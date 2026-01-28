@@ -39,6 +39,7 @@ const saveBotConfig = async (req: AuthenticatedRequest, res: Response) => {
         {
           user_id: user.id,
           symbols: config.symbols,
+          deriv_api_token: config.derivApiToken, // Save the token
           amount_per_trade: config.amountPerTrade ?? 10,
           timeframe: config.timeframe ?? 5,
           candle_count: config.candleCount ?? 10,
@@ -52,7 +53,7 @@ const saveBotConfig = async (req: AuthenticatedRequest, res: Response) => {
         {
           onConflict: "user_id"  // ← tells Supabase to update if user_id exists
         }
-    );
+      );
 
     if (error) {
       return res.status(400).json({ error: error.message });

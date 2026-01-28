@@ -267,6 +267,33 @@ export default function SettingsPage() {
                         </div>
                     )}
 
+                    <div className="space-y-4">
+                        <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-400 text-sm">
+                            <p className="font-semibold flex items-center gap-2">
+                                ⚠ Important
+                            </p>
+                            <p className="mt-1">
+                                Your Deriv API Token is required for the bot to place trades.
+                                You can generate one in your Deriv Security Settings.
+                                Make sure it has "Read" and "Trade" scopes.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label className="text-sm font-medium block mb-1">Deriv API Token</label>
+                            <div className="relative">
+                                <input
+                                    type="password"
+                                    name="derivApiToken"
+                                    defaultValue={config?.derivApiToken || ''}
+                                    placeholder="Enter your Deriv API Token"
+                                    className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm pr-10"
+                                />
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">Stored securely and encrypted.</p>
+                        </div>
+                    </div>
+
                     <div className="flex justify-end">
                         <button
                             type="submit"

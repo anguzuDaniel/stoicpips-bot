@@ -17,8 +17,11 @@ const getBotConfig = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(400).json({ error: error.message });
     }
 
-    res.json({ 
-      botConfig: data || {},
+    res.json({
+      botConfig: {
+        ...data,
+        derivApiToken: data?.deriv_api_token || '' // Return the token
+      } || {},
       user: {
         id: userId,
         subscription: req.user.subscription_status
