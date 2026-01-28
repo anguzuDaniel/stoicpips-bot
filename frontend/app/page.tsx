@@ -103,6 +103,71 @@ export default function Dashboard() {
           {/* Left Column (Chart & Signals) */}
           <div className="lg:col-span-2 space-y-6">
 
+            {/* Bot Configuration (Moved here) */}
+            <div className="rounded-xl border border-border bg-card p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold flex items-center gap-2">
+                  <SettingsIcon className="h-4 w-4" /> Bot Configuration
+                </h3>
+                <div className="flex gap-2">
+                  <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border hover:bg-accent text-xs font-medium transition-colors">
+                    <RefreshCw className="h-3 w-3" /> Reset
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setLoading(true);
+                      try {
+                        if (isRunning) {
+                          await botApi.stopBot();
+                          setIsRunning(false);
+                        } else {
+                          await botApi.startBot();
+                          setIsRunning(true);
+                        }
+                      } catch (e) {
+                        console.error(e);
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${isRunning ? 'bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20' : 'bg-primary/20 text-primary border border-primary/20 hover:bg-primary/30'}`}
+                  >
+                    {loading ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : isRunning ? (
+                      <Power className="h-3 w-3" />
+                    ) : (
+                      <Play className="h-3 w-3" />
+                    )}
+                    {isRunning ? "Stop Bot" : "Start Bot"}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">Trading Strategy</label>
+                  <div className="bg-input border border-border rounded-lg p-2 text-sm">
+                    <span className="font-medium">Martingale</span>
+                    <p className="text-xs text-muted-foreground">Double stake after loss</p>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">Base Stake ($)</label>
+                  <input type="number" defaultValue={10} className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs text-red-500 block mb-1">Stop Loss ($)</label>
+                    <input type="number" defaultValue={100} className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-green-500 block mb-1">Take Profit ($)</label>
+                    <input type="number" defaultValue={50} className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Chart Card */}
             <div className="rounded-xl border border-border bg-card p-6">
               <div className="flex items-center justify-between mb-6">
@@ -137,82 +202,14 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Bottom Row (Bot Config & Recent Trades) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Bot Configuration */}
-              <div className="rounded-xl border border-border bg-card p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold flex items-center gap-2">
-                    <SettingsIcon className="h-4 w-4" /> Bot Configuration
-                  </h3>
-                  <div className="flex gap-2">
-                    <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border hover:bg-accent text-xs font-medium transition-colors">
-                      <RefreshCw className="h-3 w-3" /> Reset
-                    </button>
-                    <button
-                      onClick={async () => {
-                        setLoading(true);
-                        try {
-                          if (isRunning) {
-                            await botApi.stopBot();
-                            setIsRunning(false);
-                          } else {
-                            await botApi.startBot();
-                            setIsRunning(true);
-                          }
-                        } catch (e) {
-                          console.error(e);
-                        } finally {
-                          setLoading(false);
-                        }
-                      }}
-                      className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${isRunning ? 'bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20' : 'bg-primary/20 text-primary border border-primary/20 hover:bg-primary/30'}`}
-                    >
-                      {loading ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : isRunning ? (
-                        <Power className="h-3 w-3" />
-                      ) : (
-                        <Play className="h-3 w-3" />
-                      )}
-                      {isRunning ? "Stop Bot" : "Start Bot"}
-                    </button>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-xs text-muted-foreground block mb-1">Trading Strategy</label>
-                    <div className="bg-input border border-border rounded-lg p-2 text-sm">
-                      <span className="font-medium">Martingale</span>
-                      <p className="text-xs text-muted-foreground">Double stake after loss</p>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground block mb-1">Base Stake ($)</label>
-                    <input type="number" defaultValue={10} className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs text-red-500 block mb-1">Stop Loss ($)</label>
-                      <input type="number" defaultValue={100} className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm" />
-                    </div>
-                    <div>
-                      <label className="text-xs text-green-500 block mb-1">Take Profit ($)</label>
-                      <input type="number" defaultValue={50} className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm" />
-                    </div>
-                  </div>
-                </div>
+            {/* Recent Trades (Full Width now) */}
+            <div className="rounded-xl border border-border bg-card p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold">Recent Trades</h3>
               </div>
-
-              {/* Recent Trades (Placeholder) */}
-              <div className="rounded-xl border border-border bg-card p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold">Recent Trades</h3>
-                </div>
-                <div className="flex flex-col items-center justify-center h-[200px] text-center text-muted-foreground">
-                  <Activity className="h-8 w-8 mb-2 opacity-20" />
-                  <p className="text-sm">No trades yet. Start trading to see your history.</p>
-                </div>
+              <div className="flex flex-col items-center justify-center h-[200px] text-center text-muted-foreground">
+                <Activity className="h-8 w-8 mb-2 opacity-20" />
+                <p className="text-sm">No trades yet. Start trading to see your history.</p>
               </div>
             </div>
 
