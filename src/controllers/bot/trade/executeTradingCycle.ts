@@ -7,7 +7,7 @@ import convertTimeframe from "../helpers/convertTimeFrame";
 import { updateExistingTrades } from "./UpdateExistingTrades";
 import symbolTimeFrames from "../helpers/symbolTimeFrames";
 
-import { checkCircuitBreaker } from "../../risk/checkCircuitBreaker";
+import { checkCircuitBreaker } from "../risk/checkCircuitBreaker";
 const fetchLatestCandles = require("../../../strategies/fetchLatestCandles");
 const executeTradeOnDeriv = require("./../deriv/executeTradeOnDeriv");
 const botStates = require("../../../types/botStates");

@@ -1,4 +1,4 @@
-import { supabase } from "../../../lib/supabaseClient";
+const { supabase } = require("../../../config/supabase");
 const botStates = require("../../../types/botStates");
 
 /**
