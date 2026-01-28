@@ -165,9 +165,6 @@ export default function LoginPage() {
                     </Link>
                 </p>
             </div>
-            <div className="mt-4 text-center text-xs text-muted-foreground/50">
-                Debug: Env Vars - {process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ URL Set' : '❌ URL Missing'} | {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Key Set' : '❌ Key Missing'}
-            </div>
         </div>
     );
 }
