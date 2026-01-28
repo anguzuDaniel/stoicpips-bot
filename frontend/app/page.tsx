@@ -158,7 +158,21 @@ export default function Dashboard() {
                   <SettingsIcon className="h-4 w-4" /> Bot Configuration
                 </h3>
                 <div className="flex gap-2">
-                  <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border hover:bg-accent text-xs font-medium transition-colors">
+                  <button
+                    onClick={async () => {
+                      if (confirm("Are you sure you want to reset all trade history and stats? This cannot be undone.")) {
+                        try {
+                          await botApi.resetBot();
+                          await fetchStats(); // Refresh stats immediately
+                          alert("Bot history reset successfully.");
+                        } catch (e) {
+                          console.error("Reset failed", e);
+                          alert("Failed to reset.");
+                        }
+                      }
+                    }}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border hover:bg-accent text-xs font-medium transition-colors"
+                  >
                     <RefreshCw className="h-3 w-3" /> Reset
                   </button>
                   <button
