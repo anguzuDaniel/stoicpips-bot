@@ -2,6 +2,19 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 
 // ... (rest of imports)
 
+const AVAILABLE_SYMBOLS = [
+    { value: "R_10", label: "Volatility 10 Index" },
+    { value: "R_25", label: "Volatility 25 Index" },
+    { value: "R_50", label: "Volatility 50 Index" },
+    { value: "R_75", label: "Volatility 75 Index" },
+    { value: "R_100", label: "Volatility 100 Index" },
+    { value: "1HZ10V", label: "Volatility 10 (1s) Index" },
+    { value: "1HZ25V", label: "Volatility 25 (1s) Index" },
+    { value: "1HZ50V", label: "Volatility 50 (1s) Index" },
+    { value: "1HZ75V", label: "Volatility 75 (1s) Index" },
+    { value: "1HZ100V", label: "Volatility 100 (1s) Index" },
+];
+
 export default function LiveTradingPage() {
     // ... (state)
 
