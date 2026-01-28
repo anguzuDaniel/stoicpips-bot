@@ -21,7 +21,7 @@ const getBotConfig = async (req: AuthenticatedRequest, res: Response) => {
       botConfig: {
         ...data,
         derivApiToken: data?.deriv_api_token || '' // Return the token
-      } || {},
+      },
       user: {
         id: userId,
         subscription: req.user.subscription_status
