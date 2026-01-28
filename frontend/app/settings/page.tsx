@@ -15,6 +15,7 @@ interface BotConfig {
     contractPreference: string;
     maxTradesPerCycle: number;
     dailyTradeLimit: number;
+    derivApiToken?: string;
 }
 
 export default function SettingsPage() {
