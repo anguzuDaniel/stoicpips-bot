@@ -94,8 +94,7 @@ export const executeTradingCycle = async (
       if (signal.action === "HOLD") {
         const reason = signal.reason || 'No signal';
         console.log(`⏸️ [${userId}] HOLD → ${symbol}: ${reason}`);
-        // Log to UI too so user sees it's working but waiting
-        BotLogger.log(userId, `HOLD ${symbol}: ${reason}`, 'warning', symbol);
+        // Removed UI log to prevent spam
         continue;
       }
 
@@ -122,6 +121,11 @@ export const executeTradingCycle = async (
 
   const updated = await updateExistingTrades(userId);
   if (updated > 0) console.log(`📝 Updated ${updated} open trades`);
+
+  // Log summary if no trades were verified this cycle to reassure user bot is running
+  if (tradesThisCycle === 0) {
+    BotLogger.log(userId, 'Cycle complete: No trade opportunities found in active zones', 'info');
+  }
 
   console.log(`⏳ Next cycle in ${config.cycleInterval ?? 30} seconds...`);
 };
