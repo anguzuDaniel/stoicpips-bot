@@ -65,6 +65,25 @@ const getAnalytics = async (req: AuthenticatedRequest, res: Response) => {
             });
         });
 
+        // Calculate Streak (Iterate backwards)
+        let currentStreak = 0;
+        if (trades.length > 0) {
+            const lastTrade = trades[trades.length - 1];
+            const isWin = lastTrade.status === 'won';
+
+            for (let i = trades.length - 1; i >= 0; i--) {
+                if ((trades[i].status === 'won') === isWin) {
+                    currentStreak++;
+                } else {
+                    break;
+                }
+            }
+            // If it's a losing streak, make it negative or just keep the number? 
+            // Usually dashboard shows green/red number. Let's just return the counts.
+            // But for "Streak", let's return the signed integer: +5 (wins) or -3 (losses).
+            currentStreak = isWin ? currentStreak : -currentStreak;
+        }
+
         const totalTrades = trades.length;
         const winRate = (wins / totalTrades) * 100;
         const averageProfit = totalProfit / totalTrades;
@@ -80,7 +99,8 @@ const getAnalytics = async (req: AuthenticatedRequest, res: Response) => {
             winLossData: [
                 { name: 'Wins', value: wins, fill: '#22c55e' },
                 { name: 'Losses', value: losses, fill: '#ef4444' },
-            ]
+            ],
+            currentStreak
         });
 
     } catch (error: any) {
