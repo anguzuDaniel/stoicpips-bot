@@ -1,4 +1,5 @@
 import { BotConfig } from "../../../types/BotConfig";
+import { BotLogger } from "../../../utils/botLogger";
 import { DerivSupplyDemandStrategy } from "../../../strategies/DerivSupplyDemandStrategy";
 import { delay } from "../../../utils/delay";
 import saveTradeToDatabase from "./saveTradeToDatabase";
@@ -48,6 +49,8 @@ export const executeTradingCycle = async (
 
   let tradesThisCycle = 0;
 
+  BotLogger.log(userId, 'Scanning market for opportunities...', 'info');
+
   for (const symbol of config.symbols) {
     if (!botState.isRunning) break;
 
@@ -93,6 +96,8 @@ export const executeTradingCycle = async (
         continue;
       }
 
+      BotLogger.log(userId, `Signal found for ${symbol} (${signal.action} ${signal.contractType})`, 'success', symbol);
+
       const tradeResult = await executeTradeOnDeriv(userId, signal, config, botState.deriv);
 
       if (tradeResult) {
@@ -108,6 +113,7 @@ export const executeTradingCycle = async (
 
     } catch (error: any) {
       console.error(`❌ [${userId}] Error processing ${symbol}:`, error.message);
+      BotLogger.log(userId, `Error processing ${symbol}: ${error.message}`, 'error', symbol);
     }
   }
 

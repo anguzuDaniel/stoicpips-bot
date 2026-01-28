@@ -1,4 +1,5 @@
 import { DerivSignal } from "../../../strategies/DerivSupplyDemandStrategy";
+import { BotLogger } from "../../../utils/botLogger";
 
 const getProposalFromDeriv = require('./getProposalFromDeriv');
 const buyContractOnDeriv = require('./buyContractOnDeriv');
@@ -39,6 +40,7 @@ const executeTradeOnDeriv = async (
     }
 
     console.log(`📊 [${userId}] Proposal: ${proposal.display_value} - Payout: $${proposal.payout}`);
+    // BotLogger.log(userId, `Proposal: ${proposal.display_value} - Payout: $${proposal.payout}`, 'info');
 
     // Execute the trade
     const tradeResult = await buyContractOnDeriv(signal, proposal, deriv);
@@ -49,6 +51,7 @@ const executeTradeOnDeriv = async (
     }
 
     console.log(`✅ [${userId}] Trade executed: ${tradeResult.buy?.contract_id}`);
+    BotLogger.log(userId, `Trade executed: Contract #${tradeResult.buy?.contract_id}`, 'success');
 
     return {
       id: tradeResult.buy?.contract_id || Date.now().toString(),

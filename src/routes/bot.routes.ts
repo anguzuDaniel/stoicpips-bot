@@ -8,6 +8,7 @@ import { getBotStatus } from "../controllers/bot/config/getBotStatus";
 import { forceTrade } from "../controllers/bot/trade/forceTrade";
 import { getTradeHistory } from "../controllers/bot/trade/getTradeHistory";
 import { getAnalytics } from "../controllers/bot/trade/getAnalytics";
+import { getLogs } from "../controllers/bot/logs/getLogs";
 
 const router = Router();
 
@@ -19,5 +20,6 @@ router.get("/status", authenticateToken, getBotStatus);
 router.post("/force-trade", authenticateToken, forceTrade);
 router.get("/history", authenticateToken, getTradeHistory);
 router.get("/analytics", authenticateToken, getAnalytics);
+router.get("/logs", authenticateToken, getLogs);
 
 module.exports = router;
