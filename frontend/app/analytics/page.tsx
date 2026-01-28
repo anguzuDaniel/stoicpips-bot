@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sidebar } from "@/components/Sidebar";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatsCard } from "@/components/StatsCard";
 import { botApi } from "@/lib/api";
 import { Loader2, TrendingUp, TrendingDown, Target, Zap } from "lucide-react";
@@ -39,10 +39,8 @@ export default function AnalyticsPage() {
     const COLORS = ['#22c55e', '#ef4444']; // Green for wins, Red for losses
 
     return (
-        <div className="flex min-h-screen bg-background text-foreground">
-            <Sidebar />
-
-            <main className="flex-1 p-6 overflow-y-auto">
+        <DashboardLayout>
+            <div className="p-4 md:p-6">
                 <h1 className="text-2xl font-bold mb-8">Performance Analytics</h1>
 
                 {/* Key Metrics */}
@@ -151,7 +149,7 @@ export default function AnalyticsPage() {
                         <h3 className="text-3xl font-bold text-red-500">-${Math.abs(data?.largestLoss || 0).toFixed(2)}</h3>
                     </div>
                 </div>
-            </main>
-        </div>
+            </div>
+        </DashboardLayout>
     );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sidebar } from "@/components/Sidebar";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { botApi } from "@/lib/api";
 import { Loader2, Save, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -46,8 +46,6 @@ export default function SettingsPage() {
             const response = await botApi.getConfigs();
             const fetchedConfig = response.data.botConfig;
 
-            // Map backend snake_case to frontend camelCase if necessary, 
-            // or usage of fetched config:
             if (fetchedConfig && Object.keys(fetchedConfig).length > 0) {
                 setConfig({
                     symbols: fetchedConfig.symbols || ["R_100"],
@@ -63,7 +61,6 @@ export default function SettingsPage() {
             }
         } catch (error) {
             console.error("Failed to fetch settings:", error);
-            // Don't show error on 404/empty, just use defaults
         } finally {
             setLoading(false);
         }
@@ -76,7 +73,6 @@ export default function SettingsPage() {
         setSuccess(null);
 
         try {
-            // Parse symbols string back to array
             const symbolsArray = symbolsString.split(",").map(s => s.trim()).filter(s => s.length > 0);
 
             const payload = {
@@ -86,8 +82,6 @@ export default function SettingsPage() {
 
             await botApi.saveConfig(payload);
             setSuccess("Configuration saved successfully!");
-
-            // Clear success message after 3 seconds
             setTimeout(() => setSuccess(null), 3000);
         } catch (err: any) {
             setError(err.response?.data?.error || "Failed to save configuration");
@@ -95,15 +89,6 @@ export default function SettingsPage() {
             setSaving(false);
         }
     };
-
-    if (loading) {
-        return (
-            <div className="flex h-screen items-center justify-center bg-background text-foreground">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        );
-    }
-
 
     const AVAILABLE_SYMBOLS = [
         { value: "R_10", label: "Volatility 10 Index" },
@@ -132,7 +117,6 @@ export default function SettingsPage() {
             });
             setSymbolsString([...config.symbols, value].join(", "));
         }
-        // Reset select
         e.target.value = "";
     };
 
@@ -145,15 +129,20 @@ export default function SettingsPage() {
         setSymbolsString(newSymbols.join(", "));
     };
 
-    return (
-        <div className="flex min-h-screen bg-background text-foreground">
-            <Sidebar />
+    if (loading) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-background text-foreground">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
 
-            <main className="flex-1 p-6 overflow-y-auto">
+    return (
+        <DashboardLayout>
+            <div className="p-4 md:p-6">
                 <h1 className="text-2xl font-bold mb-8">Bot Settings</h1>
 
                 <form onSubmit={handleSave} className="max-w-2xl space-y-8">
-
                     {/* General Settings */}
                     <div className="rounded-xl border border-border bg-card p-6 space-y-6">
                         <h2 className="text-lg font-semibold border-b border-border pb-2">Trading Parameters</h2>
@@ -261,7 +250,6 @@ export default function SettingsPage() {
                                     className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
                                 />
                             </div>
-                            {/* Note: Stop Loss / Take Profit not supported by backend yet, so omitted */}
                         </div>
                     </div>
 
@@ -290,7 +278,7 @@ export default function SettingsPage() {
                         </button>
                     </div>
                 </form>
-            </main>
-        </div>
+            </div>
+        </DashboardLayout>
     );
 }

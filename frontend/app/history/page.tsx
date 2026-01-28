@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sidebar } from "@/components/Sidebar";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { botApi } from "@/lib/api";
 import { format } from "date-fns";
 import { Loader2, ArrowUpRight, ArrowDownRight, RefreshCw } from "lucide-react";
@@ -46,10 +46,8 @@ export default function TradeHistory() {
     };
 
     return (
-        <div className="flex min-h-screen bg-background text-foreground">
-            <Sidebar />
-
-            <main className="flex-1 p-6 overflow-y-auto">
+        <DashboardLayout>
+            <div className="p-4 md:p-6">
                 <header className="flex items-center justify-between mb-8">
                     <h1 className="text-2xl font-bold">Trade History</h1>
                     <button
@@ -107,8 +105,8 @@ export default function TradeHistory() {
                                             <td className="px-6 py-4">{trade.entry_price?.toFixed(2)}</td>
                                             <td className="px-6 py-4">
                                                 <span className={`px-2 py-1 rounded text-xs font-medium uppercase ${trade.status === "won"
-                                                        ? "bg-green-500/20 text-green-500 border border-green-500/20"
-                                                        : "bg-red-500/20 text-red-500 border border-red-500/20"
+                                                    ? "bg-green-500/20 text-green-500 border border-green-500/20"
+                                                    : "bg-red-500/20 text-red-500 border border-red-500/20"
                                                     }`}>
                                                     {trade.status}
                                                 </span>
@@ -124,7 +122,7 @@ export default function TradeHistory() {
                         </div>
                     )}
                 </div>
-            </main>
-        </div>
+            </div>
+        </DashboardLayout>
     );
 }

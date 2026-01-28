@@ -1,6 +1,6 @@
 "use client";
 
-import { Sidebar } from "@/components/Sidebar";
+import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatsCard } from "@/components/StatsCard";
 import { TradingChart } from "@/components/TradingChart";
 import { TradeForm } from "@/components/TradeForm";
@@ -8,20 +8,24 @@ import { Bell, Wallet, ChevronDown, Activity, Play, RefreshCw, XCircle } from "l
 
 export default function Dashboard() {
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
-      <Sidebar />
-
-      <main className="flex-1 p-6 overflow-y-auto">
+    <DashboardLayout>
+      <div className="p-4 md:p-6">
         {/* Top Header */}
-        <header className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-card border border-border px-3 py-1.5 rounded-lg">
+        <header className="flex items-center justify-between mb-8 gap-4">
+          <h1 className="text-xl md:text-2xl font-bold">Dashboard</h1>
+
+          <div className="flex items-center gap-2 md:gap-4">
+            <div className="hidden md:flex items-center gap-2 bg-card border border-border px-3 py-1.5 rounded-lg">
               <Wallet className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium text-muted-foreground">Balance:</span>
               <span className="text-sm font-bold text-foreground">$10,000.00</span>
             </div>
-            <button className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg font-medium transition-colors">
+            {/* Mobile Balance (Compact) */}
+            <div className="md:hidden flex items-center bg-card border border-border px-2 py-1.5 rounded-lg">
+              <span className="text-sm font-bold text-foreground">$10k</span>
+            </div>
+
+            <button className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium transition-colors text-sm">
               <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
               Connect
             </button>
@@ -158,8 +162,8 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
 

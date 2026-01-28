@@ -1,70 +1,17 @@
-"use client";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
-import { useEffect, useState } from "react";
-import { Sidebar } from "@/components/Sidebar";
-import { TradeForm } from "@/components/TradeForm";
-import { TradingChart } from "@/components/TradingChart";
-import { botApi } from "@/lib/api";
-import { Loader2, Activity, Play, StopCircle, RefreshCw, ChevronDown } from "lucide-react";
-
-const AVAILABLE_SYMBOLS = [
-    { value: "R_10", label: "Volatility 10 Index" },
-    { value: "R_25", label: "Volatility 25 Index" },
-    { value: "R_50", label: "Volatility 50 Index" },
-    { value: "R_75", label: "Volatility 75 Index" },
-    { value: "R_100", label: "Volatility 100 Index" },
-    { value: "1HZ10V", label: "Volatility 10 (1s) Index" },
-    { value: "1HZ25V", label: "Volatility 25 (1s) Index" },
-    { value: "1HZ50V", label: "Volatility 50 (1s) Index" },
-    { value: "1HZ75V", label: "Volatility 75 (1s) Index" },
-    { value: "1HZ100V", label: "Volatility 100 (1s) Index" },
-];
+// ... (rest of imports)
 
 export default function LiveTradingPage() {
-    const [loading, setLoading] = useState(true);
-    const [activeSymbol, setActiveSymbol] = useState("R_100");
-    const [botStatus, setBotStatus] = useState<any>(null);
-    const [isRunning, setIsRunning] = useState(false);
+    // ... (state)
 
-    useEffect(() => {
-        fetchStatus();
-        // Poll status every 5 seconds
-        const interval = setInterval(fetchStatus, 5000);
-        return () => clearInterval(interval);
-    }, []);
-
-    const fetchStatus = async () => {
-        try {
-            const response = await botApi.getStatus();
-            setBotStatus(response.data);
-            setIsRunning(response.data.isRunning);
-        } catch (error) {
-            console.error("Failed to fetch status:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleStartBot = async () => {
-        try {
-            if (isRunning) {
-                await botApi.stopBot();
-            } else {
-                await botApi.startBot();
-            }
-            fetchStatus();
-        } catch (error) {
-            console.error("Failed to toggle bot:", error);
-        }
-    };
+    // ... (effects and handlers)
 
     return (
-        <div className="flex min-h-screen bg-background text-foreground">
-            <Sidebar />
-
-            <main className="flex-1 flex flex-col h-screen overflow-hidden">
+        <DashboardLayout>
+            <div className="flex flex-col h-[calc(100vh-64px)] md:h-screen overflow-hidden">
                 {/* Header */}
-                <header className="flex-none flex items-center justify-between p-6 border-b border-border bg-card">
+                <header className="flex-none flex items-center justify-between p-4 md:p-6 border-b border-border bg-card">
                     <div className="flex items-center gap-4">
                         <h1 className="text-2xl font-bold">Live Trading</h1>
                         <div className="relative group">
@@ -96,8 +43,8 @@ export default function LiveTradingPage() {
                         <button
                             onClick={handleStartBot}
                             className={`flex items-center gap-2 px-6 py-2 rounded-lg font-bold transition-all ${isRunning
-                                    ? 'bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20'
-                                    : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20'
+                                ? 'bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20'
+                                : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20'
                                 }`}
                         >
                             {isRunning ? (
@@ -201,7 +148,7 @@ export default function LiveTradingPage() {
                         </div>
                     </div>
                 </div>
-            </main>
-        </div>
+            </div>
+        </DashboardLayout>
     );
 }
