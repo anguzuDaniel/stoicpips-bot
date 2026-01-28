@@ -1,0 +1,26 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const executeTradeOnDeriv = require('./executeTradeOnDeriv');
+async function handleTradingSignal(userId, signal) {
+    const botState = botStates.get(userId);
+    if (!botState || !botState.isRunning)
+        return;
+    // Get config
+    const config = botState.config;
+    // Check if this symbol is in our trading list
+    if (!config.symbols.includes(signal.symbol)) {
+        console.log(`⚠️ [${userId}] Signal for ${signal.symbol} ignored (not in trading list)`);
+        return;
+    }
+    // Adjust amount based on user config
+    signal.amount = config.amountPerTrade || 10;
+    // Execute the trade
+    const tradeResult = await executeTradeOnDeriv(userId, signal, config);
+    if (tradeResult) {
+        botState.tradesExecuted++;
+        botState.currentTrades.push(tradeResult);
+        // Save trade to database
+        await saveTradeToDatabase(userId, tradeResult);
+    }
+}
+module.exports = handleTradingSignal;

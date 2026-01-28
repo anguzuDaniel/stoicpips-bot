@@ -1,0 +1,1 @@
+{"version":3,"file":"MetricItem.js","sourceRoot":"","sources":["../../../../../frontend/app/analytics/components/MetricItem.tsx"],"names":[],"mappings":"AAAA,YAAY,CAAC;;AAIb,MAAM,CAAC,OAAO,UAAU,UAAU,CAAC,EAAE,KAAK,EAAE,KAAK,EAAE;IACjD,OAAO,CACL,eAAK,SAAS,EAAC,mCAAmC,aAChD,eAAM,SAAS,EAAC,uBAAuB,YAAE,KAAK,GAAQ,EACtD,eAAM,SAAS,EAAC,2BAA2B,YAAE,KAAK,GAAQ,IACtD,CACP,CAAC;AACJ,CAAC"}

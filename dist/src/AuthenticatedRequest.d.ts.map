@@ -1,0 +1,1 @@
+{"version":3,"file":"AuthenticatedRequest.d.ts","sourceRoot":"","sources":["../../src/AuthenticatedRequest.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,OAAO,EAAE,MAAM,SAAS,CAAC;AAEvC,MAAM,WAAW,oBAAqB,SAAQ,OAAO;IACnD,IAAI,EAAE;QACJ,EAAE,EAAE,MAAM,CAAC;QACX,KAAK,EAAE,MAAM,CAAC;QACd,UAAU,CAAC,EAAE,MAAM,CAAC;QACpB,QAAQ,CAAC,EAAE,OAAO,CAAC;KACpB,CAAC;CACH"}
