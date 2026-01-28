@@ -17,7 +17,35 @@ export default function Dashboard() {
 
   useEffect(() => {
     checkConnection();
+    fetchStats();
   }, []);
+
+  const [stats, setStats] = useState({
+    totalTrades: 0,
+    winRate: 0,
+    netProfit: 0,
+    wins: 0,
+    losses: 0,
+    streak: 0
+  });
+
+  const fetchStats = async () => {
+    try {
+      const res = await botApi.getAnalytics();
+      if (res.data) {
+        setStats({
+          totalTrades: res.data.totalTrades,
+          winRate: res.data.winRate,
+          netProfit: res.data.totalProfit,
+          wins: res.data.winLossData.find((d: any) => d.name === 'Wins')?.value || 0,
+          losses: res.data.winLossData.find((d: any) => d.name === 'Losses')?.value || 0,
+          streak: res.data.currentStreak || 0
+        });
+      }
+    } catch (e) {
+      console.error("Failed to fetch stats", e);
+    }
+  };
 
   const checkConnection = async () => {
     try {
@@ -32,6 +60,14 @@ export default function Dashboard() {
       setIsConnected(false);
     }
   };
+
+  // Poll stats every 10 seconds if connected
+  useEffect(() => {
+    if (isConnected) {
+      const interval = setInterval(fetchStats, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [isConnected]);
 
   const handleConnect = async () => {
     setConnecting(true);
@@ -98,12 +134,12 @@ export default function Dashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-          <StatsCard label="Total Trades" value="0" />
-          <StatsCard label="% Win Rate" value="0.0%" color="red" />
-          <StatsCard label="$ Net Profit" value="+0.00" color="green" />
-          <StatsCard label="Wins" value="0" color="green" icon={Activity} />
-          <StatsCard label="Losses" value="0" color="red" icon={XCircle} />
-          <StatsCard label="Streak" value="0" />
+          <StatsCard label="Total Trades" value={stats.totalTrades.toString()} />
+          <StatsCard label="% Win Rate" value={`${stats.winRate}%`} color={stats.winRate >= 50 ? "green" : "red"} />
+          <StatsCard label="$ Net Profit" value={`${stats.netProfit >= 0 ? '+' : ''}${stats.netProfit.toFixed(2)}`} color={stats.netProfit >= 0 ? "green" : "red"} />
+          <StatsCard label="Wins" value={stats.wins.toString()} color="green" icon={Activity} />
+          <StatsCard label="Losses" value={stats.losses.toString()} color="red" icon={XCircle} />
+          <StatsCard label="Streak" value={stats.streak.toString()} color={stats.streak > 0 ? "green" : stats.streak < 0 ? "red" : "gray"} />
         </div>
 
         {/* Main Content Grid */}
