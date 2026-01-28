@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+yfinance
+pandas
+numpy
+ta
+xgboost
+scikit-learn
+ccxt
+python-dotenv

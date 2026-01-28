@@ -7,6 +7,7 @@ import convertTimeframe from "../helpers/convertTimeFrame";
 import { updateExistingTrades } from "./UpdateExistingTrades";
 import symbolTimeFrames from "../helpers/symbolTimeFrames";
 
+import { checkCircuitBreaker } from "../../risk/checkCircuitBreaker";
 const fetchLatestCandles = require("../../../strategies/fetchLatestCandles");
 const executeTradeOnDeriv = require("./../deriv/executeTradeOnDeriv");
 const botStates = require("../../../types/botStates");
@@ -31,6 +32,15 @@ export const executeTradingCycle = async (
 ) => {
   const botState = botStates.get(userId);
   if (!botState || !botState.isRunning) return;
+
+  // 🛡️ Circuit Breaker (Risk Check)
+  const riskStatus = await checkCircuitBreaker(userId);
+  if (!riskStatus.safe) {
+    BotLogger.log(userId, `⚠️ RISK STOP: ${riskStatus.message}`, 'error');
+    console.error(`[${userId}] Circuit Breaker Tripped! Stopping bot.`);
+    botState.isRunning = false; // Emergency Stop
+    return;
+  }
 
   const mergedSymbols = Array.from(
     new Set([
