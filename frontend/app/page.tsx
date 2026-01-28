@@ -139,7 +139,7 @@ export default function Dashboard() {
           <StatsCard label="$ Net Profit" value={`${stats.netProfit >= 0 ? '+' : ''}${stats.netProfit.toFixed(2)}`} color={stats.netProfit >= 0 ? "green" : "red"} />
           <StatsCard label="Wins" value={stats.wins.toString()} color="green" icon={Activity} />
           <StatsCard label="Losses" value={stats.losses.toString()} color="red" icon={XCircle} />
-          <StatsCard label="Streak" value={stats.streak.toString()} color={stats.streak > 0 ? "green" : stats.streak < 0 ? "red" : "gray"} />
+          <StatsCard label="Streak" value={stats.streak.toString()} color={stats.streak > 0 ? "green" : stats.streak < 0 ? "red" : "default"} />
         </div>
 
         {/* Main Content Grid */}
