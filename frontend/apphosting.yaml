@@ -1,0 +1,11 @@
+serviceId: stoicpips-frontend
+runConfig:
+  cpu: 1
+  memoryMiB: 512
+env:
+  - variable: NEXT_PUBLIC_API_URL
+    value: https://stoicpips-backend-992888719774.europe-west1.run.app/api/v1
+  - variable: NEXT_PUBLIC_SUPABASE_URL
+    value: https://qjdacnftlkdnzjkshjrq.supabase.co
+  - variable: NEXT_PUBLIC_SUPABASE_ANON_KEY
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqZGFjbmZ0bGtkbnpqa3NoanJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxNTgzODAsImV4cCI6MjA3OTczNDM4MH0._kV1X37Ln8DJf8RgRt8JDTHz5bsXR0DeZcuQ3bmARhM
