@@ -18,8 +18,19 @@ interface SidebarProps {
   onClose: () => void;
 }
 
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login"); // Middleware might redirect anyway, but good to be explicit
+    // Force refresh to clear any cached state
+    router.refresh();
+  };
 
   return (
     <>
@@ -67,14 +78,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         <div className="space-y-1 border-t border-border pt-4">
           <Link
-            href="/config"
-            onClick={() => onClose()}
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-          >
-            <Settings className="h-5 w-5" />
-            Settings
-          </Link>
-          <Link
             href="/help"
             onClick={() => onClose()}
             className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
@@ -82,6 +85,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <HelpCircle className="h-5 w-5" />
             Help & Support
           </Link>
+          <button
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+          >
+            <LogOut className="h-5 w-5" />
+            Log Out
+          </button>
         </div>
       </div>
     </>
