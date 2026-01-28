@@ -1,6 +1,11 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+"use client";
 
-// ... (rest of imports)
+import { useEffect, useState } from "react";
+import { DashboardLayout } from "@/components/DashboardLayout";
+import { TradeForm } from "@/components/TradeForm";
+import { TradingChart } from "@/components/TradingChart";
+import { botApi } from "@/lib/api";
+import { Loader2, Activity, Play, StopCircle, RefreshCw, ChevronDown } from "lucide-react";
 
 const AVAILABLE_SYMBOLS = [
     { value: "R_10", label: "Volatility 10 Index" },
@@ -16,9 +21,42 @@ const AVAILABLE_SYMBOLS = [
 ];
 
 export default function LiveTradingPage() {
-    // ... (state)
+    const [loading, setLoading] = useState(true);
+    const [activeSymbol, setActiveSymbol] = useState("R_100");
+    const [botStatus, setBotStatus] = useState<any>(null);
+    const [isRunning, setIsRunning] = useState(false);
 
-    // ... (effects and handlers)
+    useEffect(() => {
+        fetchStatus();
+        // Poll status every 5 seconds
+        const interval = setInterval(fetchStatus, 5000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const fetchStatus = async () => {
+        try {
+            const response = await botApi.getStatus();
+            setBotStatus(response.data);
+            setIsRunning(response.data.isRunning);
+        } catch (error) {
+            console.error("Failed to fetch status:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleStartBot = async () => {
+        try {
+            if (isRunning) {
+                await botApi.stopBot();
+            } else {
+                await botApi.startBot();
+            }
+            fetchStatus();
+        } catch (error) {
+            console.error("Failed to toggle bot:", error);
+        }
+    };
 
     return (
         <DashboardLayout>
