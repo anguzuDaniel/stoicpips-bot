@@ -42,7 +42,10 @@ export function ProfitChart({ data }: ProfitChartProps) {
                     <Tooltip
                         contentStyle={{ backgroundColor: '#18181b', border: '1px solid #333', borderRadius: '8px' }}
                         itemStyle={{ color: '#fff' }}
-                        formatter={(value: number) => [`$${value.toFixed(2)}`, 'Profit']}
+                        formatter={(value: number | undefined) => [
+                            `$${value?.toFixed(2) ?? '0.00'}`,
+                            'Profit'
+                        ]}
                     />
                     <Line
                         type="monotone"
