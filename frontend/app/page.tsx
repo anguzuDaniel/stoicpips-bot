@@ -7,7 +7,6 @@ import { TradeForm } from "@/components/TradeForm";
 import { Bell, Wallet, ChevronDown, Activity, Play, RefreshCw, XCircle, Power, Loader2, CheckCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { botApi } from "@/lib/api";
-import { toast } from "sonner"; // Assuming sonner is installed, otherwise I'll use simple alerts for now or just console
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(false);
