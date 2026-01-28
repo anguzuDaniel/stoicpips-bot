@@ -1,6 +1,6 @@
 "use client";
 
-import { ScrollArea } from "@/components/ui/scroll-area";
+// import { ScrollArea } from "@/components/ui/scroll-area";
 import { Activity } from "lucide-react";
 
 interface LogEntry {
@@ -30,7 +30,7 @@ export function ActivityLog() {
                 <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse" />
             </div>
 
-            <ScrollArea className="flex-1 p-4">
+            <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
                 <div className="space-y-4">
                     {mockLogs.map((log) => (
                         <div key={log.id} className="flex gap-3 items-start text-sm">
@@ -61,7 +61,7 @@ export function ActivityLog() {
                         <p>Waiting for next signal...</p>
                     </div>
                 </div>
-            </ScrollArea>
+            </div>
         </div>
     );
 }
