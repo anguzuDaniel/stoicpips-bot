@@ -27,6 +27,12 @@ export async function GET(request: NextRequest) {
     const redirectOrigin = getRedirectOrigin()
 
     if (code) {
+        const cookieStore = request.cookies
+
+        // Create the response object that we will eventually return
+        // We attach cookies to THIS object
+        const response = NextResponse.redirect(`${redirectOrigin}${next}`)
+
         const supabase = createServerClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -36,14 +42,19 @@ export async function GET(request: NextRequest) {
                         return request.cookies.getAll()
                     },
                     setAll(cookiesToSet) {
-                        cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+                        cookiesToSet.forEach(({ name, value, options }) => {
+                            request.cookies.set(name, value)
+                            response.cookies.set(name, value, options)
+                        })
                     },
                 },
             }
         )
+
         const { error } = await supabase.auth.exchangeCodeForSession(code)
+
         if (!error) {
-            return NextResponse.redirect(`${redirectOrigin}${next}`)
+            return response
         } else {
             console.error('Auth code exchange error:', error)
         }
