@@ -40,6 +40,8 @@ export async function middleware(request: NextRequest) {
     if (!session &&
         request.nextUrl.pathname !== '/login' &&
         request.nextUrl.pathname !== '/signup' &&
+        request.nextUrl.pathname !== '/reset-password' &&
+        request.nextUrl.pathname !== '/update-password' &&
         !request.nextUrl.pathname.startsWith('/auth')
     ) {
         return NextResponse.redirect(new URL('/login', request.url))
