@@ -36,4 +36,5 @@ export const botApi = {
     forceTrade: (data: { amount: number; symbol: string; contractType: 'CALL' | 'PUT'; duration: number }) => api.post("/bot/force-trade", data),
     getHistory: (params?: { page?: number; limit?: number }) => api.get("/bot/history", { params }),
     getAnalytics: () => api.get("/bot/analytics"),
+    getLogs: () => api.get("/bot/logs"),
 };
