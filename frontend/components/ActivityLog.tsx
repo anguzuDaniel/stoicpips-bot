@@ -21,7 +21,7 @@ export function ActivityLog() {
             try {
                 const res = await botApi.getLogs();
                 if (res.data && res.data.logs) {
-                    setLogs(res.data.logs);
+                    setLogs(res.data.logs.slice(0, 50)); // Limit to last 50 logs
                 }
             } catch (e) {
                 console.error("Failed to fetch logs", e);
@@ -34,7 +34,7 @@ export function ActivityLog() {
     }, []);
 
     return (
-        <div className="rounded-xl border border-border bg-card h-full flex flex-col">
+        <div className="rounded-xl border border-border bg-card h-full max-h-[600px] flex flex-col">
             <div className="p-6 border-b border-border flex items-center justify-between">
                 <h3 className="font-bold flex items-center gap-2">
                     <Activity className="h-4 w-4 text-primary" />
