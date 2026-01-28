@@ -79,13 +79,29 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
     const strategy = new DerivSupplyDemandStrategy();
     if (config.minSignalGap) strategy.setMinSignalGap(config.minSignalGap * 60000);
 
+    import { DerivWebSocket } from "../../deriv/DerivWebSocket";
+
+    // ... existing imports ...
+
+    // Inside startBot function ...
+
+    const token = config.derivApiToken || config.deriv_api_token || process.env.DERIV_API_TOKEN;
+
+    if (!token) {
+      return res.status(400).json({ error: "No Deriv API Token found. Please configure it in Settings." });
+    }
+
+    // Initialize Deriv Connection
+    const derivConnection = new DerivWebSocket({
+      apiToken: token,
+      appId: process.env.DERIV_APP_ID || '1089',
+      reconnect: true
+    });
+
+    derivConnection.connect();
+
     // Map timeframe to allowed granularity
-    let timeframeInSeconds = config.timeframe || 60;
-    if (timeframeInSeconds < 60) timeframeInSeconds = timeframeInSeconds * 60;
-    const closestGranularity = ALLOWED_GRANULARITIES.reduce((prev, curr) =>
-      Math.abs(curr - timeframeInSeconds) < Math.abs(prev - timeframeInSeconds) ? curr : prev
-    );
-    console.log(`Using candle timeframe: ${closestGranularity} seconds`);
+    // ... existing granularity logic ...
 
     // Initialize bot state
     const botState = {
@@ -97,24 +113,12 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
       tradesExecuted: 0,
       strategy,
       derivConnected: true,
+      deriv: derivConnection, // Store connection
       dailyTrades: 0,
       lastTradeDate: new Date().toISOString().slice(0, 10),
       config
     };
     botStates.set(userId, botState);
-
-    // Save bot status in DB
-    const startedAt = new Date();
-    const { error: statusError } = await supabase.from("bot_status").upsert({
-      user_id: userId,
-      is_running: true,
-      started_at: startedAt,
-      current_trades: [],
-      updated_at: startedAt
-    });
-    if (statusError) console.log('Database error:', statusError);
-
-    const cycleInterval = (config.cycle_interval || 30) * 1000;
 
     // Trading cycle
     const tradingCycle = async () => {

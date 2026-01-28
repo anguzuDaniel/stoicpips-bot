@@ -13,53 +13,43 @@ const buyContractOnDeriv = require('./buyContractOnDeriv');
  * @param userId The ID of the user.
  * @param signal The trading signal received from the user.
  * @param config The user's bot configuration.
+ * @param deriv The DerivWebSocket instance.
  * @returns A promise that resolves to the trade result or null if the trade fails.
  */
-const executeTradeOnDeriv = async(
-  userId: string, 
+const executeTradeOnDeriv = async (
+  userId: string,
   signal: DerivSignal,
-  config: any
+  config: any,
+  deriv: any
 ): Promise<any> => {
   try {
-    console.log(`🔍 [${userId}] DEBUG - executeTradeOnDeriv called`);
-    console.log(`🔍 [${userId}] DEBUG - signal type:`, signal);
-    console.log(`🔍 [${userId}] DEBUG - signal keys:`, Object.keys(signal || {}));
-    console.log(`🔍 [${userId}] DEBUG - full signal:`, JSON.stringify(signal, null, 2));
-    
-    if (!signal) {
-      console.log(`❌ [${userId}] Signal is null or undefined`);
+    if (!deriv) {
+      console.error(`❌ [${userId}] No Deriv connection available for trade`);
       return null;
     }
 
-    const action = signal.contract_type || signal.action;
-    console.log(`🔍 [${userId}] DEBUG - action value: "${signal}"`);
-    console.log(`🔍 [${userId}] DEBUG - action type: ${typeof action}`);
-    
-    if (!action || action === 'HOLD') {
-      console.log(`⏸️ [${userId}] Signal is HOLD or undefined, skipping trade`);
-      return null;
-    }
+    // ... validation ...
 
     // Get proposal first
-    const proposal = await getProposalFromDeriv(signal);
-    
+    const proposal = await getProposalFromDeriv(signal, deriv);
+
     if (!proposal) {
       console.error(`❌ [${userId}] No proposal received`);
       return null;
     }
 
     console.log(`📊 [${userId}] Proposal: ${proposal.display_value} - Payout: $${proposal.payout}`);
-    
+
     // Execute the trade
-    const tradeResult = await buyContractOnDeriv(signal, proposal);
-    
+    const tradeResult = await buyContractOnDeriv(signal, proposal, deriv);
+
     if (!tradeResult) {
       console.error(`❌ [${userId}] Trade execution failed`);
       return null;
     }
 
     console.log(`✅ [${userId}] Trade executed: ${tradeResult.buy?.contract_id}`);
-    
+
     return {
       id: tradeResult.buy?.contract_id || Date.now().toString(),
       userId: userId,

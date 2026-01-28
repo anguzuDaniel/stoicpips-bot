@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../../types/AuthenticatedRequest';
-const deriv = require('../../config/deriv');
+// const deriv = require('../../config/deriv');
 const botStates = require('../../types/botStates');
 
 const supabase = require('../../config/supabase').supabase;
@@ -35,12 +35,9 @@ const stopBot = async (req: AuthenticatedRequest, res: Response) => {
       botState.tradingInterval = null;
     }
 
-    if (botState.config._signalHandler) {
-      deriv.off('trading_signal', botState.config._signalHandler);
-    }
-
-    if (botState.config.symbols) {
-      console.log(`🔇 Unsubscribed from symbols for user ${userId}`);
+    if (botState.deriv) {
+      console.log(`🔌 Disconnecting Deriv session for user ${userId}`);
+      botState.deriv.disconnect();
     }
 
     botState.isRunning = false;
@@ -65,7 +62,7 @@ const stopBot = async (req: AuthenticatedRequest, res: Response) => {
     console.log(`✅ Bot stopped for user ${userId}`);
     console.log(`📊 Final stats: ${botState.tradesExecuted} trades, P&L: $${botState.totalProfit.toFixed(2)}`);
 
-    res.json({ 
+    res.json({
       message: "Trading bot stopped successfully",
       status: "stopped",
       startedAt: botState.startedAt,

@@ -1,7 +1,8 @@
 import { DerivSignal } from "../../../strategies/DerivSupplyDemandStrategy";
 import supportsRiseFall from "../../../types/supportRiseFail";
 
-const { deriv } = require('../../../config/deriv');
+// Remove global import
+// const { deriv } = require('../../../config/deriv');
 const { getContractType } = require('../../../types/getContractType');
 
 /**
@@ -15,17 +16,17 @@ const getProposalFromDeriv = async (signal: DerivSignal): Promise<any> => {
     const requestId = Date.now();
 
     const amount = signal.amount || 10;
-    
+
     let contract_type = signal.contract_type || getContractType(signal.action);
 
     const duration = signal.duration || 5;
     let duration_unit = signal.duration_unit || 't';
 
     if (signal.symbol.startsWith("R_")) {
-        if (contract_type === "RISE") contract_type = "CALL";
-        if (contract_type === "FALL") contract_type = "PUT";
+      if (contract_type === "RISE") contract_type = "CALL";
+      if (contract_type === "FALL") contract_type = "PUT";
 
-        duration_unit = 't';
+      duration_unit = 't';
     }
 
     console.log(`💰 Amount: ${amount}`);
@@ -90,7 +91,7 @@ const getProposalFromDeriv = async (signal: DerivSignal): Promise<any> => {
     };
 
     deriv.on('message', handler);
-    
+
     deriv.send(request);
 
     setTimeout(() => {

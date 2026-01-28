@@ -93,7 +93,7 @@ export const executeTradingCycle = async (
         continue;
       }
 
-      const tradeResult = await executeTradeOnDeriv(userId, signal, config);
+      const tradeResult = await executeTradeOnDeriv(userId, signal, config, botState.deriv);
 
       if (tradeResult) {
         botState.tradesExecuted++;
