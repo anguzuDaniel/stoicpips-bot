@@ -1,6 +1,11 @@
-const { deriv }= require('../config/deriv');
+// Remove global import
+// const { deriv }= require('../config/deriv');
 
-const fetchLatestCandles = async (symbol: string, timeframe: number) => {
+const fetchLatestCandles = async (symbol: string, timeframe: number, deriv: any) => {
+  if (!deriv) {
+    throw new Error("Deriv connection not provided for fetching candles");
+  }
+
   return new Promise<any[]>((resolve, reject) => {
     const requestId = Date.now();
 

@@ -68,7 +68,7 @@ export const executeTradingCycle = async (
 
       try {
 
-        candles = await fetchLatestCandles(symbol, symbolTimeFrames[symbol]);
+        candles = await fetchLatestCandles(symbol, symbolTimeFrames[symbol], botState.deriv);
 
       } catch (err: any) {
         console.log(`⚠️ Skipping ${symbol}: ${err.message}`);
