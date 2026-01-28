@@ -4,9 +4,52 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatsCard } from "@/components/StatsCard";
 import { TradingChart } from "@/components/TradingChart";
 import { TradeForm } from "@/components/TradeForm";
-import { Bell, Wallet, ChevronDown, Activity, Play, RefreshCw, XCircle } from "lucide-react";
+import { Bell, Wallet, ChevronDown, Activity, Play, RefreshCw, XCircle, Power, Loader2, CheckCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { botApi } from "@/lib/api";
+import { toast } from "sonner"; // Assuming sonner is installed, otherwise I'll use simple alerts for now or just console
 
 export default function Dashboard() {
+  const [loading, setLoading] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+
+  useEffect(() => {
+    checkConnection();
+  }, []);
+
+  const checkConnection = async () => {
+    try {
+      const res = await botApi.getStatus();
+      if (res.data) {
+        setIsConnected(true);
+        // Assuming status returns if bot is running
+        setIsRunning(res.data.isActive || false);
+      }
+    } catch (e) {
+      console.error("Connection check failed", e);
+      setIsConnected(false);
+    }
+  };
+
+  const handleConnect = async () => {
+    setConnecting(true);
+    try {
+      await checkConnection();
+      // If still not connected after check, show error
+      if (!isConnected) {
+        // Force a retry or show status
+        const res = await botApi.getStatus();
+        if (res.status === 200) setIsConnected(true);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setConnecting(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="p-4 md:p-6">
@@ -25,9 +68,19 @@ export default function Dashboard() {
               <span className="text-sm font-bold text-foreground">$10k</span>
             </div>
 
-            <button className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium transition-colors text-sm">
-              <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
-              Connect
+            <button
+              onClick={handleConnect}
+              disabled={connecting || isConnected}
+              className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium transition-colors text-sm ${isConnected ? 'bg-green-500/10 text-green-500 border border-green-500/20 cursor-default' : 'bg-primary hover:bg-primary/90 text-primary-foreground'}`}
+            >
+              {connecting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isConnected ? (
+                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+              ) : (
+                <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
+              )}
+              {isConnected ? "Connected" : connecting ? "Connecting..." : "Connect"}
             </button>
             <button className="p-2 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors">
               <Bell className="h-5 w-5" />
@@ -97,8 +150,33 @@ export default function Dashboard() {
                     <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border hover:bg-accent text-xs font-medium transition-colors">
                       <RefreshCw className="h-3 w-3" /> Reset
                     </button>
-                    <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary/20 text-primary border border-primary/20 hover:bg-primary/30 text-xs font-medium transition-colors">
-                      <Play className="h-3 w-3" /> Start Bot
+                    <button
+                      onClick={async () => {
+                        setLoading(true);
+                        try {
+                          if (isRunning) {
+                            await botApi.stopBot();
+                            setIsRunning(false);
+                          } else {
+                            await botApi.startBot();
+                            setIsRunning(true);
+                          }
+                        } catch (e) {
+                          console.error(e);
+                        } finally {
+                          setLoading(false);
+                        }
+                      }}
+                      className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${isRunning ? 'bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20' : 'bg-primary/20 text-primary border border-primary/20 hover:bg-primary/30'}`}
+                    >
+                      {loading ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : isRunning ? (
+                        <Power className="h-3 w-3" />
+                      ) : (
+                        <Play className="h-3 w-3" />
+                      )}
+                      {isRunning ? "Stop Bot" : "Start Bot"}
                     </button>
                   </div>
                 </div>
