@@ -5,6 +5,7 @@ interface AuthenticatedRequest extends Request {
     id: string;
     email: string;
     subscription_status: string;
+    isAdmin?: boolean;
   };
 }
 
