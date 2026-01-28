@@ -96,7 +96,7 @@ export const executeTradingCycle = async (
         continue;
       }
 
-      BotLogger.log(userId, `Signal found for ${symbol} (${signal.action} ${signal.contractType})`, 'success', symbol);
+      BotLogger.log(userId, `Signal found for ${symbol} (${signal.action} ${signal.contract_type})`, 'success', symbol);
 
       const tradeResult = await executeTradeOnDeriv(userId, signal, config, botState.deriv);
 

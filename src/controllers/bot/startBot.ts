@@ -3,6 +3,7 @@ import { AuthenticatedRequest } from "../../types/AuthenticatedRequest";
 import { DerivSupplyDemandStrategy } from '../../strategies/DerivSupplyDemandStrategy';
 import ALLOWED_GRANULARITIES from './helpers/ALLOWED_GRANULARITIES';
 import symbolTimeFrames from './helpers/symbolTimeFrames';
+import { DerivWebSocket } from "../../deriv/DerivWebSocket";
 
 const botStates = require('../../types/botStates');
 const { executeTradingCycle } = require('./trade/executeTradingCycle');
@@ -79,7 +80,7 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
     const strategy = new DerivSupplyDemandStrategy();
     if (config.minSignalGap) strategy.setMinSignalGap(config.minSignalGap * 60000);
 
-    import { DerivWebSocket } from "../../deriv/DerivWebSocket";
+
 
     // ... existing imports ...
 
@@ -156,19 +157,21 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
       }
     };
 
+    const cycleIntervalMs = (config.cycleInterval || 30) * 1000;
+
     tradingCycle();
-    botState.tradingInterval = setInterval(tradingCycle, cycleInterval);
+    botState.tradingInterval = setInterval(tradingCycle, cycleIntervalMs);
 
     console.log(`🤖 Bot started for user ${userId}`);
     console.log(`📊 Trading symbols: ${config.symbols.join(', ')}`);
     console.log(`💰 Trade amount: $${baseAmount}`);
     console.log(`👑 Subscription: ${subscription}`);
-    console.log(`⏱️ Cycle interval: ${cycleInterval / 1000} seconds`);
+    console.log(`⏱️ Cycle interval: ${cycleIntervalMs / 1000} seconds`);
 
     res.json({
       message: "Trading bot started successfully",
       status: "running",
-      startedAt,
+      startedAt: botState.startedAt,
       user: { id: userId, email: userEmail, subscription },
       config
     });

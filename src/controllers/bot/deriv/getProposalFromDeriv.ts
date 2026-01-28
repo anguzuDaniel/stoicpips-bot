@@ -8,11 +8,18 @@ const { getContractType } = require('../../../types/getContractType');
 /**
  * Gets a proposal from Deriv based on the given signal.
  * @param {DerivSignal} signal - The signal to send to Deriv.
+ * @param {any} deriv - The DerivWebSocket instance.
  * @returns {Promise<any>} - A promise that resolves to the proposal received from Deriv.
  * @throws {Error} - If there is an error with the API request.
  */
-const getProposalFromDeriv = async (signal: DerivSignal): Promise<any> => {
+const getProposalFromDeriv = async (signal: DerivSignal, deriv: any): Promise<any> => {
   return new Promise((resolve, reject) => {
+    if (!deriv) {
+      console.error('❌ [getProposal] No Deriv connection provided');
+      resolve(null);
+      return;
+    }
+
     const requestId = Date.now();
 
     const amount = signal.amount || 10;
