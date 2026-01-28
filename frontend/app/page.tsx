@@ -3,6 +3,7 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatsCard } from "@/components/StatsCard";
 import { ActivityLog } from "@/components/ActivityLog";
+import { ProfitChart } from "@/components/ProfitChart";
 import { Bell, Wallet, ChevronDown, Activity, Play, RefreshCw, XCircle, Power, Loader2, CheckCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -26,7 +27,8 @@ export default function Dashboard() {
     netProfit: 0,
     wins: 0,
     losses: 0,
-    streak: 0
+    streak: 0,
+    profitHistory: []
   });
 
   const fetchStats = async () => {
@@ -39,7 +41,8 @@ export default function Dashboard() {
           netProfit: res.data.totalProfit,
           wins: res.data.winLossData.find((d: any) => d.name === 'Wins')?.value || 0,
           losses: res.data.winLossData.find((d: any) => d.name === 'Losses')?.value || 0,
-          streak: res.data.currentStreak || 0
+          streak: res.data.currentStreak || 0,
+          profitHistory: res.data.profitHistory || []
         });
       }
     } catch (e) {
@@ -221,9 +224,7 @@ export default function Dashboard() {
                   Performance
                 </h2>
               </div>
-              <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
-                <p>Performance graph will appear here after enough data is collected.</p>
-              </div>
+              <ProfitChart data={stats.profitHistory} />
             </div>
 
             {/* Recent Trades (Full Width now) */}
