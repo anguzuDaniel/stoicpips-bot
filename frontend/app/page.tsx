@@ -2,13 +2,14 @@
 
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatsCard } from "@/components/StatsCard";
-import { TradingChart } from "@/components/TradingChart";
-import { TradeForm } from "@/components/TradeForm";
+import { ActivityLog } from "@/components/ActivityLog";
 import { Bell, Wallet, ChevronDown, Activity, Play, RefreshCw, XCircle, Power, Loader2, CheckCircle } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { botApi } from "@/lib/api";
 
 export default function Dashboard() {
+  const router = useRouter(); // Initialize router
   const [loading, setLoading] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -35,15 +36,23 @@ export default function Dashboard() {
   const handleConnect = async () => {
     setConnecting(true);
     try {
-      await checkConnection();
-      // If still not connected after check, show error
-      if (!isConnected) {
-        // Force a retry or show status
-        const res = await botApi.getStatus();
-        if (res.status === 200) setIsConnected(true);
+      if (isConnected) {
+        // If already connected, maybe just refresh status
+        await checkConnection();
+      } else {
+        // Attempt to start the bot
+        await botApi.startBot();
+        setIsConnected(true);
+        setIsRunning(true);
+        // You might want to show a success toast here
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      // Simple alert for now, or use a toast component if available
+      alert(e.response?.data?.error || "Failed to connect. Please check Settings.");
+      if (e.response?.data?.error?.includes("Token")) {
+        router.push("/settings");
+      }
     } finally {
       setConnecting(false);
     }
@@ -168,37 +177,16 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Chart Card */}
-            <div className="rounded-xl border border-border bg-card p-6">
+            {/* Active Trades / Profit Graph Placeholder */}
+            <div className="rounded-xl border border-border bg-card p-6 min-h-[300px]">
               <div className="flex items-center justify-between mb-6">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h2 className="text-lg font-bold">Volatility 10 Index</h2>
-                    <ChevronDown className="h-4 w-4 text-muted-foreground cursor-pointer" />
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-2xl font-bold">9841.82</span>
-                    <span className="text-sm font-medium text-primary flex items-center gap-1">
-                      +12.45 (0.13%)
-                    </span>
-                  </div>
-                </div>
-                <div className="flex bg-secondary/50 rounded-lg p-1">
-                  {['1m', '5m', '15m', '1h', '4h', '1D'].map((time) => (
-                    <button
-                      key={time}
-                      className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${time === '5m' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                    >
-                      {time}
-                    </button>
-                  ))}
-                </div>
+                <h2 className="text-lg font-bold flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-primary" />
+                  Performance
+                </h2>
               </div>
-              <div className="relative">
-                <TradingChart />
-                <div className="absolute top-4 left-4 text-xs font-mono text-muted-foreground">
-                  V10 Price Chart
-                </div>
+              <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
+                <p>Performance graph will appear here after enough data is collected.</p>
               </div>
             </div>
 
@@ -215,25 +203,9 @@ export default function Dashboard() {
 
           </div>
 
-          {/* Right Column (Place Trade & Indicators) */}
-          <div className="space-y-6">
-            <div className="rounded-xl border border-border bg-card p-6">
-              <div className="flex flex-col items-center justify-center h-[120px] mb-6 border border-dashed border-border rounded-lg bg-secondary/10">
-                <div className="relative">
-                  <div className="h-12 w-12 rounded-full border-2 border-border flex items-center justify-center">
-                    <Activity className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-muted border-2 border-card" />
-                </div>
-                <p className="mt-3 text-sm text-muted-foreground font-medium">No active trade</p>
-                <p className="text-xs text-muted-foreground opacity-60">Place a trade or start the bot</p>
-              </div>
-
-              <div className="mb-4">
-                <h3 className="font-bold mb-4">Place Trade</h3>
-                <TradeForm />
-              </div>
-            </div>
+          {/* Right Column (Live Activity) */}
+          <div className="space-y-6 lg:h-full">
+            <ActivityLog />
           </div>
         </div>
       </div>
