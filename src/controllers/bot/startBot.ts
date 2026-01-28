@@ -137,7 +137,7 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
             Math.abs(curr - desiredTimeframe) < Math.abs(prev - desiredTimeframe) ? curr : prev
           );
 
-          const candles = await fetchLatestCandles(symbol, closestGranularity);
+          const candles = await fetchLatestCandles(symbol, closestGranularity, derivConnection);
           if (candles && candles.length > 0) candlesMap[symbol] = candles;
           else console.log(`⚠️ No candles for ${symbol}, skipping`);
 
