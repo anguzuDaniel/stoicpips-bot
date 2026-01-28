@@ -1,4 +1,5 @@
 const { supabase } = require('../../../config/supabase');
+import { BotLogger } from "../../../utils/botLogger";
 
 /**
  * Saves a trade to the database
@@ -29,8 +30,10 @@ const saveTradeToDatabase = async (userId: string, trade: any) => {
 
     if (error) {
       console.error(`❌ [${userId}] Failed to save trade to database:`, error.message);
+      BotLogger.log(userId, `Failed to save trade: ${error.message}`, 'error');
     } else {
       console.log(`💾 [${userId}] Trade saved to database: ${trade.id}`);
+      // BotLogger.log(userId, `Trade saved to DB: #${trade.contractId}`, 'info');
     }
   } catch (error: any) {
     console.error(`❌ [${userId}] Save trade error:`, error.message);
