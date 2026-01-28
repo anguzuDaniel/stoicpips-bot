@@ -22,13 +22,14 @@ export interface DerivSignal {
   confidence: number;
   zone: DerivZone;
   timestamp: number;
+  reason?: string; // Debug reason
 }
 
 export class DerivSupplyDemandStrategy {
   private zoneDetector: ZoneDetector;
   private activeZones: DerivZone[] = [];
   private lastSignalTime: number = 0;
-  private minSignalGap: number = 300000; // 5 minutes
+  private minSignalGap: number = 30000; // 30 seconds for testing (was 5 mins)
 
   constructor() {
     this.zoneDetector = new ZoneDetector();
@@ -39,7 +40,7 @@ export class DerivSupplyDemandStrategy {
 
     // Prevent rapid-fire signals
     if (now - this.lastSignalTime < this.minSignalGap) {
-      return this.HoldSignal(symbol, timeframe);
+      return this.HoldSignal(symbol, timeframe, `Cooldown active (${Math.round((this.minSignalGap - (now - this.lastSignalTime)) / 1000)}s remaining)`);
     }
 
     const standardCandles = candles.map(c => ({
@@ -63,7 +64,7 @@ export class DerivSupplyDemandStrategy {
       return this.evaluateZoneEntry(currentPrice, activeZone, standardCandles);
     }
 
-    return this.HoldSignal(symbol, timeframe);
+    return this.HoldSignal(symbol, timeframe, 'Price not in any active supply/demand zone');
   }
 
   private updateZones(candles: any[], symbol: string, timeframe: number): void {
@@ -146,6 +147,8 @@ export class DerivSupplyDemandStrategy {
           zone,
           timestamp: Date.now()
         };
+      } else {
+        return this.HoldSignal(zone.symbol, zone.timeframe, `In Demand Zone but RSI too high (${latestRSI.toFixed(2)} >= 35)`);
       }
     }
 
@@ -166,10 +169,12 @@ export class DerivSupplyDemandStrategy {
           zone,
           timestamp: Date.now()
         };
+      } else {
+        return this.HoldSignal(zone.symbol, zone.timeframe, `In Supply Zone but RSI too low (${latestRSI.toFixed(2)} <= 65)`);
       }
     }
 
-    return this.HoldSignal(zone.symbol, zone.timeframe);
+    return this.HoldSignal(zone.symbol, zone.timeframe, 'In zone but conditions not met');
   }
 
   private calculateRSI(prices: number[], period: number = 14): number[] {
@@ -208,7 +213,7 @@ export class DerivSupplyDemandStrategy {
     return { value: 120, unit: 'm' };
   }
 
-  private HoldSignal(symbol: string, timeframe: number): DerivSignal {
+  private HoldSignal(symbol: string, timeframe: number, reason: string = ''): DerivSignal {
     return {
       action: 'HOLD',
       symbol,
@@ -218,7 +223,8 @@ export class DerivSupplyDemandStrategy {
       duration_unit: 'm',
       confidence: 0,
       zone: this.getEmptyZone(symbol, timeframe),
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      reason
     };
   }
 

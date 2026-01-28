@@ -11,7 +11,7 @@ const fetchLatestCandles = require("../../../strategies/fetchLatestCandles");
 const executeTradeOnDeriv = require("./../deriv/executeTradeOnDeriv");
 const botStates = require("../../../types/botStates");
 
-const strategy = new DerivSupplyDemandStrategy();
+
 
 /**
  * Execute a single trading cycle for a given user.
@@ -83,7 +83,7 @@ export const executeTradingCycle = async (
         continue;
       }
 
-      const signal = strategy.analyzeCandles(
+      const signal = botState.strategy.analyzeCandles(
         candles,
         symbol,
         symbolTimeFrames[symbol]
@@ -92,7 +92,10 @@ export const executeTradingCycle = async (
       console.log(`Signal debug for ${symbol}:`, signal);
 
       if (signal.action === "HOLD") {
-        console.log(`⏸️ [${userId}] HOLD → ${symbol}`);
+        const reason = signal.reason || 'No signal';
+        console.log(`⏸️ [${userId}] HOLD → ${symbol}: ${reason}`);
+        // Log to UI too so user sees it's working but waiting
+        BotLogger.log(userId, `HOLD ${symbol}: ${reason}`, 'warning', symbol);
         continue;
       }
 
