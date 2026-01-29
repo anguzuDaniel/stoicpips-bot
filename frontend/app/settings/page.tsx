@@ -34,14 +34,6 @@ export default function SettingsPage() {
     const [showRealToken, setShowRealToken] = useState(false);
     const [showOpenAiKey, setShowOpenAiKey] = useState(false);
 
-    // Bank Info State
-    const [bankInfo, setBankInfo] = useState({
-        bankName: "",
-        accountNumber: "",
-        accountName: ""
-    });
-    const [savingBank, setSavingBank] = useState(false);
-
     const [config, setConfig] = useState<BotConfig>({
         symbols: ["R_100"],
         amountPerTrade: 10,
@@ -82,19 +74,9 @@ export default function SettingsPage() {
                 });
                 setSymbolsString(fetchedConfig.symbols ? fetchedConfig.symbols.join(", ") : "R_100");
             }
-
-            // Fetch Bank Info from Profile
-            const profileRes = await botApi.getProfile();
-            if (profileRes.data && profileRes.data.user) {
-                const profile = profileRes.data.user;
-                setBankInfo({
-                    bankName: profile.bank_name || "",
-                    accountNumber: profile.account_number || "",
-                    accountName: profile.account_name || ""
-                });
-            }
         } catch (error) {
             console.error("Failed to fetch settings:", error);
+            setError("Could not load bot configuration.");
         } finally {
             setLoading(false);
         }
@@ -124,23 +106,6 @@ export default function SettingsPage() {
         }
     };
 
-    const handleSaveBank = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setSavingBank(true);
-        setError(null);
-        setSuccess(null);
-
-        try {
-            await botApi.updateBankInfo(bankInfo);
-            setSuccess("Bank information updated successfully!");
-            setTimeout(() => setSuccess(null), 3000);
-        } catch (err: any) {
-            setError(err.response?.data?.error || "Failed to save bank information");
-        } finally {
-            setSavingBank(false);
-        }
-    };
-
     const AVAILABLE_SYMBOLS = [
         { value: "R_10", label: "Volatility 10 Index" },
         { value: "R_25", label: "Volatility 25 Index" },
@@ -162,11 +127,12 @@ export default function SettingsPage() {
     const handleAddSymbol = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const value = e.target.value;
         if (value && !config.symbols.includes(value)) {
+            const newSymbols = [...config.symbols, value];
             setConfig({
                 ...config,
-                symbols: [...config.symbols, value]
+                symbols: newSymbols
             });
-            setSymbolsString([...config.symbols, value].join(", "));
+            setSymbolsString(newSymbols.join(", "));
         }
         e.target.value = "";
     };
@@ -190,13 +156,13 @@ export default function SettingsPage() {
 
     return (
         <DashboardLayout>
-            <div className="p-4 md:p-6">
-                <h1 className="text-2xl font-bold mb-8">Bot Settings</h1>
+            <div className="p-4 md:p-6 max-w-4xl mx-auto">
+                <h1 className="text-2xl font-bold mb-8 text-foreground">Bot Settings</h1>
 
                 <form onSubmit={handleSave} className="space-y-6">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Trading Parameters */}
-                        <div className="rounded-xl border border-border bg-card p-6 space-y-6 h-full">
+                        <div className="rounded-xl border border-border bg-card p-6 space-y-6 h-full shadow-sm hover:shadow-md transition-shadow">
                             <h2 className="text-lg font-semibold border-b border-border pb-2 flex items-center gap-2">
                                 <span className="h-2 w-2 rounded-full bg-primary" />
                                 Trading Parameters
@@ -286,7 +252,7 @@ export default function SettingsPage() {
                         {/* Right Column Grid - Nested */}
                         <div className="space-y-6 flex flex-col">
                             {/* Risk Management */}
-                            <div className="rounded-xl border border-border bg-card p-6 space-y-6 flex-grow">
+                            <div className="rounded-xl border border-border bg-card p-6 space-y-6 flex-grow shadow-sm hover:shadow-md transition-shadow">
                                 <h2 className="text-lg font-semibold border-b border-border pb-2 flex items-center gap-2">
                                     <span className="h-2 w-2 rounded-full bg-red-500" />
                                     Risk Management
@@ -315,7 +281,7 @@ export default function SettingsPage() {
                             </div>
 
                             {/* AI Configuration */}
-                            <div className="rounded-xl border border-border bg-card p-6 space-y-6 flex-grow">
+                            <div className="rounded-xl border border-border bg-card p-6 space-y-6 flex-grow shadow-sm hover:shadow-md transition-shadow">
                                 <h2 className="text-lg font-semibold border-b border-border pb-2 flex items-center gap-2">
                                     <span className="h-2 w-2 rounded-full bg-indigo-500" />
                                     AI Engine
@@ -375,10 +341,8 @@ export default function SettingsPage() {
                         </div>
                     </div>
 
-                    {/* Deriv Configuration - Full Width below or Grid item? 
-                        Let's put it in a card that matches the grid width or spans both
-                    */}
-                    <div className="rounded-xl border border-border bg-card p-6 space-y-6">
+                    {/* Deriv Configuration */}
+                    <div className="rounded-xl border border-border bg-card p-6 space-y-6 shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex items-center justify-between border-b border-border pb-2">
                             <h2 className="text-lg font-semibold flex items-center gap-2">
                                 <span className="h-2 w-2 rounded-full bg-green-500" />
@@ -435,81 +399,20 @@ export default function SettingsPage() {
                                 </div>
                             </div>
                         </div>
-                        <div className="p-3 bg-secondary/30 rounded-lg flex items-start gap-3 border border-border/50">
-                            <AlertCircle className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-                            <p className="text-xs text-muted-foreground leading-relaxed italic">
-                                Note: Tokens are encrypted before storage. To trade on both accounts, please provide your Demo and Real API tokens. You can obtain these from the Deriv dashboard.
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Bank Account Information Section */}
-                    <div className="rounded-xl border border-border bg-card p-6 space-y-6">
-                        <div className="flex items-center justify-between border-b border-border pb-2">
-                            <h2 className="text-lg font-semibold flex items-center gap-2">
-                                <span className="h-2 w-2 rounded-full bg-blue-500" />
-                                Bank Account Information
-                            </h2>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-muted-foreground">Bank Name</label>
-                                <input
-                                    type="text"
-                                    value={bankInfo.bankName}
-                                    onChange={(e) => setBankInfo({ ...bankInfo, bankName: e.target.value })}
-                                    placeholder="e.g. Stanbic Bank"
-                                    className="w-full bg-input border border-border rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-muted-foreground">Account Number</label>
-                                <input
-                                    type="text"
-                                    value={bankInfo.accountNumber}
-                                    onChange={(e) => setBankInfo({ ...bankInfo, accountNumber: e.target.value })}
-                                    placeholder="00XXX..."
-                                    className="w-full bg-input border border-border rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-muted-foreground">Account Name</label>
-                                <input
-                                    type="text"
-                                    value={bankInfo.accountName}
-                                    onChange={(e) => setBankInfo({ ...bankInfo, accountName: e.target.value })}
-                                    placeholder="Your Full Name"
-                                    className="w-full bg-input border border-border rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="flex justify-end">
-                            <button
-                                type="button"
-                                onClick={handleSaveBank}
-                                disabled={savingBank}
-                                className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-500 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-                            >
-                                {savingBank ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                                Save Bank Details
-                            </button>
-                        </div>
                     </div>
 
                     {/* Messages & Actions */}
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border mt-8">
                         <div className="flex-1 w-full sm:w-auto">
                             {error && (
-                                <div className="flex items-center gap-2 rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-destructive text-sm animate-in fade-in slide-in-from-left-2">
+                                <div className="flex items-center gap-2 rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-destructive text-sm animate-in fade-in slide-in-from-left-2 shadow-sm">
                                     <AlertCircle className="h-4 w-4" />
                                     {error}
                                 </div>
                             )}
 
                             {success && (
-                                <div className="flex items-center gap-2 rounded-xl bg-green-500/10 border border-green-500/20 p-4 text-green-500 text-sm animate-in fade-in slide-in-from-left-2">
+                                <div className="flex items-center gap-2 rounded-xl bg-green-500/10 border border-green-500/20 p-4 text-green-500 text-sm animate-in fade-in slide-in-from-left-2 shadow-sm">
                                     <Save className="h-4 w-4" />
                                     {success}
                                 </div>
