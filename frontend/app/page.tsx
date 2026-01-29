@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { botApi, fetcher } from "@/lib/api";
 import useSWR from "swr";
 import { Skeleton } from "@/components/Skeleton";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export default function Dashboard() {
   const router = useRouter(); // Initialize router
@@ -262,9 +263,7 @@ export default function Dashboard() {
 
               {!isConnected ? "Connect & Start" : isRunning ? "Stop Bot" : "Start Bot"}
             </button>
-            <button className="p-2 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors">
-              <Bell className="h-5 w-5" />
-            </button>
+            <NotificationBell />
           </div>
         </header>
 
