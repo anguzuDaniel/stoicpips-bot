@@ -4,6 +4,7 @@ import cors from "cors";
 const authRoutes = require('./routes/auth.routes');
 const botRoutes = require('./routes/bot.routes');
 const userRoutes = require('./routes/user.routes');
+const adminRoutes = require('./routes/admin.routes');
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/bot', botRoutes);
 app.use('/api/v1/user', userRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 // Global Error Handler
 app.use((err: any, req: any, res: any, next: any) => {

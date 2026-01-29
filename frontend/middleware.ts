@@ -52,6 +52,23 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/', request.url))
     }
 
+    // Admin route protection
+    if (session && request.nextUrl.pathname.startsWith('/admin')) {
+        // Fetch user profile to check admin status
+        const { data: profile } = await supabase
+            .from('users')
+            .select('is_admin')
+            .eq('id', session.user.id)
+            .single();
+
+        if (!profile || !profile.is_admin) {
+            // User is not an admin, redirect to dashboard
+            const redirectUrl = new URL('/', request.url);
+            redirectUrl.searchParams.set('error', 'admin_access_required');
+            return NextResponse.redirect(redirectUrl);
+        }
+    }
+
     return response
 }
 

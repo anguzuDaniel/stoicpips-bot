@@ -18,6 +18,12 @@ const botStates = new Map<string, {
     timestamp: number;
   };
   config: any;
+  globalPause?: boolean;
+  pauseReason?: string;
+  pausedAt?: string;
+  pausedBy?: string;
+  resumedAt?: string;
+  resumedBy?: string;
 }>();
 
-module.exports = botStates;
+module.exports = { botStates };
