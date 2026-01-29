@@ -1,32 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getBotConfig = void 0;
-const supabase = require('../../../config/supabase').supabase;
+const supabase_1 = require("../../../config/supabase");
 const getBotConfig = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { data, error } = await supabase
+        const { data, error } = await supabase_1.supabase
             .from("bot_configs")
             .select("*")
             .eq("user_id", userId)
             .single();
-        if (error && error.code !== 'PGRST116') {
-            return res.status(400).json({ error: error.message });
-        }
-        res.json({
-            botConfig: {
-                ...data,
-                derivApiToken: data?.deriv_api_token || '' // Return the token
-            },
-            user: {
-                id: userId,
-                subscription: req.user.subscription_status
-            }
-        });
+        if (error && error.code !== 'PGRST116')
+            throw error;
+        res.json(data || {});
     }
     catch (error) {
-        console.error('Get bot config error:', error);
-        res.status(500).json({ error: 'Failed to get bot configuration' });
+        res.status(500).json({ error: error.message });
     }
 };
 exports.getBotConfig = getBotConfig;

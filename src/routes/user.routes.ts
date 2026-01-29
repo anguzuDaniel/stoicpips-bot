@@ -1,10 +1,10 @@
 import { Router } from "express";
-const userController = require("../controllers/user/user.controller");
+import { getUserProfile, updatePlan, updateBankInfo } from "../controllers/user/user.controller";
 
 const router = Router();
 
-router.get("/profile", userController.getUserProfile);
-router.post("/update-plan", userController.updatePlan);
-router.post("/update-bank-info", userController.updateBankInfo);
+router.get("/profile", getUserProfile);
+router.post("/update-plan", updatePlan);
+router.post("/update-bank-info", updateBankInfo);
 
-module.exports = router;
+export default router;

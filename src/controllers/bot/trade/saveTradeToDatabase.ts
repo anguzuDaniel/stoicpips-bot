@@ -1,11 +1,9 @@
-const { supabase } = require('../../../config/supabase');
+import { supabase } from '../../../config/supabase';
 import { BotLogger } from "../../../utils/botLogger";
+import { botStates } from '../../../types/botStates';
 
 /**
  * Saves a trade to the database
- * @param {string} userId - The user ID of the user who executed the trade
- * @param {object} trade - The trade object containing the trade details
- * @returns {Promise<void>} - A promise that resolves when the trade is saved to the database
  */
 const saveTradeToDatabase = async (userId: string, trade: any) => {
   try {
@@ -34,12 +32,10 @@ const saveTradeToDatabase = async (userId: string, trade: any) => {
     } else {
       console.log(`💾 [${userId}] Trade saved to database: ${trade.id}`);
 
-      // Invalidate analytics cache to show new trade immediately
-      const botStates = require('../../../types/botStates');
       const botState = botStates.get(userId);
       if (botState) {
         botState.analyticsCache = undefined;
-        botState.lastSyncTime = 0; // Force sync on next refresh
+        botState.lastSyncTime = 0;
       }
     }
   } catch (error: any) {

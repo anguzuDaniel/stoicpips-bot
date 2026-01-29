@@ -1,4 +1,6 @@
-export const updatePlan = async (req, res) => {
+import { supabase } from "../../config/supabase";
+
+export const updatePlan = async (req: any, res: any) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: "Not authenticated" });
@@ -11,13 +13,13 @@ export const updatePlan = async (req, res) => {
 
     const { data, error } = await supabase
       .from("subscriptions")
-      .upsert([{ 
-        user_id: req.user.id, 
-        plan, 
+      .upsert([{
+        user_id: req.user.id,
+        plan,
         status,
         updated_at: new Date()
-      }], { 
-        onConflict: "user_id" 
+      }], {
+        onConflict: "user_id"
       })
       .select()
       .single();
@@ -26,9 +28,9 @@ export const updatePlan = async (req, res) => {
       return res.status(400).json({ error: error.message });
     }
 
-    return res.json({ 
-      message: "Plan updated successfully", 
-      subscription: data 
+    return res.json({
+      message: "Plan updated successfully",
+      subscription: data
     });
   } catch (err) {
     console.error("updatePlan error:", err);

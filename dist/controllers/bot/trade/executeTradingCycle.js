@@ -10,22 +10,14 @@ const saveTradeToDatabase_1 = __importDefault(require("./saveTradeToDatabase"));
 const UpdateExistingTrades_1 = require("./UpdateExistingTrades");
 const symbolTimeFrames_1 = __importDefault(require("../helpers/symbolTimeFrames"));
 const checkCircuitBreaker_1 = require("../risk/checkCircuitBreaker");
-const fetchLatestCandles = require("../../../strategies/fetchLatestCandles");
-const executeTradeOnDeriv = require("./../deriv/executeTradeOnDeriv");
-const botStates = require("../../../types/botStates");
+const fetchLatestCandles_1 = __importDefault(require("../../../strategies/fetchLatestCandles"));
+const botStates_1 = require("../../../types/botStates");
+const supabase_1 = require("../../../config/supabase");
 /**
  * Execute a single trading cycle for a given user.
- * This function is called repeatedly by the bot controller.
- * It fetches the latest candle data for all symbols in the user's config,
- * analyzes the data using the Supply/Demand strategy, and executes trades
- * based on the strategy's signals.
- *
- * @param userId The ID of the user to execute the trading cycle for.
- * @param config The user's bot configuration.
- * @param candlesMap A map of symbol to candle data.
  */
 const executeTradingCycle = async (userId, config, candlesMap) => {
-    const botState = botStates.get(userId);
+    const botState = botStates_1.botStates.get(userId);
     if (!botState || !botState.isRunning)
         return;
     // 🛡️ Circuit Breaker (Risk Check)
@@ -40,14 +32,12 @@ const executeTradingCycle = async (userId, config, candlesMap) => {
         ...(config.symbols || []),
     ]));
     config.symbols = mergedSymbols;
-    console.log(`🔥 Final Symbols: ${JSON.stringify(config.symbols)}`);
     const today = new Date().toISOString().slice(0, 10);
     if (botState.lastTradeDate !== today) {
         botState.dailyTrades = 0;
         botState.lastTradeDate = today;
     }
     let tradesThisCycle = 0;
-    botLogger_1.BotLogger.log(userId, 'Scanning market for opportunities...', 'info');
     for (const symbol of config.symbols) {
         if (!botState.isRunning)
             break;
@@ -59,34 +49,66 @@ const executeTradingCycle = async (userId, config, candlesMap) => {
         if (config.dailyTradeLimit && botState.dailyTrades >= config.dailyTradeLimit)
             break;
         try {
-            let candles = [];
-            try {
-                candles = await fetchLatestCandles(symbol, symbolTimeFrames_1.default[symbol], botState.deriv);
-            }
-            catch (err) {
-                console.log(`⚠️ Skipping ${symbol}: ${err.message}`);
-                continue; // Continue to next symbol
+            let candles = candlesMap[symbol];
+            if (!candles || candles.length === 0) {
+                // Fallback fetch if not in map
+                try {
+                    const timeframe = symbolTimeFrames_1.default[symbol] || 900;
+                    candles = await (0, fetchLatestCandles_1.default)(symbol, timeframe, botState.derivWS);
+                }
+                catch (err) {
+                    console.log(`⚠️ Skipping ${symbol}: ${err.message}`);
+                    continue;
+                }
             }
             if (!candles || candles.length === 0) {
                 console.log(`⚠️ No candle data for ${symbol}, skipping`);
                 continue;
             }
-            const signal = botState.strategy.analyzeCandles(candles, symbol, symbolTimeFrames_1.default[symbol]);
-            console.log(`Signal debug for ${symbol}:`, signal);
-            if (signal.action === "HOLD") {
-                const reason = signal.reason || 'No signal';
-                console.log(`⏸️ [${userId}] HOLD → ${symbol}: ${reason}`);
-                // Removed UI log to prevent spam
+            const signal = botState.strategy.analyze(candles, symbol, symbolTimeFrames_1.default[symbol] || 900);
+            if (!signal || signal.action === "HOLD") {
                 continue;
             }
-            botLogger_1.BotLogger.log(userId, `Signal found for ${symbol} (${signal.action} ${signal.contract_type})`, 'success', symbol);
-            const tradeResult = await executeTradeOnDeriv(userId, signal, config, botState.deriv);
+            // --- Sentinel Filter & AI Fallback ---
+            const baseAmount = config.amountPerTrade || 10;
+            signal.amount = baseAmount; // Set base amount before sentinel
+            const sentinelDecision = await botState.sentinel.executeScalpWithFallback(signal, botState.subscriptionTier || 'free', botState.hasTakenFirstTrade || false);
+            if (!sentinelDecision.shouldExecute) {
+                console.log(`🛡️ [${userId}] Sentinel Blocked Trade for ${symbol}: Low AI Confidence.`);
+                continue;
+            }
+            const executionAmount = sentinelDecision.amount;
+            signal.amount = executionAmount; // Apply adjusted amount
+            botLogger_1.BotLogger.log(userId, `Signal approved by Sentinel for ${symbol} (Amount: $${executionAmount})`, 'success', symbol);
+            // --- Execution Logic ---
+            const mode = botState.executionMode || 'auto';
+            if (mode === 'signal_only') {
+                botLogger_1.BotLogger.log(userId, `Philosopher's Signal: Opportunity detected but Automation is reserved for Elite Tier.`, 'warning', symbol);
+                continue;
+            }
+            // Execute via the new OCO-supported method in DerivWebSocket
+            const tradeResult = await botState.derivWS.executeTrade(signal);
+            if (tradeResult && mode === 'first_trade') {
+                await supabase_1.supabase.from('profiles').update({ has_taken_first_trade: true }).eq('id', userId);
+                botState.executionMode = 'signal_only';
+                botState.hasTakenFirstTrade = true;
+                botLogger_1.BotLogger.log(userId, `The Emperor has spoken. First trade used. Upgrade to Elite for full automation.`, 'info');
+            }
             if (tradeResult) {
                 botState.tradesExecuted++;
                 botState.dailyTrades++;
                 tradesThisCycle++;
                 botState.currentTrades.push(tradeResult);
-                await (0, saveTradeToDatabase_1.default)(userId, tradeResult);
+                await (0, saveTradeToDatabase_1.default)(userId, {
+                    ...tradeResult,
+                    symbol,
+                    contractType: signal.contract_type,
+                    action: signal.action,
+                    amount: signal.amount,
+                    entryPrice: tradeResult.entry_tick || 0,
+                    status: 'open',
+                    timestamp: new Date()
+                });
             }
             await (0, delay_1.delay)(2000); // small pause between symbols
         }
@@ -98,10 +120,6 @@ const executeTradingCycle = async (userId, config, candlesMap) => {
     const updated = await (0, UpdateExistingTrades_1.updateExistingTrades)(userId);
     if (updated > 0)
         console.log(`📝 Updated ${updated} open trades`);
-    // Log summary if no trades were verified this cycle to reassure user bot is running
-    if (tradesThisCycle === 0) {
-        botLogger_1.BotLogger.log(userId, 'Cycle complete: No trade opportunities found in active zones', 'info');
-    }
     console.log(`⏳ Next cycle in ${config.cycleInterval ?? 30} seconds...`);
 };
 exports.executeTradingCycle = executeTradingCycle;

@@ -1,11 +1,7 @@
-const supabase = require('../../config/supabase').supabase;
+import { supabase } from '../../config/supabase';
 const { logAdminAction } = require('../../utils/auditLog');
 
-/**
- * GET /api/v1/admin/users
- * List all users with pagination and search
- */
-exports.listUsers = async (req, res) => {
+export const listUsers = async (req: any, res: any) => {
     try {
         const { page = 1, limit = 50, search = '' } = req.query;
         const offset = (page - 1) * limit;
@@ -70,7 +66,7 @@ exports.listUsers = async (req, res) => {
  * PATCH /api/v1/admin/users/:id/tier
  * Update user subscription tier
  */
-exports.updateUserTier = async (req, res) => {
+export const updateUserTier = async (req: any, res: any) => {
     try {
         const { id } = req.params;
         const { tier } = req.body;
@@ -110,4 +106,4 @@ exports.updateUserTier = async (req, res) => {
     }
 };
 
-export {};
+export { };

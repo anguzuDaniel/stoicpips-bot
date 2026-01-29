@@ -1,14 +1,11 @@
-const { supabase } = require('../../../config/supabase');
+import { supabase } from '../../../config/supabase';
 import { DerivWebSocket } from "../../../deriv/DerivWebSocket";
-const botStates = require('../../../types/botStates');
+import { botStates } from '../../../types/botStates';
 
 const SYNC_COOLDOWN = 60 * 1000; // 60 seconds
 
 /**
  * Syncs trade history from Deriv profit table to Supabase trades table.
- * @param userId - The user ID to sync for.
- * @param derivWS - An authorized DerivWebSocket instance.
- * @param limit - Number of trades to fetch (default 50).
  */
 export const syncDerivTrades = async (userId: string, derivWS: DerivWebSocket, limit: number = 50) => {
     try {
@@ -24,7 +21,6 @@ export const syncDerivTrades = async (userId: string, derivWS: DerivWebSocket, l
 
         const derivTrades = await derivWS.getProfitTable(limit);
 
-        // Update lastSyncTime even if no trades found to respect the cooldown
         if (botState) {
             botState.lastSyncTime = now;
         }
@@ -34,7 +30,6 @@ export const syncDerivTrades = async (userId: string, derivWS: DerivWebSocket, l
             return 0;
         }
 
-        // 1. Fetch existing contract_ids from DB to prevent duplicates (Manual Sync)
         const { data: existingTrades, error: fetchError } = await supabase
             .from('trades')
             .select('contract_id')
@@ -54,14 +49,13 @@ export const syncDerivTrades = async (userId: string, derivWS: DerivWebSocket, l
                 const pnl = sellPrice - buyPrice;
                 const status = pnl >= 0 ? 'won' : 'lost';
 
-                // Map Deriv fields to database schema
                 return {
                     user_id: userId,
                     contract_id: t.contract_id,
-                    trade_id: `DERIV_${t.transaction_id}`, // Prefix shared IDs
-                    symbol: t.shortcode ? t.shortcode.split('_')[1] || t.shortcode : 'UKN', // Fallback to full shortcode
+                    trade_id: `DERIV_${t.transaction_id}`,
+                    symbol: t.shortcode ? t.shortcode.split('_')[1] || t.shortcode : 'UKN',
                     contract_type: t.longcode.includes('CALL') ? 'CALL' : t.longcode.includes('PUT') ? 'PUT' : 'UNKNOWN',
-                    action: 'BUY', // Default action for history trades
+                    action: 'BUY',
                     amount: buyPrice,
                     entry_price: buyPrice,
                     payout: sellPrice,
@@ -76,7 +70,6 @@ export const syncDerivTrades = async (userId: string, derivWS: DerivWebSocket, l
 
         if (tradesToInsert.length === 0) return 0;
 
-        // Insert new trades
         const { error: insertError } = await supabase
             .from('trades')
             .insert(tradesToInsert);
@@ -88,7 +81,6 @@ export const syncDerivTrades = async (userId: string, derivWS: DerivWebSocket, l
 
         console.log(`✅ [${userId}] Successfully synced ${tradesToInsert.length} new trades.`);
 
-        // Invalidate analytics cache since we have new data
         if (botState && tradesToInsert.length > 0) {
             botState.analyticsCache = undefined;
         }

@@ -1,39 +1,17 @@
-import { Response } from 'express';
-import { AuthenticatedRequest } from '../../../types/AuthenticatedRequest';
+import { supabase } from '../../../config/supabase';
 
-const supabase = require('../../../config/supabase').supabase;
-
-const getBotConfig = async (req: AuthenticatedRequest, res: Response) => {
+export const getBotConfig = async (req: any, res: any) => {
   try {
     const userId = req.user.id;
-
     const { data, error } = await supabase
       .from("bot_configs")
       .select("*")
       .eq("user_id", userId)
       .single();
 
-    if (error && error.code !== 'PGRST116') {
-      return res.status(400).json({ error: error.message });
-    }
-
-    res.json({
-      botConfig: {
-        ...data,
-        derivApiToken: data?.deriv_api_token || '',
-        derivRealToken: data?.deriv_real_token || '',
-        derivDemoToken: data?.deriv_demo_token || '',
-        openaiApiKey: data?.openai_api_key || ''
-      },
-      user: {
-        id: userId,
-        subscription: req.user.subscription_status
-      }
-    });
+    if (error && error.code !== 'PGRST116') throw error;
+    res.json(data || {});
   } catch (error: any) {
-    console.error('Get bot config error:', error);
-    res.status(500).json({ error: 'Failed to get bot configuration' });
+    res.status(500).json({ error: error.message });
   }
 };
-
-export { getBotConfig };

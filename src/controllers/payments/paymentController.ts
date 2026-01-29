@@ -1,15 +1,15 @@
 import { Response } from 'express';
 import axios from 'axios';
-const { supabase } = require('../../config/supabase');
+import { supabase } from '../../config/supabase';
 
 const FLW_SECRET_KEY = process.env.FLW_SECRET_KEY;
 const FLW_WEBHOOK_HASH = process.env.FLW_WEBHOOK_HASH;
 // If frontend is on Vercel/Prod, update this var.
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-const PRICES = {
-    pro: 10,
-    elite: 50
+const PRICES: Record<string, number> = {
+    pro: 49,
+    elite: 99
 };
 
 export const initializePayment = async (req: any, res: Response) => {
@@ -73,8 +73,18 @@ export const initializePayment = async (req: any, res: Response) => {
         }
 
     } catch (error: any) {
-        console.error("Payment Init Error:", error.response?.data || error.message);
-        return res.status(500).json({ error: "Payment Initialization Failed" });
+        const errorData = error.response?.data;
+        console.error("❌ Payment Init Error:", errorData || error.message);
+
+        // Log more specifics to help debug
+        if (errorData) {
+            console.error("Flutterwave Error Message:", errorData.message);
+        }
+
+        return res.status(500).json({
+            error: "Payment Initialization Failed",
+            details: errorData?.message || error.message
+        });
     }
 };
 

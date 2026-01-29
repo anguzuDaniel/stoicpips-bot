@@ -1,22 +1,27 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getTradeHistory = void 0;
-const { supabase } = require('../../../config/supabase');
+const supabase_1 = require("../../../config/supabase");
+const botStates_1 = require("../../../types/botStates");
 /**
  * Fetch trade history for the authenticated user
- * Supports pagination and filtering by date
  */
 const getTradeHistory = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { page = 1, limit = 50, start_date, end_date } = req.query;
-        const offset = (Number(page) - 1) * Number(limit);
-        let query = supabase
+        const { page = 1, limit = 50, start_date, end_date, status } = req.query;
+        const limitNum = Number(limit);
+        const botState = botStates_1.botStates.get(userId);
+        const offset = (Number(page) - 1) * limitNum;
+        let query = supabase_1.supabase
             .from('trades')
             .select('*', { count: 'exact' })
             .eq('user_id', userId)
             .order('created_at', { ascending: false })
-            .range(offset, offset + Number(limit) - 1);
+            .range(offset, offset + limitNum - 1);
+        if (status && status !== 'all') {
+            query = query.eq('status', status);
+        }
         if (start_date) {
             query = query.gte('created_at', start_date);
         }
@@ -33,8 +38,8 @@ const getTradeHistory = async (req, res) => {
             pagination: {
                 total: count,
                 page: Number(page),
-                limit: Number(limit),
-                pages: Math.ceil((count || 0) / Number(limit))
+                limit: limitNum,
+                pages: Math.ceil((count || 0) / limitNum)
             }
         });
     }

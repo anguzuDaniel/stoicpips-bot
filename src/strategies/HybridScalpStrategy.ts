@@ -5,7 +5,7 @@ import { TechnicalIndicators } from '../utils/TechnicalIndicators';
 export class HybridScalpStrategy {
     private zoneDetector: ZoneDetector;
     private lastSignalTime: number = 0;
-    private minSignalGap: number = 60000; // 1 minute gap for scalping
+    public minSignalGap: number = 60000; // 1 minute gap for scalping
 
     constructor() {
         this.zoneDetector = new ZoneDetector();

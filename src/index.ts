@@ -1,11 +1,10 @@
-const express = require('express');
-import cors from "cors";
-
-const authRoutes = require('./routes/auth.routes');
-const botRoutes = require('./routes/bot.routes');
-const userRoutes = require('./routes/user.routes');
-const adminRoutes = require('./routes/admin.routes');
-const paymentRoutes = require('./routes/payment.routes');
+import express from 'express';
+import cors from 'cors';
+import authRoutes from './routes/auth.routes';
+import botRoutes from './routes/bot.routes';
+import userRoutes from './routes/user.routes';
+import adminRoutes from './routes/admin.routes';
+import paymentRoutes from './routes/payment.routes';
 
 const app = express();
 
@@ -42,7 +41,7 @@ app.use((err: any, req: any, res: any, next: any) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);

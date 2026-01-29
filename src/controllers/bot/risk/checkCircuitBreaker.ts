@@ -1,10 +1,8 @@
-const { supabase } = require("../../../config/supabase");
-const botStates = require("../../../types/botStates");
+import { supabase } from "../../../config/supabase";
+import { botStates } from "../../../types/botStates";
 
 /**
  * Checks if the user has hit the max loss threshold for the past hour.
- * @param userId - The user's ID
- * @returns { success: boolean, message?: string } - success=false means breaker TRIPPED
  */
 export const checkCircuitBreaker = async (userId: string): Promise<{ safe: boolean; message?: string }> => {
     try {
@@ -12,14 +10,14 @@ export const checkCircuitBreaker = async (userId: string): Promise<{ safe: boole
 
         // 1. Fetch trades from last hour
         const { data: recentTrades, error } = await supabase
-            .from('trade_history')
-            .select('profit')
+            .from('trades') // Changed from trade_history to trades to match syncDerivTrades
+            .select('pnl')
             .eq('user_id', userId)
-            .gte('timestamp', oneHourAgo);
+            .gte('created_at', oneHourAgo);
 
         if (error) {
             console.error("CircuitBreaker DB Error:", error);
-            return { safe: true }; // Fail open (safe) or closed? Usually fail closed in finance, but here safe to keep running if DB err
+            return { safe: true };
         }
 
         if (!recentTrades || recentTrades.length === 0) {
@@ -27,18 +25,17 @@ export const checkCircuitBreaker = async (userId: string): Promise<{ safe: boole
         }
 
         // 2. Calculate PnL
-        const hourlyPnL = recentTrades.reduce((sum, t) => sum + (t.profit || 0), 0);
+        const hourlyPnL = recentTrades.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0);
 
         // 3. Get Account Balance
-        // We try to get real balance if connected, otherwise fallback (which effectively disables it for paper trading without balance)
-        let balance = 10000; // Default fallback
+        let balance = 10000;
         const botState = botStates.get(userId);
 
-        if (botState && botState.deriv) {
-            // We'd ideally fetch real balance here. 
-            // For V1, let's assume valid access or use a stored balance.
-            // Doing a quick fetch might be too slow for HFT loop, better to cache balance.
-            // For now, use fallback or cache if available.
+        if (botState && botState.derivWS) {
+            const status = botState.derivWS.getStatus();
+            if (status.authorized && status.balance > 0) {
+                balance = status.balance;
+            }
         }
 
         // 4. Check Threshold (-1.5%)

@@ -4,37 +4,51 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.startBot = void 0;
-const DerivSupplyDemandStrategy_1 = require("../../strategies/DerivSupplyDemandStrategy");
+const HybridScalpStrategy_1 = require("../../strategies/HybridScalpStrategy");
+const SentinelExecutionLayer_1 = require("../../strategies/SentinelExecutionLayer");
 const ALLOWED_GRANULARITIES_1 = __importDefault(require("./helpers/ALLOWED_GRANULARITIES"));
 const symbolTimeFrames_1 = __importDefault(require("./helpers/symbolTimeFrames"));
 const DerivWebSocket_1 = require("../../deriv/DerivWebSocket");
 const botLogger_1 = require("../../utils/botLogger");
-const botStates = require('../../types/botStates');
-const { executeTradingCycle } = require('./trade/executeTradingCycle');
-const supabase = require('../../config/supabase').supabase;
-const fetchLatestCandles = require('../../strategies/fetchLatestCandles');
+const botStates_1 = require("../../types/botStates");
+const executeTradingCycle_1 = require("./trade/executeTradingCycle");
+const supabase_1 = require("../../config/supabase");
+const fetchLatestCandles_1 = __importDefault(require("../../strategies/fetchLatestCandles"));
 const startBot = async (req, res) => {
     try {
         const userId = req.user.id;
         const userEmail = req.user.email;
         const subscription = req.user.subscription_status;
         console.log(`🚀 Starting bot for user ${userId} (${userEmail})`);
-        // Prevent multiple bots
-        if (botStates.has(userId) && botStates.get(userId).isRunning) {
-            return res.status(400).json({ error: "You already have a bot running. Stop the current bot first." });
+        // Prevent multiple bots (Running)
+        if (botStates_1.botStates.has(userId)) {
+            const existingState = botStates_1.botStates.get(userId);
+            if (existingState.isRunning) {
+                return res.status(400).json({ error: "You already have a bot running. Stop the current bot first." });
+            }
+            // If exists but not running (Idle), disconnect old socket to start fresh
+            if (existingState.derivWS) {
+                console.log(`♻️ Cleaning up idle connection for user ${userId}`);
+                try {
+                    existingState.derivWS.disconnect();
+                }
+                catch (e) {
+                    console.error("Error disconnecting old socket", e);
+                }
+            }
         }
         // Cleanup stale bot status
-        const { data: existingBots } = await supabase
+        const { data: existingBots } = await supabase_1.supabase
             .from("bot_status")
             .select("*")
             .eq("user_id", userId)
             .eq("is_running", true);
         if (existingBots && existingBots.length > 0) {
             console.log(`🔄 Cleaning up stale bot status for user ${userId}`);
-            await supabase.from("bot_status").update({ is_running: false }).eq("user_id", userId);
+            await supabase_1.supabase.from("bot_status").update({ is_running: false }).eq("user_id", userId);
         }
         // Get bot configuration
-        const { data: botConfig, error: configError } = await supabase
+        const { data: botConfig, error: configError } = await supabase_1.supabase
             .from("bot_configs")
             .select("*")
             .eq("user_id", userId)
@@ -44,7 +58,6 @@ const startBot = async (req, res) => {
         }
         if (!botConfig)
             return res.status(400).json({ error: "No bot configuration found" });
-        console.log(`BotConfig: ${JSON.stringify(botConfig)}`);
         // Merge top-level fields with config_data
         const config = { ...botConfig, ...botConfig.config_data };
         // 🔥 Merge both symbol lists safely
@@ -53,52 +66,119 @@ const startBot = async (req, res) => {
             ...(botConfig.config_data?.symbols || [])
         ]));
         config.symbols = mergedSymbols;
-        console.log("🔥 Final symbols to trade:", mergedSymbols);
         if (!config.symbols || !Array.isArray(config.symbols) || config.symbols.length === 0) {
             return res.status(400).json({ error: "Please configure trading symbols first" });
         }
+        // Check Subscription Tier & First Trade Logic
+        const { data: profile } = await supabase_1.supabase
+            .from('profiles')
+            .select('subscription_tier, has_taken_first_trade, created_at, bank_name, account_number, account_name')
+            .eq('id', userId)
+            .single();
+        const tier = profile?.subscription_tier || 'free';
+        const hasTakenFirstTrade = profile?.has_taken_first_trade || false;
+        const createdAt = profile?.created_at;
+        const { bank_name, account_number, account_name } = profile || {};
+        let executionMode = 'auto'; // Default for Elite
+        // Bank Account Info Check
+        if (!bank_name || !account_number || !account_name) {
+            return res.status(403).json({
+                error: "Bank Account Information Required: Please go to Profile Settings and provide your bank details (Bank Name, Account Number, Account Name) before using the bot.",
+                code: "BANK_INFO_REQUIRED"
+            });
+        }
+        // 1-Week Trial Check
+        const trialDurationMs = 7 * 24 * 60 * 60 * 1000;
+        const isTrialExpired = createdAt && (new Date().getTime() - new Date(createdAt).getTime()) > trialDurationMs;
+        if (tier === 'free') {
+            if (isTrialExpired) {
+                return res.status(403).json({
+                    error: "Your 1-week free trial has expired. Upgrade to Pro or Elite to continue using SyntoicAi.",
+                    code: "UPGRADE_REQUIRED"
+                });
+            }
+            if (hasTakenFirstTrade) {
+                return res.status(403).json({
+                    error: "The Emperor has spoken. You have seen the power of SyntoicAi. Upgrade to Elite for full automation.",
+                    code: "UPGRADE_REQUIRED"
+                });
+            }
+            executionMode = 'first_trade';
+            botLogger_1.BotLogger.log(userId, "Welcome! You are currently in your 1-week free trial. Enjoy!", "info");
+        }
+        else if (tier === 'pro') {
+            executionMode = 'signal_only';
+        }
+        else {
+            console.log(`👑 [${userId}] Elite Tier: Full Automation.`);
+        }
         const baseAmount = config.amountPerTrade || 10;
-        if (subscription === 'free' && baseAmount > 10) {
+        if (tier === 'free' && baseAmount > 10) {
             return res.status(403).json({
                 error: "Free users are limited to $10 per trade. Upgrade to premium for higher limits."
             });
         }
-        // Initialize strategy
-        const strategy = new DerivSupplyDemandStrategy_1.DerivSupplyDemandStrategy();
+        // Initialize strategy & Sentinel
+        const strategy = new HybridScalpStrategy_1.HybridScalpStrategy();
+        const sentinel = new SentinelExecutionLayer_1.SentinelExecutionLayer();
         if (config.minSignalGap)
-            strategy.setMinSignalGap(config.minSignalGap * 60000);
-        // ... existing imports ...
-        // Inside startBot function ...
-        const demoToken = config.deriv_demo_token || config.derivDemoToken;
-        const realToken = config.deriv_real_token || config.derivRealToken;
+            strategy.minSignalGap = config.minSignalGap * 60000;
+        const sanitizeToken = (t) => t ? t.trim().replace(/[\[\]"]/g, '') : '';
+        const demoToken = sanitizeToken(config.deriv_demo_token || config.derivDemoToken);
+        const realToken = sanitizeToken(config.deriv_real_token || config.derivRealToken);
         if (!demoToken && !realToken) {
             return res.status(400).json({
-                error: "No Deriv API Tokens found. Please go to Settings and configure your Real and Demo API Tokens."
+                error: "Account Information Required: No Deriv API Tokens found. Please go to Settings > Account Information and configure your Real or Demo API Tokens to start trading.",
+                code: "ACCOUNT_INFO_REQUIRED"
             });
         }
         // Default to demo if available for safety
         let token = demoToken;
         let activeAccountType = 'demo';
         if (!token) {
-            // Fallback to real if demo is missing
             console.warn("⚠️ No Demo token found. Starting in REAL mode.");
             token = realToken;
             activeAccountType = 'real';
         }
-        console.log(`🔑 Using ${activeAccountType.toUpperCase()} Token: ${token.substring(0, 4)}...`);
         // Initialize Deriv Connection
         const derivConnection = new DerivWebSocket_1.DerivWebSocket({
             apiToken: token,
             appId: process.env.DERIV_APP_ID || '1089',
             reconnect: true
         });
-        derivConnection.connect();
         // Wire up logs to frontend
         derivConnection.on('log', (logData) => {
             botLogger_1.BotLogger.log(userId, logData.message, logData.type);
         });
-        // Map timeframe to allowed granularity
-        // ... existing granularity logic ...
+        // Wait for connection & authorization check
+        try {
+            await new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    reject(new Error("Timeout waiting for Deriv authorization"));
+                }, 15000);
+                derivConnection.once('authorized', (auth) => {
+                    clearTimeout(timeout);
+                    if (auth.success)
+                        resolve(auth);
+                    else
+                        reject(new Error(auth.error || "Authorization failed"));
+                });
+                derivConnection.connect();
+            });
+            // Check Balance for Real Accounts
+            const status = derivConnection.getStatus();
+            if (activeAccountType === 'real' && status.balance <= 0.5) {
+                derivConnection.disconnect();
+                return res.status(400).json({
+                    error: `Insufficient Funds: Your Real Account balance is ${status.balance} ${status.currency || 'USD'}. Please deposit funds to start trading.`
+                });
+            }
+        }
+        catch (err) {
+            console.error("❌ Connection failed during start:", err.message);
+            derivConnection.disconnect();
+            return res.status(400).json({ error: `Connection failed: ${err.message}` });
+        }
         // Initialize bot state
         const botState = {
             isRunning: true,
@@ -108,13 +188,17 @@ const startBot = async (req, res) => {
             totalProfit: 0,
             tradesExecuted: 0,
             strategy,
+            sentinel,
             derivConnected: true,
-            deriv: derivConnection, // Store connection
+            derivWS: derivConnection,
             dailyTrades: 0,
             lastTradeDate: new Date().toISOString().slice(0, 10),
-            config
+            executionMode,
+            config,
+            subscriptionTier: tier,
+            hasTakenFirstTrade
         };
-        botStates.set(userId, botState);
+        botStates_1.botStates.set(userId, botState);
         // Trading cycle
         const tradingCycle = async () => {
             if (!botState.isRunning) {
@@ -127,19 +211,17 @@ const startBot = async (req, res) => {
                 for (const symbol of config.symbols) {
                     const desiredTimeframe = symbolTimeFrames_1.default[symbol] || 900;
                     const closestGranularity = ALLOWED_GRANULARITIES_1.default.reduce((prev, curr) => Math.abs(curr - desiredTimeframe) < Math.abs(prev - desiredTimeframe) ? curr : prev);
-                    const candles = await fetchLatestCandles(symbol, closestGranularity, derivConnection);
+                    const candles = await (0, fetchLatestCandles_1.default)(symbol, closestGranularity, derivConnection);
                     if (candles && candles.length > 0)
                         candlesMap[symbol] = candles;
                     else
                         console.log(`⚠️ No candles for ${symbol}, skipping`);
-                    console.log(`Signal debug for ${symbol}: using timeframe ${closestGranularity}s`);
                 }
                 const availableSymbols = Object.keys(candlesMap);
                 if (availableSymbols.length === 0)
                     return;
-                console.log(`📊 Available symbols this cycle: ${availableSymbols.join(', ')}`);
                 const cycleConfig = { ...config, symbols: availableSymbols, amountPerTrade: baseAmount };
-                await executeTradingCycle(userId, cycleConfig, candlesMap);
+                await (0, executeTradingCycle_1.executeTradingCycle)(userId, cycleConfig, candlesMap);
             }
             catch (err) {
                 console.error(`❌ Error in trading cycle for user ${userId}:`, err);
@@ -148,16 +230,11 @@ const startBot = async (req, res) => {
         const cycleIntervalMs = (config.cycleInterval || 30) * 1000;
         tradingCycle();
         botState.tradingInterval = setInterval(tradingCycle, cycleIntervalMs);
-        console.log(`🤖 Bot started for user ${userId}`);
-        console.log(`📊 Trading symbols: ${config.symbols.join(', ')}`);
-        console.log(`💰 Trade amount: $${baseAmount}`);
-        console.log(`👑 Subscription: ${subscription}`);
-        console.log(`⏱️ Cycle interval: ${cycleIntervalMs / 1000} seconds`);
         res.json({
             message: "Trading bot started successfully",
             status: "running",
             startedAt: botState.startedAt,
-            user: { id: userId, email: userEmail, subscription },
+            user: { id: userId, email: userEmail, subscription, subscriptionTier: tier },
             config
         });
     }

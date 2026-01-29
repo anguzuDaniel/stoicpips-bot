@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
-
-const { supabase } = require('../../config/supabase');
+import { supabase } from '../../config/supabase';
 
 export const loginUser = async (req: Request, res: Response) => {
   const { email, password } = req.body;

@@ -1,12 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUserProfile = void 0;
+const supabase_1 = require("../../config/supabase");
 const getUserProfile = async (req, res) => {
     try {
         if (!req.user) {
             return res.status(401).json({ error: "Not authenticated" });
         }
-        const { data, error } = await supabase
+        const { data, error } = await supabase_1.supabase
             .from("users")
             .select("*")
             .eq("id", req.user.id)

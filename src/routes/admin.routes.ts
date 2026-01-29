@@ -1,12 +1,13 @@
-const express = require('express');
+import express from 'express';
+import { authenticateToken, requireAdmin } from '../middleware/auth.middleware';
+
 const router = express.Router();
-const { authenticateToken, requireAdmin } = require('../middleware/auth.middleware');
 
 // Admin controllers
-const usersController = require('../controllers/admin/users');
-const infrastructureController = require('../controllers/admin/infrastructure');
-const botControlController = require('../controllers/admin/botControl');
-const analyticsController = require('../controllers/admin/analytics');
+import * as usersController from '../controllers/admin/users';
+import * as infrastructureController from '../controllers/admin/infrastructure';
+import * as botControlController from '../controllers/admin/botControl';
+import * as analyticsController from '../controllers/admin/analytics';
 
 // All admin routes require authentication AND admin role
 router.use(authenticateToken);
@@ -27,4 +28,4 @@ router.get('/bot/status', botControlController.getGlobalBotStatus);
 // Analytics
 router.get('/analytics/global', analyticsController.getGlobalAnalytics);
 
-module.exports = router;
+export default router;

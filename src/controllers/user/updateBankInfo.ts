@@ -1,5 +1,5 @@
 import { Response } from "express";
-const { supabase } = require('../../config/supabase');
+import { supabase } from '../../config/supabase';
 
 /**
  * Updates the user's bank account information.

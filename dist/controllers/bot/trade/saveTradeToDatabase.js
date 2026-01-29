@@ -1,16 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const { supabase } = require('../../../config/supabase');
+const supabase_1 = require("../../../config/supabase");
 const botLogger_1 = require("../../../utils/botLogger");
+const botStates_1 = require("../../../types/botStates");
 /**
  * Saves a trade to the database
- * @param {string} userId - The user ID of the user who executed the trade
- * @param {object} trade - The trade object containing the trade details
- * @returns {Promise<void>} - A promise that resolves when the trade is saved to the database
  */
 const saveTradeToDatabase = async (userId, trade) => {
     try {
-        const { error } = await supabase
+        const { error } = await supabase_1.supabase
             .from("trades")
             .insert({
             user_id: userId,
@@ -34,7 +32,11 @@ const saveTradeToDatabase = async (userId, trade) => {
         }
         else {
             console.log(`💾 [${userId}] Trade saved to database: ${trade.id}`);
-            // BotLogger.log(userId, `Trade saved to DB: #${trade.contractId}`, 'info');
+            const botState = botStates_1.botStates.get(userId);
+            if (botState) {
+                botState.analyticsCache = undefined;
+                botState.lastSyncTime = 0;
+            }
         }
     }
     catch (error) {
