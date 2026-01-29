@@ -51,8 +51,8 @@ const TIERS = [
 // Helper Component for Tier Card
 const PricingTierCard = ({ title, price, description, features, popular, badge }: any) => (
     <div className={`relative flex flex-col p-8 rounded-3xl border transition-all duration-500 overflow-hidden group ${popular
-            ? 'border-primary/50 bg-gradient-to-b from-primary/10 to-transparent shadow-[0_0_50px_rgba(var(--primary-rgb),0.1)]'
-            : 'border-border bg-card/40 hover:border-primary/30'
+        ? 'border-primary/50 bg-gradient-to-b from-primary/10 to-transparent shadow-[0_0_50px_rgba(var(--primary-rgb),0.1)]'
+        : 'border-border bg-card/40 hover:border-primary/30'
         }`}>
         {/* Coming Soon Overlay/Badge */}
         <div className="absolute top-4 right-4 z-20">
@@ -91,8 +91,8 @@ const PricingTierCard = ({ title, price, description, features, popular, badge }
         <button
             disabled
             className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl ${popular
-                    ? 'bg-primary text-primary-foreground shadow-primary/20 cursor-not-allowed opacity-50'
-                    : 'bg-secondary text-foreground shadow-black/5 cursor-not-allowed opacity-50'
+                ? 'bg-primary text-primary-foreground shadow-primary/20 cursor-not-allowed opacity-50'
+                : 'bg-secondary text-foreground shadow-black/5 cursor-not-allowed opacity-50'
                 }`}
         >
             Waitlist Only
@@ -117,14 +117,14 @@ function PricingContent() {
             <div className="max-w-[1600px] w-full space-y-20 mt-8">
 
                 {/* Header Section */}
-                <div className="text-center space-y-6 max-w-3xl mx-auto">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black uppercase tracking-widest text-primary mb-4">
+                <div className="text-center space-y-4 max-w-3xl mx-auto">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black uppercase tracking-widest text-primary mb-2">
                         <Zap className="h-3 w-3 animate-pulse" /> Future Ready
                     </div>
-                    <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-foreground leading-[0.9]">
+                    <h1 className="text-2xl md:text-3xl font-black tracking-tight text-foreground">
                         Choose Your <span className="text-primary italic">Trading Rank</span>
                     </h1>
-                    <p className="text-lg text-muted-foreground font-medium max-w-2xl mx-auto">
+                    <p className="text-sm text-muted-foreground font-medium max-w-2xl mx-auto">
                         We are engineering the future of synthetic automation. Reserve your spot in the next generation of AI trading.
                     </p>
                 </div>

@@ -12,7 +12,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 <div className="container mx-auto px-6 py-8">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-3xl font-bold text-[#00F2FF] tracking-tight">
+                            <h1 className="text-2xl md:text-3xl font-black text-[#00F2FF] tracking-tight">
                                 Emperor's Command Center
                             </h1>
                             <p className="text-sm text-gray-400 mt-1">

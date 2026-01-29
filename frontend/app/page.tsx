@@ -188,7 +188,7 @@ export default function Dashboard() {
       <div className="p-4 md:p-10 max-w-[1600px] mx-auto w-full">
         {/* Top Header */}
         <header className="flex items-center justify-between mb-8 gap-4">
-          <h1 className="text-xl md:text-2xl font-bold">Dashboard</h1>
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-foreground">Dashboard</h1>
 
           <div className="flex items-center gap-2 md:gap-4">
             {/* Account Toggle - Fixed event propagation */}

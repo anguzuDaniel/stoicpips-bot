@@ -157,7 +157,7 @@ export default function SettingsPage() {
     return (
         <DashboardLayout>
             <div className="p-4 md:p-10 max-w-[1600px] mx-auto w-full">
-                <h1 className="text-4xl font-black mb-12 text-foreground tracking-tighter shadow-sm inline-block">Bot Settings</h1>
+                <h1 className="text-2xl md:text-3xl font-black tracking-tight text-foreground mb-8">Bot Settings</h1>
 
                 <form onSubmit={handleSave} className="space-y-6">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
