@@ -45,9 +45,9 @@ export default function TradeHistory() {
 
     return (
         <DashboardLayout>
-            <div className="p-4 md:p-6">
-                <header className="flex items-center justify-between mb-8">
-                    <h1 className="text-2xl font-bold">Trade History</h1>
+            <div className="p-4 md:p-10 max-w-[1600px] mx-auto w-full">
+                <header className="flex items-center justify-between mb-10">
+                    <h1 className="text-3xl font-extrabold tracking-tight">Trade History</h1>
                     <div className="flex items-center gap-4">
                         <div className="flex items-center bg-secondary/20 rounded-lg p-1 border border-border">
                             {(["all", "won", "lost"] as const).map((f) => (

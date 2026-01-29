@@ -44,7 +44,7 @@ export default function HelpPage() {
 
     return (
         <DashboardLayout>
-            <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-8">
+            <div className="p-4 md:p-10 max-w-[1600px] mx-auto w-full space-y-12">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Help & Support</h1>
                     <p className="text-muted-foreground mt-2">

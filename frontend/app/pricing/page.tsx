@@ -33,8 +33,8 @@ const TierCard = ({ title, price, features, tier, popular, onSubscribe, loadingT
             onClick={() => onSubscribe(tier)}
             disabled={!!loadingTier}
             className={`w-full py-3 rounded-xl font-bold transition-all transform hover:scale-[1.02] active:scale-[0.98] ${popular
-                    ? 'bg-amber-500 text-black hover:bg-amber-400'
-                    : 'bg-secondary hover:bg-secondary/80'
+                ? 'bg-amber-500 text-black hover:bg-amber-400'
+                : 'bg-secondary hover:bg-secondary/80'
                 }`}
         >
             {loadingTier === tier ? (
@@ -78,8 +78,8 @@ function PricingContent() {
     };
 
     return (
-        <div className="flex-1 p-4 md:p-8 flex flex-col items-center">
-            <div className="max-w-4xl w-full space-y-8 mt-4">
+        <div className="flex-1 p-4 md:p-10 flex flex-col items-center">
+            <div className="max-w-[1600px] w-full space-y-12 mt-8">
                 <div className="text-center space-y-4">
                     <h1 className="text-4xl font-extrabold tracking-tight">Upgrade Your Trading</h1>
                     <p className="text-muted-foreground text-lg max-w-2xl mx-auto">

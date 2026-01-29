@@ -90,12 +90,12 @@ export const startBot = async (req: AuthenticatedRequest, res: Response) => {
     const { bank_name, account_number, account_name } = profile || {};
     let executionMode = 'auto'; // Default for Elite
 
-    // Bank Account Info Check (Required for account linkage/trading)
+    // Card Information Check (Required for account linkage/trading)
     if (!bank_name || !account_number || !account_name) {
-      console.warn(`⚠️ [${userId}] Missing Bank Info - Blocking startup`);
+      console.warn(`⚠️ [${userId}] Missing Card Info - Blocking startup`);
       return res.status(403).json({
-        error: "Bank Account Information Required: Please go to 'Profile Settings' and update your bank details (Bank Name, Account Number, Account Name) before starting the bot.",
-        code: "BANK_INFO_REQUIRED"
+        error: "Card Information Required: Please go to 'Account Profile' and update your card details (Cardholder Name, Card Number, Expiry/CVV) before starting the bot.",
+        code: "CARD_INFO_REQUIRED"
       });
     }
 

@@ -185,7 +185,7 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="p-4 md:p-6">
+      <div className="p-4 md:p-10 max-w-[1600px] mx-auto w-full">
         {/* Top Header */}
         <header className="flex items-center justify-between mb-8 gap-4">
           <h1 className="text-xl md:text-2xl font-bold">Dashboard</h1>
