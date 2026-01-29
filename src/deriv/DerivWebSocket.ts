@@ -114,12 +114,14 @@ class DerivWebSocket extends EventEmitter {
       this.accountType = this.accountLoginId.startsWith('V') ? 'demo' : 'real';
 
       console.log(`✅ Authorized successfully. Account: ${this.accountLoginId} (${this.accountType.toUpperCase()}) | Balance: ${this.currentBalance} ${this.currency}`);
+      console.log('🔍 Debug Authorize Data:', JSON.stringify(data.authorize, null, 2)); // Debug log
 
       // Subscribe to balance updates
       this.send({ balance: 1, subscribe: 1 });
     }
 
     if (data.msg_type === "balance") {
+      console.log('🔍 Debug Balance Event:', JSON.stringify(data.balance, null, 2)); // Debug log
       this.currentBalance = data.balance.balance;
       this.currency = data.balance.currency;
       // Emit balance update
@@ -396,6 +398,14 @@ class DerivWebSocket extends EventEmitter {
   private async executeTrade(signal: TradingSignal) {
     if (!this.isAuthorized) {
       console.error("❌ Not authorized to trade");
+      return;
+    }
+
+    // Check if balance is sufficient
+    if (this.currentBalance < signal.amount || this.currentBalance <= 0) {
+      const msg = `⚠️ Insufficient balance (${this.currentBalance} ${this.currency}). Cannot place trade of ${signal.amount}.`;
+      console.warn(msg);
+      this.emit('log', { type: 'error', message: msg }); // Emit so frontend can potentially pick it up via logs
       return;
     }
 

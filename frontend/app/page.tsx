@@ -4,7 +4,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatsCard } from "@/components/StatsCard";
 import { ActivityLog } from "@/components/ActivityLog";
 import { ProfitChart } from "@/components/ProfitChart";
-import { Bell, Wallet, ChevronDown, Activity, Play, RefreshCw, XCircle, Power, Loader2, CheckCircle } from "lucide-react";
+import { Bell, Wallet, ChevronDown, Activity, Play, RefreshCw, XCircle, Power, Loader2, CheckCircle, AlertTriangle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { botApi } from "@/lib/api";
@@ -221,6 +221,27 @@ export default function Dashboard() {
             </button>
           </div>
         </header>
+
+        {/* Low Balance Warning */}
+        {stats.accountType === 'real' && stats.balance <= 0 && (
+          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-5 w-5" />
+              <div>
+                <h4 className="font-bold text-sm">Insufficient Funds</h4>
+                <p className="text-xs opacity-90">Your Real Account balance is {stats.currency} 0.00. Please deposit funds on Deriv to start trading.</p>
+              </div>
+            </div>
+            <a
+              href="https://app.deriv.com/cashier/deposit"
+              target="_blank"
+              rel="noreferrer"
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition-colors shadow-sm"
+            >
+              Deposit Now
+            </a>
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
