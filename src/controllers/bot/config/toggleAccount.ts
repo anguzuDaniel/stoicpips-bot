@@ -18,13 +18,24 @@ export const toggleAccount = async (req: AuthenticatedRequest, res: Response) =>
             return res.status(404).json({ error: "Bot session not active. Please start the bot first." });
         }
 
-        // Retrieve tokens from config (assuming they are in botState.config or we fetch from DB)
-        // Ideally botState.config should have them if we loaded them on start
+        // Fetch latest config from DB to ensure tokens are up-to-date
+        const supabase = require('../../../config/supabase').supabase;
+        const { data: dbConfig, error } = await supabase
+            .from('bot_configs')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+
+        if (error || !dbConfig) {
+            console.error("Failed to fetch fresh config for toggle:", error);
+            return res.status(400).json({ error: "Failed to load latest configuration." });
+        }
+
+        // Update in-memory config with fresh DB data
+        // We merge it to preserve any runtime properties if necessary, but tokens must come from DB
+        botState.config = { ...botState.config, ...dbConfig };
         const config = botState.config;
 
-        if (!config) {
-            return res.status(400).json({ error: "Configuration not loaded." });
-        }
 
         let newToken = '';
         if (targetType === 'real') {
@@ -47,7 +58,7 @@ export const toggleAccount = async (req: AuthenticatedRequest, res: Response) =>
         // Reconnect with new token
         // CAUTION: This assumes DerivWebSocket constructor just needs options. 
         // We might need to ensure other options like appId are preserved.
-        const appId = process.env.DERIV_APP_ID || "62019"; // Default fallback
+        const appId = process.env.DERIV_APP_ID || "1089"; // Standard App ID
 
         const newWS = new DerivWebSocket({
             apiToken: newToken,
