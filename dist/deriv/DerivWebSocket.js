@@ -16,6 +16,8 @@ class DerivWebSocket extends events_1.default {
         this.lastSignalTime = 0;
         this.minSignalGap = 300000; // 5 minutes between signals
         this.isAuthorized = false;
+        this.pendingRequests = new Map();
+        this.reqIdCounter = 0;
         this.currentBalance = 0;
         this.currency = 'USD';
         this.accountType = 'demo';
@@ -87,19 +89,31 @@ class DerivWebSocket extends events_1.default {
         this.heartbeatTimer = null;
     }
     handleMessage(data) {
-        if (data.msg_type === "ping")
+        if (data.msg_type === "ping" && !data.req_id)
             return;
         if (data.msg_type === "authorize") {
+            if (data.error) {
+                console.error("❌ Authorization failed:", data.error.message);
+                this.isAuthorized = false;
+                this.emit('log', {
+                    type: 'error',
+                    message: `Authorization failed: ${data.error.message}`
+                });
+                this.emit('authorized', { success: false, error: data.error.message });
+                return;
+            }
             this.isAuthorized = true;
-            this.currentBalance = data.authorize.balance;
-            this.currency = data.authorize.currency;
+            this.currentBalance = data.authorize.balance || 0;
+            this.currency = data.authorize.currency || 'USD';
             this.accountLoginId = data.authorize.loginid;
             this.accountType = this.accountLoginId.startsWith('V') ? 'demo' : 'real';
             console.log(`✅ Authorized successfully. Account: ${this.accountLoginId} (${this.accountType.toUpperCase()}) | Balance: ${this.currentBalance} ${this.currency}`);
+            // Emit specific authorized event for controllers to await
+            this.emit('authorized', { success: true, accountType: this.accountType, loginId: this.accountLoginId });
             // Emit debug logs for frontend visibility
             this.emit('log', {
                 type: 'info',
-                message: `🔍 Auth Data: ${JSON.stringify(data.authorize).substring(0, 200)}...`
+                message: `🔍 Authorized on ${this.accountType.toUpperCase()} account (${this.accountLoginId.substring(0, 4)}...)`
             });
             // Subscribe to balance updates
             this.send({ balance: 1, subscribe: 1 });
@@ -117,6 +131,14 @@ class DerivWebSocket extends events_1.default {
                 currency: this.currency,
                 accountType: this.accountType
             });
+        }
+        // Handle pending requests (Promise resolution)
+        if (data.req_id && this.pendingRequests.has(data.req_id)) {
+            const resolve = this.pendingRequests.get(data.req_id);
+            if (resolve) {
+                resolve(data);
+                this.pendingRequests.delete(data.req_id);
+            }
         }
         // Emit event for external handling
         this.emit('message', data);
@@ -348,30 +370,74 @@ class DerivWebSocket extends events_1.default {
         if (this.currentBalance < signal.amount || this.currentBalance <= 0) {
             const msg = `⚠️ Insufficient balance (${this.currentBalance} ${this.currency}). Cannot place trade of ${signal.amount}.`;
             console.warn(msg);
-            this.emit('log', { type: 'error', message: msg }); // Emit so frontend can potentially pick it up via logs
+            this.emit('log', { type: 'error', message: msg });
             return;
         }
+        // Use Multipliers for OCO-like TP/SL management by the exchange
+        const isMultiplier = signal.symbol.startsWith('R_') || signal.symbol.startsWith('10'); // Synthetic indices
         const contractParams = {
             proposal: 1,
             amount: signal.amount,
-            basis: 'stake',
-            contract_type: signal.contract_type,
+            basis: isMultiplier ? 'stake' : 'stake',
+            contract_type: signal.contract_type === 'CALL' ? 'MULTUP' : 'MULTDOWN',
             currency: 'USD',
-            duration: signal.duration,
-            duration_unit: signal.duration_unit,
-            symbol: signal.symbol
+            symbol: signal.symbol,
+            limit_order: {}
         };
+        if (signal.takeProfit) {
+            contractParams.limit_order.take_profit = Math.abs(signal.takeProfit - (signal.zone?.bottom || signal.takeProfit)); // Simplified distance
+        }
+        if (signal.stopLoss) {
+            contractParams.limit_order.stop_loss = Math.abs(signal.stopLoss - (signal.zone?.top || signal.stopLoss)); // Simplified distance
+        }
+        // Fallback to standard CALL/PUT if not using multipliers or if preferred
+        if (!isMultiplier) {
+            contractParams.contract_type = signal.contract_type;
+            delete contractParams.limit_order;
+            contractParams.duration = signal.duration;
+            contractParams.duration_unit = signal.duration_unit;
+        }
         try {
-            // First get proposal
-            this.send(contractParams);
-            // The actual buy would happen in response to the proposal
-            // You need to handle the proposal response and then send buy request
+            console.log(`📤 Requesting Proposal: ${contractParams.contract_type} on ${signal.symbol} | TP: ${signal.takeProfit} | SL: ${signal.stopLoss}`);
+            const proposal = await this.request(contractParams);
+            if (proposal.error) {
+                throw new Error(proposal.error.message);
+            }
+            console.log(`📊 Proposal Received: ${proposal.proposal.id}. Executing Buy...`);
+            const buyResult = await this.request({
+                buy: proposal.proposal.id,
+                price: signal.amount
+            });
+            if (buyResult.error) {
+                throw new Error(buyResult.error.message);
+            }
+            console.log(`✅ Trade Executed! Ticket: ${buyResult.buy.contract_id}`);
+            this.emit('trade_executed', buyResult.buy);
         }
         catch (error) {
-            console.error("❌ Trade execution failed:", error);
+            console.error("❌ Trade execution failed:", error.message);
+            this.emit('log', { type: 'error', message: `Trade failed: ${error.message}` });
         }
     }
     // ================== PUBLIC METHODS ==================
+    request(data) {
+        return new Promise((resolve, reject) => {
+            if (this.ws?.readyState !== ws_1.default.OPEN) {
+                return reject(new Error("WebSocket not connected"));
+            }
+            const req_id = ++this.reqIdCounter;
+            this.pendingRequests.set(req_id, resolve);
+            const payload = { ...data, req_id };
+            this.ws.send(JSON.stringify(payload));
+            // Timeout safety
+            setTimeout(() => {
+                if (this.pendingRequests.has(req_id)) {
+                    this.pendingRequests.delete(req_id);
+                    reject(new Error("Request timed out"));
+                }
+            }, 10000);
+        });
+    }
     send(data) {
         if (this.ws?.readyState === ws_1.default.OPEN) {
             this.ws.send(JSON.stringify(data));
@@ -409,6 +475,21 @@ class DerivWebSocket extends events_1.default {
     clearZones() {
         this.activeZones = [];
         console.log("🧹 All trading zones cleared");
+    }
+    async getProfitTable(limit = 50) {
+        if (!this.isAuthorized) {
+            throw new Error("Not authorized to fetch profit table.");
+        }
+        const response = await this.request({
+            profit_table: 1,
+            description: 1,
+            sort: "DESC",
+            limit: limit
+        });
+        if (response.error) {
+            throw new Error(response.error.message);
+        }
+        return response.profit_table?.transactions || [];
     }
     updateSettings(settings) {
         if (settings.minSignalGap)

@@ -1,24 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateExistingTrades = void 0;
-const botStates = require('../../../types/botStates');
-const { supabase } = require('../../../config/supabase');
+const botStates_1 = require("../../../types/botStates");
+const supabase_1 = require("../../../config/supabase");
 const botLogger_1 = require("../../../utils/botLogger");
 /**
  * Updates existing trades for a given user.
- * Checks contract status via Deriv API.
  */
 const updateExistingTrades = async (userId) => {
     let updatedTrades = 0;
-    const botState = botStates.get(userId);
-    if (!botState || !botState.deriv)
+    const botState = botStates_1.botStates.get(userId);
+    if (!botState || !botState.derivWS)
         return 0;
     for (const trade of botState.currentTrades) {
         if (trade.status === 'open') {
             try {
-                // Check status with Deriv
-                // Sending proposal_open_contract gets the latest status
-                const response = await botState.deriv.request({
+                const response = await botState.derivWS.request({
                     proposal_open_contract: 1,
                     contract_id: trade.contractId
                 });
@@ -27,25 +24,26 @@ const updateExistingTrades = async (userId) => {
                     const profit = contract.profit;
                     const isWin = profit > 0;
                     const status = isWin ? 'won' : 'lost';
-                    // Update local state
                     trade.status = status;
                     trade.pnl = profit;
                     trade.exitPrice = contract.exit_tick;
                     trade.closedAt = new Date();
                     console.log(`🔒 [${userId}] Contract ${trade.contractId} CLOSED. Result: ${status.toUpperCase()} ($${profit})`);
                     botLogger_1.BotLogger.log(userId, `Trade closed: ${status.toUpperCase()} ($${profit})`, isWin ? 'success' : 'error', trade.symbol);
-                    // Update DB
-                    const { error } = await supabase
+                    const { error } = await supabase_1.supabase
                         .from("trades")
                         .update({
                         status: status,
-                        pnl: profit, // Important for Net Profit stats
+                        pnl: profit,
                         close_price: contract.exit_tick,
                         closed_at: new Date()
                     })
                         .eq('trade_id', trade.id);
-                    if (!error)
+                    if (!error) {
                         updatedTrades++;
+                        botState.analyticsCache = undefined;
+                        botState.lastSyncTime = 0;
+                    }
                 }
             }
             catch (err) {
@@ -53,7 +51,6 @@ const updateExistingTrades = async (userId) => {
             }
         }
     }
-    // Cleanup old closed trades from memory
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     botState.currentTrades = botState.currentTrades.filter((trade) => trade.status === 'open' || new Date(trade.timestamp) > oneHourAgo);
     return updatedTrades;

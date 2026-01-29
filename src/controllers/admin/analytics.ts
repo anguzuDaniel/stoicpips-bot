@@ -1,13 +1,12 @@
-const supabaseClient = require('../../config/supabase').supabase;
-const { logAdminAction: logAction } = require('../../utils/auditLog');
+import { supabase as supabaseClient } from '../../config/supabase';
+import { logAdminAction as logAction } from '../../utils/auditLog';
 
 /**
  * GET /api/v1/admin/analytics/global
  * Get platform-wide trading analytics
  */
-exports.getGlobalAnalytics = async (req, res) => {
+export const getGlobalAnalytics = async (req: any, res: any) => {
     try {
-        // Fetch all trades
         const { data: allTrades, error: tradesError } = await supabaseClient
             .from('trades')
             .select('status, pnl, user_id, created_at');
@@ -17,17 +16,14 @@ exports.getGlobalAnalytics = async (req, res) => {
             return res.status(500).json({ error: 'Failed to fetch analytics' });
         }
 
-        // Calculate aggregate metrics
         const totalTrades = allTrades.length;
         const wonTrades = allTrades.filter(t => t.status === 'won').length;
         const lostTrades = allTrades.filter(t => t.status === 'lost').length;
         const winRate = totalTrades > 0 ? ((wonTrades / totalTrades) * 100).toFixed(2) : "0.00";
-        const totalPnL = allTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+        const totalPnL = allTrades.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0);
 
-        // Get unique active users (users who have traded)
         const activeUsers = new Set(allTrades.map(t => t.user_id)).size;
 
-        // Fetch user tiers
         const { data: users, error: usersError } = await supabaseClient
             .from('profiles')
             .select('id, subscription_tier');
@@ -36,10 +32,9 @@ exports.getGlobalAnalytics = async (req, res) => {
             console.error('[ADMIN] Failed to fetch users:', usersError);
         }
 
-        // Group metrics by tier
-        const tierMetrics = {};
+        const tierMetrics: any = {};
         if (users) {
-            const userTierMap = {};
+            const userTierMap: any = {};
             users.forEach(u => {
                 userTierMap[u.id] = u.subscription_tier || 'free';
             });
@@ -48,7 +43,7 @@ exports.getGlobalAnalytics = async (req, res) => {
                 const tierTrades = allTrades.filter(t => userTierMap[t.user_id] === tier);
                 const tierWins = tierTrades.filter(t => t.status === 'won').length;
                 const tierTotal = tierTrades.length;
-                const tierPnL = tierTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
+                const tierPnL = tierTrades.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0);
 
                 tierMetrics[tier] = {
                     total_trades: tierTotal,
@@ -59,8 +54,7 @@ exports.getGlobalAnalytics = async (req, res) => {
             });
         }
 
-        // Calculate average AI confidence (placeholder - would come from AI engine)
-        const avgAiConfidence = 85; // TODO: Fetch from AI engine or bot states
+        const avgAiConfidence = 85;
 
         await logAction(req.user.id, 'VIEW_GLOBAL_ANALYTICS');
 
@@ -82,5 +76,3 @@ exports.getGlobalAnalytics = async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch global analytics' });
     }
 };
-
-export {};

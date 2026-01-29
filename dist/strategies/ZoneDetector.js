@@ -44,13 +44,13 @@ class ZoneDetector {
         const baseHigh = Math.max(...consolidationBars.map(b => b.high));
         const baseLow = Math.min(...consolidationBars.map(b => b.low));
         const baseRange = baseHigh - baseLow;
-        // Check for downward breakout (Demand Zone)
+        // Check for downward breakout (Supply Zone)
         if (nextCandle.close < baseLow &&
-            (nextCandle.close - nextCandle.low) / nextCandle.close > this.impulseThreshold) {
+            (baseLow - nextCandle.close) / baseLow > this.impulseThreshold) {
             return {
                 top: baseHigh,
                 bottom: baseLow,
-                type: 'demand',
+                type: 'supply',
                 strength: this.calculateZoneStrength(consolidationBars, nextCandle),
                 timeframe: consolidationBars[0].timeframe,
                 created: new Date(),
@@ -58,13 +58,13 @@ class ZoneDetector {
                 isValid: true
             };
         }
-        // Check for upward breakout (Supply Zone)
+        // Check for upward breakout (Demand Zone)
         if (nextCandle.close > baseHigh &&
-            (nextCandle.high - nextCandle.close) / nextCandle.close > this.impulseThreshold) {
+            (nextCandle.close - baseHigh) / baseHigh > this.impulseThreshold) {
             return {
                 top: baseHigh,
                 bottom: baseLow,
-                type: 'supply',
+                type: 'demand',
                 strength: this.calculateZoneStrength(consolidationBars, nextCandle),
                 timeframe: consolidationBars[0].timeframe,
                 created: new Date(),

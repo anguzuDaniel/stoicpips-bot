@@ -1,9 +1,9 @@
-const supabase = require('../../config/supabase').supabase;
+import { supabase } from '../config/supabase';
 
 /**
  * Log admin actions for audit trail
  */
-exports.logAdminAction = async (adminId, actionType, targetUserId = null, details = {}) => {
+export const logAdminAction = async (adminId: string, actionType: string, targetUserId: string | null = null, details: any = {}) => {
     try {
         const { error } = await supabase
             .from('admin_audit_log')
@@ -23,4 +23,4 @@ exports.logAdminAction = async (adminId, actionType, targetUserId = null, detail
     }
 };
 
-export {};
+export { };

@@ -1,14 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.resetBot = void 0;
-const { supabase } = require('../../../config/supabase');
-const botStates = require('../../../types/botStates');
+const supabase_1 = require("../../../config/supabase");
+const botStates_1 = require("../../../types/botStates");
 const botLogger_1 = require("../../../utils/botLogger");
 const resetBot = async (req, res) => {
     try {
         const userId = req.user.id;
         // 1. Delete all trades for this user from DB
-        const { error } = await supabase
+        const { error } = await supabase_1.supabase
             .from('trades')
             .delete()
             .eq('user_id', userId);
@@ -17,7 +17,7 @@ const resetBot = async (req, res) => {
         // 2. Clear in-memory logs
         botLogger_1.BotLogger.clearLogs(userId);
         // 3. Reset in-memory stats in botState
-        const botState = botStates.get(userId);
+        const botState = botStates_1.botStates.get(userId);
         if (botState) {
             botState.totalProfit = 0;
             botState.tradesExecuted = 0;

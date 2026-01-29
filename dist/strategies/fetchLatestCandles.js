@@ -1,12 +1,11 @@
-// Remove global import
-// const { deriv }= require('../config/deriv');
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const fetchLatestCandles = async (symbol, timeframe, deriv) => {
     if (!deriv) {
         throw new Error("Deriv connection not provided for fetching candles");
     }
     return new Promise((resolve, reject) => {
         const requestId = Date.now();
-        // Listen for response
         const handler = (msg) => {
             if (msg.req_id === requestId) {
                 deriv.off('message', handler);
@@ -27,7 +26,6 @@ const fetchLatestCandles = async (symbol, timeframe, deriv) => {
             }
         };
         deriv.on('message', handler);
-        // Send candles request
         deriv.send({
             ticks_history: symbol,
             granularity: timeframe,
@@ -36,11 +34,10 @@ const fetchLatestCandles = async (symbol, timeframe, deriv) => {
             style: 'candles',
             req_id: requestId
         });
-        // Timeout after 15s
         setTimeout(() => {
             deriv.off('message', handler);
             reject(new Error('Timeout fetching candles'));
         }, 15000);
     });
 };
-module.exports = fetchLatestCandles;
+exports.default = fetchLatestCandles;

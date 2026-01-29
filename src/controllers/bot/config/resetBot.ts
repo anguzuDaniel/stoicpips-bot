@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from "../../../types/AuthenticatedRequest";
-const { supabase } = require('../../../config/supabase');
-const botStates = require('../../../types/botStates');
+import { supabase } from '../../../config/supabase';
+import { botStates } from '../../../types/botStates';
 import { BotLogger } from "../../../utils/botLogger";
 
 export const resetBot = async (req: AuthenticatedRequest, res: Response) => {

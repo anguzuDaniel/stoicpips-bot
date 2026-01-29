@@ -1,18 +1,11 @@
-import { Response } from 'express';
-import { AuthenticatedRequest } from "../../../types/AuthenticatedRequest";
-const { supabase } = require('../../../config/supabase');
+import { supabase } from '../../../config/supabase';
+import { botStates } from '../../../types/botStates';
+import { BotLogger } from "../../../utils/botLogger";
 
 /**
  * Get aggregated analytics for the user
  */
-const botStates = require('../../../types/botStates');
-
-import { syncDerivTrades } from './syncDerivTrades';
-
-/**
- * Get aggregated analytics for the user
- */
-const getAnalytics = async (req: AuthenticatedRequest, res: Response) => {
+export const getAnalytics = async (req: any, res: any) => {
     try {
         const userId = req.user.id;
         const botState = botStates.get(userId);
@@ -25,16 +18,7 @@ const getAnalytics = async (req: AuthenticatedRequest, res: Response) => {
             return res.json(botState.analyticsCache.data);
         }
 
-        // 1. Sync from Deriv if connected
-        if (botState && botState.derivWS && botState.derivWS.getStatus().authorized) {
-            try {
-                await syncDerivTrades(userId, botState.derivWS);
-            } catch (err) {
-                console.error("Failed to sync trades before analytics:", err);
-            }
-        }
-
-        // 2. Fetch all trades from DB as source of truth
+        // 1. Fetch all trades from DB as source of truth
         const { data: trades, error } = await supabase
             .from('trades')
             .select('entry_price, payout, pnl, status, contract_type, created_at')
@@ -118,7 +102,6 @@ const getAnalytics = async (req: AuthenticatedRequest, res: Response) => {
         const averageProfit = totalProfit / totalTrades;
 
         // Get last 5 trades for dashboard
-        // If trades are sorted by created_at asc (oldest first), we take slice(-5).reverse()
         const recentTrades = trades.slice(-5).reverse();
 
         const responseData = {
@@ -152,5 +135,3 @@ const getAnalytics = async (req: AuthenticatedRequest, res: Response) => {
         res.status(500).json({ error: 'Failed to fetch analytics' });
     }
 };
-
-export { getAnalytics };

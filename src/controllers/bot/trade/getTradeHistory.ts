@@ -1,36 +1,17 @@
-import { Response } from 'express';
-import { AuthenticatedRequest } from "../../../types/AuthenticatedRequest";
-const { supabase } = require('../../../config/supabase');
+import { supabase } from '../../../config/supabase';
+import { botStates } from '../../../types/botStates';
 
 /**
  * Fetch trade history for the authenticated user
- * Supports pagination and filtering by date
  */
-import { syncDerivTrades } from './syncDerivTrades';
-
-/**
- * Fetch trade history for the authenticated user
- * Supports pagination and filtering by date
- */
-const getTradeHistory = async (req: AuthenticatedRequest, res: Response) => {
+export const getTradeHistory = async (req: any, res: any) => {
     try {
         const userId = req.user.id;
         const { page = 1, limit = 50, start_date, end_date, status } = req.query;
 
         const limitNum = Number(limit);
-        const botStates = require('../../../types/botStates');
         const botState = botStates.get(userId);
 
-        // 1. Sync from Deriv if connected
-        if (botState && botState.derivWS && botState.derivWS.getStatus().authorized) {
-            try {
-                await syncDerivTrades(userId, botState.derivWS, limitNum);
-            } catch (err) {
-                console.error("Failed to sync trades before history fetch:", err);
-            }
-        }
-
-        // 2. DB Fallback
         const offset = (Number(page) - 1) * limitNum;
 
         let query = supabase
@@ -45,11 +26,11 @@ const getTradeHistory = async (req: AuthenticatedRequest, res: Response) => {
         }
 
         if (start_date) {
-            query = query.gte('created_at', start_date);
+            query = query.gte('created_at', (start_date as string));
         }
 
         if (end_date) {
-            query = query.lte('created_at', end_date);
+            query = query.lte('created_at', (end_date as string));
         }
 
         const { data: trades, error, count } = await query;
@@ -74,5 +55,3 @@ const getTradeHistory = async (req: AuthenticatedRequest, res: Response) => {
         res.status(500).json({ error: 'Failed to fetch trade history' });
     }
 };
-
-export { getTradeHistory };

@@ -1,38 +1,35 @@
-const axiosClient = require('axios');
-const { logAdminAction: auditLogger } = require('../../utils/auditLog');
-const { botStates } = require('../../types/botStates');
+import axios from 'axios';
+import { logAdminAction as auditLogger } from '../../utils/auditLog';
+import { botStates } from '../../types/botStates';
 
 /**
  * POST /api/v1/admin/bot/pause
  * Trigger "Great Pause" - Emergency stop for all automated trading
  */
-exports.triggerGreatPause = async (req, res) => {
+export const triggerGreatPause = async (req: any, res: any) => {
     try {
         const { reason = 'Admin initiated emergency pause' } = req.body;
 
         // Set global pause flag in bot state
-        botStates.globalPause = true;
-        botStates.pauseReason = reason;
-        botStates.pausedAt = new Date().toISOString();
-        botStates.pausedBy = req.user.email;
+        (botStates as any).globalPause = true;
+        (botStates as any).pauseReason = reason;
+        (botStates as any).pausedAt = new Date().toISOString();
+        (botStates as any).pausedBy = req.user.email;
 
         // Send signal to AI Engine to halt trading
         const aiEngineUrl = process.env.AI_ENGINE_URL || 'http://localhost:5000';
         let aiEngineResponse = null;
 
         try {
-            aiEngineResponse = await axiosClient.post(`${aiEngineUrl}/admin/pause`, {
+            aiEngineResponse = await axios.post(`${aiEngineUrl}/admin/pause`, {
                 reason,
                 admin_id: req.user.id
             }, { timeout: 5000 });
-        } catch (error) {
+        } catch (error: any) {
             console.error('[GREAT PAUSE] Failed to notify AI Engine:', error.message);
-            // Continue even if AI engine is unreachable
         }
 
-        // Count affected bots (users with active trading)
-        // For now, we'll just return a placeholder count
-        const affectedBots = 0; // TODO: Query active trading sessions
+        const affectedBots = 0;
 
         await auditLogger(req.user.id, 'TRIGGER_GREAT_PAUSE', null, {
             reason,
@@ -46,8 +43,8 @@ exports.triggerGreatPause = async (req, res) => {
             message: 'Great Pause activated successfully',
             status: 'paused',
             reason,
-            paused_at: botStates.pausedAt,
-            paused_by: botStates.pausedBy,
+            paused_at: (botStates as any).pausedAt,
+            paused_by: (botStates as any).pausedBy,
             affected_bots: affectedBots,
             ai_engine_notified: !!aiEngineResponse
         });
@@ -61,21 +58,19 @@ exports.triggerGreatPause = async (req, res) => {
  * POST /api/v1/admin/bot/resume
  * Resume automated trading after Great Pause
  */
-exports.resumeTrading = async (req, res) => {
+export const resumeTrading = async (req: any, res: any) => {
     try {
-        // Clear global pause flag
-        botStates.globalPause = false;
-        botStates.pauseReason = null;
-        botStates.resumedAt = new Date().toISOString();
-        botStates.resumedBy = req.user.email;
+        (botStates as any).globalPause = false;
+        (botStates as any).pauseReason = null;
+        (botStates as any).resumedAt = new Date().toISOString();
+        (botStates as any).resumedBy = req.user.email;
 
-        // Notify AI Engine
         const aiEngineUrl = process.env.AI_ENGINE_URL || 'http://localhost:5000';
         try {
-            await axiosClient.post(`${aiEngineUrl}/admin/resume`, {
+            await axios.post(`${aiEngineUrl}/admin/resume`, {
                 admin_id: req.user.id
             }, { timeout: 5000 });
-        } catch (error) {
+        } catch (error: any) {
             console.error('[RESUME] Failed to notify AI Engine:', error.message);
         }
 
@@ -86,8 +81,8 @@ exports.resumeTrading = async (req, res) => {
         res.json({
             message: 'Trading resumed successfully',
             status: 'active',
-            resumed_at: botStates.resumedAt,
-            resumed_by: botStates.resumedBy
+            resumed_at: (botStates as any).resumedAt,
+            resumed_by: (botStates as any).resumedBy
         });
     } catch (error) {
         console.error('[ADMIN] Resume trading error:', error);
@@ -99,20 +94,18 @@ exports.resumeTrading = async (req, res) => {
  * GET /api/v1/admin/bot/status
  * Get current global bot status
  */
-exports.getGlobalBotStatus = async (req, res) => {
+export const getGlobalBotStatus = async (req: any, res: any) => {
     try {
         res.json({
-            is_paused: botStates.globalPause || false,
-            pause_reason: botStates.pauseReason,
-            paused_at: botStates.pausedAt,
-            paused_by: botStates.pausedBy,
-            resumed_at: botStates.resumedAt,
-            resumed_by: botStates.resumedBy
+            is_paused: (botStates as any).globalPause || false,
+            pause_reason: (botStates as any).pauseReason,
+            paused_at: (botStates as any).pausedAt,
+            paused_by: (botStates as any).pausedBy,
+            resumed_at: (botStates as any).resumedAt,
+            resumed_by: (botStates as any).resumedBy
         });
     } catch (error) {
         console.error('[ADMIN] Get global bot status error:', error);
         res.status(500).json({ error: 'Failed to get bot status' });
     }
 };
-
-export {};

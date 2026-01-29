@@ -1,21 +1,31 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAnalytics = void 0;
-const { supabase } = require('../../../config/supabase');
+const supabase_1 = require("../../../config/supabase");
+const botStates_1 = require("../../../types/botStates");
 /**
  * Get aggregated analytics for the user
  */
 const getAnalytics = async (req, res) => {
     try {
         const userId = req.user.id;
-        // Fetch all trades for this user
-        const { data: trades, error } = await supabase
+        const botState = botStates_1.botStates.get(userId);
+        const now = Date.now();
+        const CACHE_TTL = 30 * 1000; // 30 seconds
+        // 0. Check Cache
+        if (botState && botState.analyticsCache && (now - botState.analyticsCache.timestamp < CACHE_TTL)) {
+            console.log(`🚀 [${userId}] Serving analytics from CACHE`);
+            return res.json(botState.analyticsCache.data);
+        }
+        // 1. Fetch all trades from DB as source of truth
+        const { data: trades, error } = await supabase_1.supabase
             .from('trades')
             .select('entry_price, payout, pnl, status, contract_type, created_at')
             .eq('user_id', userId)
-            .order('created_at', { ascending: true });
-        if (error)
-            throw error;
+            .order('created_at', { ascending: true }); // Chart order
+        if (error) {
+            console.error(`❌ [${userId}] Fetch trades error for analytics:`, error.message);
+        }
         if (!trades || trades.length === 0) {
             return res.json({
                 totalTrades: 0,
@@ -28,7 +38,8 @@ const getAnalytics = async (req, res) => {
                 winLossData: [
                     { name: 'Wins', value: 0 },
                     { name: 'Losses', value: 0 },
-                ]
+                ],
+                currentStreak: 0
             });
         }
         let totalProfit = 0;
@@ -40,10 +51,12 @@ const getAnalytics = async (req, res) => {
         const profitHistory = [];
         let cumulativeProfit = 0;
         trades.forEach((trade) => {
-            const pnl = parseFloat(trade.pnl);
+            const pnl = parseFloat(trade.pnl || (trade.payout - trade.entry_price)); // Robustness
             totalProfit += pnl;
             cumulativeProfit += pnl;
-            if (trade.status === 'won') {
+            // Determine status if not set
+            const isWin = pnl >= 0; // >= 0 usually win/breakeven
+            if (isWin) {
                 wins++;
                 if (pnl > largestWin)
                     largestWin = pnl;
@@ -55,7 +68,7 @@ const getAnalytics = async (req, res) => {
             }
             // Group by day or hour could be done here, simplified for now
             profitHistory.push({
-                date: new Date(trade.created_at).toLocaleDateString(),
+                date: new Date(trade.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), // Show time for recent trades
                 profit: cumulativeProfit,
                 dailyPnl: pnl
             });
@@ -63,25 +76,25 @@ const getAnalytics = async (req, res) => {
         // Calculate Streak (Iterate backwards)
         let currentStreak = 0;
         if (trades.length > 0) {
-            const lastTrade = trades[trades.length - 1];
-            const isWin = lastTrade.status === 'won';
-            for (let i = trades.length - 1; i >= 0; i--) {
-                if ((trades[i].status === 'won') === isWin) {
+            const reversedTrades = [...trades].reverse();
+            const lastIsWin = reversedTrades[0].pnl >= 0;
+            for (let i = 0; i < reversedTrades.length; i++) {
+                const isWin = reversedTrades[i].pnl >= 0;
+                if (isWin === lastIsWin) {
                     currentStreak++;
                 }
                 else {
                     break;
                 }
             }
-            // If it's a losing streak, make it negative or just keep the number? 
-            // Usually dashboard shows green/red number. Let's just return the counts.
-            // But for "Streak", let's return the signed integer: +5 (wins) or -3 (losses).
-            currentStreak = isWin ? currentStreak : -currentStreak;
+            currentStreak = lastIsWin ? currentStreak : -currentStreak;
         }
         const totalTrades = trades.length;
         const winRate = (wins / totalTrades) * 100;
         const averageProfit = totalProfit / totalTrades;
-        res.json({
+        // Get last 5 trades for dashboard
+        const recentTrades = trades.slice(-5).reverse();
+        const responseData = {
             totalTrades,
             winRate: parseFloat(winRate.toFixed(2)),
             totalProfit: parseFloat(totalProfit.toFixed(2)),
@@ -93,8 +106,17 @@ const getAnalytics = async (req, res) => {
                 { name: 'Wins', value: wins, fill: '#22c55e' },
                 { name: 'Losses', value: losses, fill: '#ef4444' },
             ],
-            currentStreak
-        });
+            currentStreak,
+            recentTrades
+        };
+        // 4. Update Cache
+        if (botState) {
+            botState.analyticsCache = {
+                data: responseData,
+                timestamp: Date.now()
+            };
+        }
+        res.json(responseData);
     }
     catch (error) {
         console.error('Analytics error:', error);

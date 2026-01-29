@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import axios from 'axios';
-const { supabase } = require('../../config/supabase');
+import { supabase } from '../../config/supabase';
 
 const FLW_SECRET_KEY = process.env.FLW_SECRET_KEY;
 const FLW_WEBHOOK_HASH = process.env.FLW_WEBHOOK_HASH;

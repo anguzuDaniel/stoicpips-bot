@@ -1,4 +1,6 @@
-export const getUserProfile = async (req, res) => {
+import { supabase } from "../../config/supabase";
+
+export const getUserProfile = async (req: any, res: any) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: "Not authenticated" });

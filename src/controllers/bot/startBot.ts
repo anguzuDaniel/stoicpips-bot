@@ -6,13 +6,12 @@ import ALLOWED_GRANULARITIES from './helpers/ALLOWED_GRANULARITIES';
 import symbolTimeFrames from './helpers/symbolTimeFrames';
 import { DerivWebSocket } from "../../deriv/DerivWebSocket";
 import { BotLogger } from "../../utils/botLogger";
+import { botStates } from '../../types/botStates';
+import { executeTradingCycle } from './trade/executeTradingCycle';
+import { supabase } from '../../config/supabase';
+import fetchLatestCandles from '../../strategies/fetchLatestCandles';
 
-const botStates = require('../../types/botStates');
-const { executeTradingCycle } = require('./trade/executeTradingCycle');
-const supabase = require('../../config/supabase').supabase;
-const fetchLatestCandles = require('../../strategies/fetchLatestCandles');
-
-const startBot = async (req: AuthenticatedRequest, res: Response) => {
+export const startBot = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user.id;
     const userEmail = req.user.email;
@@ -23,15 +22,15 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
     // Prevent multiple bots (Running)
     if (botStates.has(userId)) {
       const existingState = botStates.get(userId);
-      if (existingState.isRunning) {
+      if (existingState!.isRunning) {
         return res.status(400).json({ error: "You already have a bot running. Stop the current bot first." });
       }
 
       // If exists but not running (Idle), disconnect old socket to start fresh
-      if (existingState.derivWS) {
+      if (existingState!.derivWS) {
         console.log(`♻️ Cleaning up idle connection for user ${userId}`);
         try {
-          existingState.derivWS.disconnect();
+          existingState!.derivWS.disconnect();
         } catch (e) { console.error("Error disconnecting old socket", e); }
       }
     }
@@ -61,8 +60,6 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
 
     if (!botConfig) return res.status(400).json({ error: "No bot configuration found" });
 
-    console.log(`BotConfig: ${JSON.stringify(botConfig)}`);
-
     // Merge top-level fields with config_data
     const config = { ...botConfig, ...botConfig.config_data };
 
@@ -75,8 +72,6 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
     );
 
     config.symbols = mergedSymbols;
-
-    console.log("🔥 Final symbols to trade:", mergedSymbols);
 
     if (!config.symbols || !Array.isArray(config.symbols) || config.symbols.length === 0) {
       return res.status(400).json({ error: "Please configure trading symbols first" });
@@ -122,11 +117,9 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
         });
       }
       executionMode = 'first_trade';
-      console.log(`🎁 [${userId}] User granted First Trade Exception (Trial Active).`);
       BotLogger.log(userId, "Welcome! You are currently in your 1-week free trial. Enjoy!", "info");
     } else if (tier === 'pro') {
       executionMode = 'signal_only';
-      console.log(`🛡️ [${userId}] Pro Tier: Signal Only Mode.`);
     } else {
       console.log(`👑 [${userId}] Elite Tier: Full Automation.`);
     }
@@ -142,15 +135,7 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
     const strategy = new HybridScalpStrategy();
     const sentinel = new SentinelExecutionLayer();
 
-    // @ts-ignore
     if (config.minSignalGap) strategy.minSignalGap = config.minSignalGap * 60000;
-
-
-
-    // ... existing imports ...
-
-    // Inside startBot function ...
-
 
     const sanitizeToken = (t: string) => t ? t.trim().replace(/[\[\]"]/g, '') : '';
     const demoToken = sanitizeToken(config.deriv_demo_token || config.derivDemoToken);
@@ -168,13 +153,10 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
     let activeAccountType = 'demo';
 
     if (!token) {
-      // Fallback to real if demo is missing
       console.warn("⚠️ No Demo token found. Starting in REAL mode.");
       token = realToken;
       activeAccountType = 'real';
     }
-
-    console.log(`🔑 Using ${activeAccountType.toUpperCase()} Token: ${token.substring(0, 4)}...`);
 
     // Initialize Deriv Connection
     const derivConnection = new DerivWebSocket({
@@ -192,7 +174,6 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
     try {
       await new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
-          // Don't disconnect here, let the catch block handle cleanup
           reject(new Error("Timeout waiting for Deriv authorization"));
         }, 15000);
 
@@ -202,17 +183,12 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
           else reject(new Error(auth.error || "Authorization failed"));
         });
 
-        // Also listen for error during connect
-        // derivConnection emits 'error' event? Checked source, yes.
-        // But 'error' might restart connection. We want to catch fatal auth/connect errors.
-
         derivConnection.connect();
       });
 
       // Check Balance for Real Accounts
       const status = derivConnection.getStatus();
       if (activeAccountType === 'real' && status.balance <= 0.5) {
-        console.warn(`🛑 [${userId}] Real account empty (${status.balance}). Blocking start.`);
         derivConnection.disconnect();
         return res.status(400).json({
           error: `Insufficient Funds: Your Real Account balance is ${status.balance} ${status.currency || 'USD'}. Please deposit funds to start trading.`
@@ -225,9 +201,6 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(400).json({ error: `Connection failed: ${err.message}` });
     }
 
-    // Map timeframe to allowed granularity
-    // ... existing granularity logic ...
-
     // Initialize bot state
     const botState = {
       isRunning: true,
@@ -239,7 +212,7 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
       strategy,
       sentinel,
       derivConnected: true,
-      derivWS: derivConnection, // Store connection as derivWS to match other controllers
+      derivWS: derivConnection,
       dailyTrades: 0,
       lastTradeDate: new Date().toISOString().slice(0, 10),
       executionMode,
@@ -260,7 +233,7 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
         const candlesMap: Record<string, any[]> = {};
 
         for (const symbol of config.symbols) {
-          const desiredTimeframe = symbolTimeFrames[symbol] || 900;
+          const desiredTimeframe = symbolTimeFrames[symbol as keyof typeof symbolTimeFrames] || 900;
           const closestGranularity = ALLOWED_GRANULARITIES.reduce((prev, curr) =>
             Math.abs(curr - desiredTimeframe) < Math.abs(prev - desiredTimeframe) ? curr : prev
           );
@@ -268,14 +241,10 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
           const candles = await fetchLatestCandles(symbol, closestGranularity, derivConnection);
           if (candles && candles.length > 0) candlesMap[symbol] = candles;
           else console.log(`⚠️ No candles for ${symbol}, skipping`);
-
-          console.log(`Signal debug for ${symbol}: using timeframe ${closestGranularity}s`);
         }
 
         const availableSymbols = Object.keys(candlesMap);
         if (availableSymbols.length === 0) return;
-
-        console.log(`📊 Available symbols this cycle: ${availableSymbols.join(', ')}`);
 
         const cycleConfig = { ...config, symbols: availableSymbols, amountPerTrade: baseAmount };
         await executeTradingCycle(userId, cycleConfig, candlesMap);
@@ -290,17 +259,11 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
     tradingCycle();
     botState.tradingInterval = setInterval(tradingCycle, cycleIntervalMs);
 
-    console.log(`🤖 Bot started for user ${userId}`);
-    console.log(`📊 Trading symbols: ${config.symbols.join(', ')}`);
-    console.log(`💰 Trade amount: $${baseAmount}`);
-    console.log(`👑 Subscription: ${subscription}`);
-    console.log(`⏱️ Cycle interval: ${cycleIntervalMs / 1000} seconds`);
-
     res.json({
       message: "Trading bot started successfully",
       status: "running",
       startedAt: botState.startedAt,
-      user: { id: userId, email: userEmail, subscription },
+      user: { id: userId, email: userEmail, subscription, subscriptionTier: tier },
       config
     });
 
@@ -309,5 +272,3 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
     res.status(500).json({ error: 'Failed to start bot: ' + error.message });
   }
 };
-
-export { startBot };
