@@ -11,7 +11,7 @@ exports.listUsers = async (req, res) => {
         const offset = (page - 1) * limit;
 
         let query = supabase
-            .from('users')
+            .from('profiles')
             .select('id, email, subscription_tier, last_active, created_at, is_admin', { count: 'exact' })
             .order('created_at', { ascending: false })
             .range(offset, offset + limit - 1);
@@ -83,7 +83,7 @@ exports.updateUserTier = async (req, res) => {
 
         // Update user tier
         const { data, error } = await supabase
-            .from('users')
+            .from('profiles')
             .update({ subscription_tier: tier })
             .eq('id', id)
             .select()

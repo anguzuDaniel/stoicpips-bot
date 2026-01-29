@@ -29,7 +29,7 @@ exports.getGlobalAnalytics = async (req, res) => {
 
         // Fetch user tiers
         const { data: users, error: usersError } = await supabase
-            .from('users')
+            .from('profiles')
             .select('id, subscription_tier');
 
         if (usersError) {

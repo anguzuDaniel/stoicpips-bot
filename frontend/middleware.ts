@@ -56,7 +56,7 @@ export async function middleware(request: NextRequest) {
     if (session && request.nextUrl.pathname.startsWith('/admin')) {
         // Fetch user profile to check admin status
         const { data: profile } = await supabase
-            .from('users')
+            .from('profiles')
             .select('is_admin')
             .eq('id', session.user.id)
             .single();

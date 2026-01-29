@@ -57,7 +57,7 @@ exports.requireAdmin = async (req, res, next) => {
   try {
     // Fetch user profile from Supabase to check is_admin flag
     const { data: profile, error } = await supabase
-      .from('users')
+      .from('profiles')
       .select('is_admin')
       .eq('id', req.user.id)
       .single();
