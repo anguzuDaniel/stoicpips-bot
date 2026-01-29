@@ -80,10 +80,11 @@ const startBot = async (req, res) => {
         const createdAt = profile?.created_at;
         const { bank_name, account_number, account_name } = profile || {};
         let executionMode = 'auto'; // Default for Elite
-        // Bank Account Info Check
+        // Bank Account Info Check (Required for withdrawals/trading)
         if (!bank_name || !account_number || !account_name) {
+            console.warn(`⚠️ [${userId}] Missing Bank Info - Blocking startup`);
             return res.status(403).json({
-                error: "Bank Account Information Required: Please go to Profile Settings and provide your bank details (Bank Name, Account Number, Account Name) before using the bot.",
+                error: "Bank Account Information Required: Please go to 'Profile Settings' or 'Withdrawals' and update your bank details (Bank Name, Account Number, Account Name) before starting the bot.",
                 code: "BANK_INFO_REQUIRED"
             });
         }

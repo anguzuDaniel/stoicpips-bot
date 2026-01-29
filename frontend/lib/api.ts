@@ -2,7 +2,7 @@ import axios, { AxiosResponse } from "axios";
 
 export const fetcher = (url: string) => api.get(url).then(res => res.data);
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
 
 export const api = axios.create({
     baseURL: API_URL,
@@ -14,7 +14,7 @@ export const api = axios.create({
 // Add interceptor to include token if we implement auth
 api.interceptors.request.use(async (config) => {
     // Try to get token from localStorage first (if you save it there)
-    let token = localStorage.getItem("token");
+    let token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
 
     // Or get it from supabase session
     if (!token) {
@@ -43,4 +43,8 @@ export const botApi = {
     resetBot: () => api.post("/bot/reset", {}),
     toggleAccount: (type: 'real' | 'demo') => api.post("/bot/toggle-account", { targetType: type }),
     initializePayment: (tier: 'pro' | 'elite') => api.post("/payments/initialize", { tier }),
+
+    // User endpoints
+    getProfile: () => api.get("/user/profile"),
+    updateBankInfo: (data: { bankName: string; accountNumber: string; accountName: string }) => api.post("/user/update-bank-info", data),
 };

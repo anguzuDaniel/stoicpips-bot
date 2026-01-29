@@ -2,28 +2,29 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updatePlan = void 0;
 const supabase_1 = require("../../config/supabase");
+/**
+ * Updates the user's subscription plan directly in the profiles table.
+ * (Alternative to manual payment flow for testing/admin use)
+ */
 const updatePlan = async (req, res) => {
     try {
-        if (!req.user) {
-            return res.status(401).json({ error: "Not authenticated" });
-        }
+        const userId = req.user.id;
         const { plan, status } = req.body;
         if (!plan || !status) {
             return res.status(400).json({ error: "Plan & status required" });
         }
         const { data, error } = await supabase_1.supabase
-            .from("subscriptions")
-            .upsert([{
-                user_id: req.user.id,
-                plan,
-                status,
-                updated_at: new Date()
-            }], {
-            onConflict: "user_id"
+            .from("profiles")
+            .update({
+            subscription_tier: plan,
+            subscription_status: status,
+            updated_at: new Date().toISOString()
         })
+            .eq("id", userId)
             .select()
             .single();
         if (error) {
+            console.error(`❌ [${userId}] Update plan error:`, error.message);
             return res.status(400).json({ error: error.message });
         }
         return res.json({
