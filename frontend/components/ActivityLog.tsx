@@ -33,39 +33,13 @@ export function ActivityLog() {
         return () => clearInterval(interval);
     }, []);
 
-    // Simulated AI Logs effect
+    // AI Simulation removed as requested
     useEffect(() => {
-        const aiMessages = [
-            "AI: Scanning market volatility...",
-            "AI: Analyzing trend momentum...",
-            "AI: Checking resistance levels...",
-            "AI: Calculating risk/reward ratios...",
-            "AI: Monitoring spread variations...",
-            "AI: Validating candlestick patterns..."
-        ];
-
-        const simulateInterval = setInterval(() => {
-            // Only add fake log if we don't have many real logs or randomly to show activity
-            const randomMsg = aiMessages[Math.floor(Math.random() * aiMessages.length)];
-            const newLog: LogEntry = {
-                id: `ai-${Date.now()}`,
-                timestamp: new Date().toLocaleTimeString(),
-                message: randomMsg,
-                type: 'info'
-            };
-
-            setLogs(prev => {
-                const updated = [newLog, ...prev].slice(0, 50);
-                return updated;
-            });
-
-        }, 5000 + Math.random() * 5000); // Random interval 5-10s
-
-        return () => clearInterval(simulateInterval);
+        // AI Simulation removed to focus on real trades
     }, []);
 
     return (
-        <div className="rounded-xl border border-border bg-card h-full max-h-[600px] flex flex-col">
+        <div className="rounded-xl border border-border bg-card h-[480px] flex flex-col">
             <div className="p-6 border-b border-border flex items-center justify-between">
                 <h3 className="font-bold flex items-center gap-2">
                     <Activity className="h-4 w-4 text-primary" />
@@ -104,12 +78,7 @@ export function ActivityLog() {
                             </div>
                         )))}
 
-                    <div className="flex gap-3 items-start text-sm opacity-50 animate-pulse">
-                        <span className="text-xs text-muted-foreground font-mono mt-0.5 whitespace-nowrap">
-                            --:--:--
-                        </span>
-                        <p>Waiting for next signal...</p>
-                    </div>
+                    {/* Waiting for next signal element removed */}
                 </div>
             </div>
         </div>

@@ -51,9 +51,12 @@ const getBotStatus = async (req: AuthenticatedRequest, res: Response) => {
             reconnect: true
           });
 
-          // Wire up logs to prevent unhandled log events and show activity
+          // Wire up logs only for errors during Auto-Connect (Balance checking)
+          // Actual trading logs will be wired up in startBot.ts
           derivConnection.on('log', (logData: any) => {
-            BotLogger.log(userId, logData.message, logData.type);
+            if (logData.type === 'error') {
+              BotLogger.log(userId, logData.message, logData.type);
+            }
           });
 
           derivConnection.connect();

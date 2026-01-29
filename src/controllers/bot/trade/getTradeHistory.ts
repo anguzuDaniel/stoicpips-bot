@@ -6,6 +6,12 @@ const { supabase } = require('../../../config/supabase');
  * Fetch trade history for the authenticated user
  * Supports pagination and filtering by date
  */
+import { syncDerivTrades } from './syncDerivTrades';
+
+/**
+ * Fetch trade history for the authenticated user
+ * Supports pagination and filtering by date
+ */
 const getTradeHistory = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const userId = req.user.id;
@@ -15,39 +21,12 @@ const getTradeHistory = async (req: AuthenticatedRequest, res: Response) => {
         const botStates = require('../../../types/botStates');
         const botState = botStates.get(userId);
 
-        // 1. Try fetching from Deriv if connected
+        // 1. Sync from Deriv if connected
         if (botState && botState.derivWS && botState.derivWS.getStatus().authorized) {
-            console.log(`📡 Fetching profit table from Deriv (History) for user ${userId}`);
             try {
-                const derivTrades = await botState.derivWS.getProfitTable(limitNum);
-
-                // Map to schema
-                const trades = derivTrades.map((t: any) => ({
-                    id: t.transaction_id, // Use txn id as ID
-                    user_id: userId,
-                    symbol: t.shortcode || 'UKN', // shortcode often contains symbol
-                    contract_type: t.longcode.includes('CALL') ? 'CALL' : t.longcode.includes('PUT') ? 'PUT' : 'UNKNOWN',
-                    amount: t.buy_price,
-                    entry_price: t.buy_price,
-                    payout: t.sell_price,
-                    status: (parseFloat(t.sell_price) - parseFloat(t.buy_price)) >= 0 ? 'won' : 'lost',
-                    pnl: parseFloat(t.sell_price) - parseFloat(t.buy_price),
-                    created_at: new Date(t.purchase_time * 1000).toISOString(),
-                    contract_id: t.contract_id
-                }));
-
-                return res.json({
-                    trades,
-                    pagination: {
-                        total: trades.length,
-                        page: 1,
-                        limit: limitNum,
-                        pages: 1
-                    }
-                });
-
+                await syncDerivTrades(userId, botState.derivWS, limitNum);
             } catch (err) {
-                console.error("Failed to fetch Deriv history, falling back to DB:", err);
+                console.error("Failed to sync trades before history fetch:", err);
             }
         }
 

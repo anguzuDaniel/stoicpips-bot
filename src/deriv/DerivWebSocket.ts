@@ -541,7 +541,7 @@ class DerivWebSocket extends EventEmitter {
       profit_table: 1,
       description: 1,
       sort: "DESC",
-      count: limit
+      limit: limit
     });
 
     if (response.error) {

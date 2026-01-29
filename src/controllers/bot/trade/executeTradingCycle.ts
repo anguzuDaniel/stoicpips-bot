@@ -59,7 +59,7 @@ export const executeTradingCycle = async (
 
   let tradesThisCycle = 0;
 
-  BotLogger.log(userId, 'Scanning market for opportunities...', 'info');
+  // BotLogger.log(userId, 'Scanning market for opportunities...', 'info');
 
   for (const symbol of config.symbols) {
     if (!botState.isRunning) break;
@@ -134,7 +134,7 @@ export const executeTradingCycle = async (
 
   // Log summary if no trades were verified this cycle to reassure user bot is running
   if (tradesThisCycle === 0) {
-    BotLogger.log(userId, 'Cycle complete: No trade opportunities found in active zones', 'info');
+    // BotLogger.log(userId, 'Cycle complete: No trade opportunities found in active zones', 'info');
   }
 
   console.log(`⏳ Next cycle in ${config.cycleInterval ?? 30} seconds...`);
