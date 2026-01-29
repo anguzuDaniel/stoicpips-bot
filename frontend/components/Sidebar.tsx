@@ -51,7 +51,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <div className="flex items-center justify-between px-2 pb-8 pt-4">
             <div className="flex items-center gap-2">
               <Activity className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold tracking-tight">SynthBot <span className="text-xs font-normal text-primary border border-primary/20 bg-primary/10 px-1 rounded">Beta</span></span>
+              <span className="text-xl font-bold tracking-tight">SyntoicAi Bot <span className="text-xs font-normal text-primary border border-primary/20 bg-primary/10 px-1 rounded">Beta</span></span>
             </div>
             {/* Mobile Close Button */}
             <button onClick={onClose} className="md:hidden p-1 text-muted-foreground hover:text-foreground">

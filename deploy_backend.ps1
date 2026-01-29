@@ -10,7 +10,7 @@ $env:ENCRYPTION_KEY="5d8f0e4b6a9c2d7f1e8a3b5c6d9e0f2a4b6c8d1e3f5a7b9c2d4e6f8a0b2
 
 # 1. Build Image using Cloud Build
 Write-Host "Building Docker image..."
-$IMAGE_TAG="us-central1-docker.pkg.dev/stoicpips/cloud-run-source-deploy/stoic-backend:latest"
+$IMAGE_TAG="us-central1-docker.pkg.dev/syntoicai/cloud-run-source-deploy/stoic-backend:latest"
 gcloud builds submit --tag $IMAGE_TAG .
 
 if ($LASTEXITCODE -ne 0) {

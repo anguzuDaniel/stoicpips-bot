@@ -157,253 +157,291 @@ export default function SettingsPage() {
             <div className="p-4 md:p-6">
                 <h1 className="text-2xl font-bold mb-8">Bot Settings</h1>
 
-                <form onSubmit={handleSave} className="max-w-4xl space-y-8">
-                    {/* General Settings */}
-                    <div className="rounded-xl border border-border bg-card p-6 space-y-6">
-                        <h2 className="text-lg font-semibold border-b border-border pb-2">Trading Parameters</h2>
+                <form onSubmit={handleSave} className="space-y-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Trading Parameters */}
+                        <div className="rounded-xl border border-border bg-card p-6 space-y-6 h-full">
+                            <h2 className="text-lg font-semibold border-b border-border pb-2 flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-primary" />
+                                Trading Parameters
+                            </h2>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-4 md:col-span-2">
-                                <label className="text-sm font-medium">Active Symbols</label>
+                            <div className="space-y-6">
+                                <div className="space-y-3">
+                                    <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Active Symbols</label>
+                                    <div className="flex flex-wrap gap-2 p-3 bg-secondary/10 rounded-xl min-h-[50px] border border-border/50">
+                                        {config.symbols.map((symbol) => (
+                                            <span key={symbol} className="inline-flex items-center gap-1 bg-primary/10 text-primary border border-primary/20 px-3 py-1.5 rounded-lg text-xs font-bold uppercase">
+                                                {AVAILABLE_SYMBOLS.find(s => s.value === symbol)?.label || symbol}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeSymbol(symbol)}
+                                                    className="hover:bg-primary/20 rounded-full p-1 ml-1 transition-colors"
+                                                >
+                                                    <AlertCircle className="h-3.5 w-3.5 rotate-45" />
+                                                </button>
+                                            </span>
+                                        ))}
+                                        {config.symbols.length === 0 && (
+                                            <span className="text-muted-foreground text-xs italic">No symbols selected</span>
+                                        )}
+                                    </div>
 
-                                <div className="flex flex-wrap gap-2 mb-2 p-2 bg-secondary/20 rounded-lg min-h-[42px]">
-                                    {config.symbols.map((symbol) => (
-                                        <span key={symbol} className="inline-flex items-center gap-1 bg-primary/10 text-primary border border-primary/20 px-2.5 py-1 rounded-md text-sm font-medium">
-                                            {AVAILABLE_SYMBOLS.find(s => s.value === symbol)?.label || symbol}
+                                    <div className="relative">
+                                        <select
+                                            onChange={handleAddSymbol}
+                                            className="w-full bg-input border border-border rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none appearance-none transition-all cursor-pointer"
+                                            defaultValue=""
+                                        >
+                                            <option value="" disabled>+ Add a symbol...</option>
+                                            {AVAILABLE_SYMBOLS.map((s) => (
+                                                <option key={s.value} value={s.value} disabled={config.symbols.includes(s.value)}>
+                                                    {s.label} ({s.value})
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-3 top-3 pointer-events-none text-muted-foreground">
+                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-muted-foreground">Stake Amount ($)</label>
+                                        <input
+                                            type="number"
+                                            value={config.amountPerTrade}
+                                            onChange={(e) => setConfig({ ...config, amountPerTrade: Number(e.target.value) })}
+                                            className="w-full bg-input border border-border rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-muted-foreground">Timeframe</label>
+                                        <select
+                                            value={config.timeframe}
+                                            onChange={(e) => setConfig({ ...config, timeframe: Number(e.target.value) })}
+                                            className="w-full bg-input border border-border rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all cursor-pointer"
+                                        >
+                                            <option value={1}>1 Minute</option>
+                                            <option value={3}>3 Minutes</option>
+                                            <option value={5}>5 Minutes</option>
+                                            <option value={15}>15 Minutes</option>
+                                            <option value={60}>1 Hour</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="text-sm font-medium text-muted-foreground">Contract Type</label>
+                                        <select
+                                            value={config.contractPreference}
+                                            onChange={(e) => setConfig({ ...config, contractPreference: e.target.value })}
+                                            className="w-full bg-input border border-border rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all cursor-pointer"
+                                        >
+                                            <option value="RISE/FALL">Rise / Fall</option>
+                                            <option value="TOUCH/NO_TOUCH">Touch / No Touch</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Column Grid - Nested */}
+                        <div className="space-y-6 flex flex-col">
+                            {/* Risk Management */}
+                            <div className="rounded-xl border border-border bg-card p-6 space-y-6 flex-grow">
+                                <h2 className="text-lg font-semibold border-b border-border pb-2 flex items-center gap-2">
+                                    <span className="h-2 w-2 rounded-full bg-red-500" />
+                                    Risk Management
+                                </h2>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-muted-foreground">Daily Trade Limit</label>
+                                        <input
+                                            type="number"
+                                            value={config.dailyTradeLimit}
+                                            onChange={(e) => setConfig({ ...config, dailyTradeLimit: Number(e.target.value) })}
+                                            className="w-full bg-input border border-border rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-muted-foreground">Max Trades / Cycle</label>
+                                        <input
+                                            type="number"
+                                            value={config.maxTradesPerCycle}
+                                            onChange={(e) => setConfig({ ...config, maxTradesPerCycle: Number(e.target.value) })}
+                                            className="w-full bg-input border border-border rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* AI Configuration */}
+                            <div className="rounded-xl border border-border bg-card p-6 space-y-6 flex-grow">
+                                <h2 className="text-lg font-semibold border-b border-border pb-2 flex items-center gap-2">
+                                    <span className="h-2 w-2 rounded-full bg-indigo-500" />
+                                    AI Engine
+                                </h2>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-[10px] font-bold uppercase text-muted-foreground mb-3 block">Signal Provider</label>
+                                        <div className="grid grid-cols-1 gap-3">
                                             <button
                                                 type="button"
-                                                onClick={() => removeSymbol(symbol)}
-                                                className="hover:bg-primary/20 rounded-full p-0.5 ml-1"
+                                                onClick={() => setConfig({ ...config, aiProvider: 'local' })}
+                                                className={`p-4 rounded-xl border text-left transition-all group ${config.aiProvider !== 'openai'
+                                                    ? 'border-indigo-500/50 bg-indigo-500/5 ring-1 ring-indigo-500/50'
+                                                    : 'border-border hover:border-indigo-500/30 hover:bg-indigo-500/5'
+                                                    }`}
                                             >
-                                                <AlertCircle className="h-3 w-3 rotate-45" />
+                                                <div className="font-semibold mb-1 group-hover:text-indigo-400 transition-colors">Internal Model</div>
+                                                <p className="text-xs text-muted-foreground leading-relaxed">Uses built-in XGBoost analysis. Fast and optimized for synthetics.</p>
                                             </button>
-                                        </span>
-                                    ))}
-                                    {config.symbols.length === 0 && (
-                                        <span className="text-muted-foreground text-sm italic px-2 py-1">No symbols selected</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => setConfig({ ...config, aiProvider: 'openai' })}
+                                                className={`p-4 rounded-xl border text-left transition-all group ${config.aiProvider === 'openai'
+                                                    ? 'border-emerald-500/50 bg-emerald-500/5 ring-1 ring-emerald-500/50'
+                                                    : 'border-border hover:border-emerald-500/30 hover:bg-emerald-500/5'
+                                                    }`}
+                                            >
+                                                <div className="font-semibold mb-1 group-hover:text-emerald-400 transition-colors">OpenAI GPT-4</div>
+                                                <p className="text-xs text-muted-foreground leading-relaxed">Advanced LLM market analysis. Requires valid API Key.</p>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {config.aiProvider === 'openai' && (
+                                        <div className="animate-in fade-in slide-in-from-top-2 pt-2">
+                                            <label className="text-xs font-semibold uppercase text-muted-foreground block mb-2">OpenAI API Key</label>
+                                            <div className="relative">
+                                                <input
+                                                    type={showOpenAiKey ? "text" : "password"}
+                                                    value={config.openaiApiKey || ''}
+                                                    onChange={(e) => setConfig({ ...config, openaiApiKey: e.target.value })}
+                                                    placeholder="sk-..."
+                                                    className="w-full bg-input border border-border rounded-lg px-4 py-2.5 text-sm pr-11 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 focus:outline-none"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowOpenAiKey(!showOpenAiKey)}
+                                                    className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors p-1"
+                                                >
+                                                    {showOpenAiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                </button>
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
-
-                                <div className="relative">
-                                    <select
-                                        onChange={handleAddSymbol}
-                                        className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary focus:outline-none appearance-none"
-                                        defaultValue=""
-                                    >
-                                        <option value="" disabled>+ Add a symbol...</option>
-                                        {AVAILABLE_SYMBOLS.map((s) => (
-                                            <option key={s.value} value={s.value} disabled={config.symbols.includes(s.value)}>
-                                                {s.label} ({s.value})
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute right-3 top-2.5 pointer-events-none text-muted-foreground">
-                                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Stake Amount ($)</label>
-                                <input
-                                    type="number"
-                                    value={config.amountPerTrade}
-                                    onChange={(e) => setConfig({ ...config, amountPerTrade: Number(e.target.value) })}
-                                    className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Timeframe (Minutes)</label>
-                                <select
-                                    value={config.timeframe}
-                                    onChange={(e) => setConfig({ ...config, timeframe: Number(e.target.value) })}
-                                    className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
-                                >
-                                    <option value={1}>1 Minute</option>
-                                    <option value={3}>3 Minutes</option>
-                                    <option value={5}>5 Minutes</option>
-                                    <option value={15}>15 Minutes</option>
-                                    <option value={60}>1 Hour</option>
-                                </select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Contract Type</label>
-                                <select
-                                    value={config.contractPreference}
-                                    onChange={(e) => setConfig({ ...config, contractPreference: e.target.value })}
-                                    className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
-                                >
-                                    <option value="RISE/FALL">Rise / Fall</option>
-                                    <option value="TOUCH/NO_TOUCH">Touch / No Touch</option>
-                                </select>
                             </div>
                         </div>
                     </div>
 
-                    {/* Risk Management */}
+                    {/* Deriv Configuration - Full Width below or Grid item? 
+                        Let's put it in a card that matches the grid width or spans both
+                    */}
                     <div className="rounded-xl border border-border bg-card p-6 space-y-6">
-                        <h2 className="text-lg font-semibold border-b border-border pb-2">Risk Management</h2>
+                        <div className="flex items-center justify-between border-b border-border pb-2">
+                            <h2 className="text-lg font-semibold flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-green-500" />
+                                Deriv Connection
+                            </h2>
+                            <div className="px-3 py-1 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-400 text-[10px] font-bold uppercase">
+                                Authorization Required
+                            </div>
+                        </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Daily Trade Limit</label>
-                                <input
-                                    type="number"
-                                    value={config.dailyTradeLimit}
-                                    onChange={(e) => setConfig({ ...config, dailyTradeLimit: Number(e.target.value) })}
-                                    className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Max Trades / Cycle</label>
-                                <input
-                                    type="number"
-                                    value={config.maxTradesPerCycle}
-                                    onChange={(e) => setConfig({ ...config, maxTradesPerCycle: Number(e.target.value) })}
-                                    className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-primary focus:outline-none"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {error && (
-                        <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-4 text-destructive text-sm">
-                            <AlertCircle className="h-4 w-4" />
-                            {error}
-                        </div>
-                    )}
-
-                    {success && (
-                        <div className="flex items-center gap-2 rounded-lg bg-green-500/10 p-4 text-green-500 text-sm">
-                            <Save className="h-4 w-4" />
-                            {success}
-                        </div>
-                    )}
-
-                    {/* AI Configuration */}
-                    <div className="rounded-xl border border-border bg-card p-6 space-y-6">
-                        <h2 className="text-lg font-semibold border-b border-border pb-2">AI Engine Configuration</h2>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="text-sm font-medium block mb-2">AI Signal Provider</label>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setConfig({ ...config, aiProvider: 'local' })}
-                                        className={`p-4 rounded-xl border text-left transition-all ${config.aiProvider !== 'openai'
-                                            ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                                            : 'border-border hover:border-primary/50'
-                                            }`}
-                                    >
-                                        <div className="font-semibold mb-1">Internal AI Model</div>
-                                        <p className="text-xs text-muted-foreground">Uses the built-in Python XGBoost model. Free and fast.</p>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setConfig({ ...config, aiProvider: 'openai' })}
-                                        className={`p-4 rounded-xl border text-left transition-all ${config.aiProvider === 'openai'
-                                            ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                                            : 'border-border hover:border-primary/50'
-                                            }`}
-                                    >
-                                        <div className="font-semibold mb-1">OpenAI (ChatGPT)</div>
-                                        <p className="text-xs text-muted-foreground">Uses GPT-3.5/4 for market analysis. Requires API Key.</p>
-                                    </button>
-                                </div>
-                            </div>
-
-                            {config.aiProvider === 'openai' && (
-                                <div className="animate-in fade-in slide-in-from-top-2">
-                                    <label className="text-sm font-medium block mb-1">OpenAI API Key</label>
-                                    <div className="relative">
-                                        <input
-                                            type={showOpenAiKey ? "text" : "password"}
-                                            value={config.openaiApiKey || ''}
-                                            onChange={(e) => setConfig({ ...config, openaiApiKey: e.target.value })}
-                                            placeholder="sk-..."
-                                            className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm pr-10"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowOpenAiKey(!showOpenAiKey)}
-                                            className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-                                        >
-                                            {showOpenAiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                        </button>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        Your key is used locally and sent to your own backend.
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Deriv Configuration */}
-                    <div className="space-y-4">
-                        <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-400 text-sm">
-                            <p className="font-semibold flex items-center gap-2">
-                                ⚠ Important
-                            </p>
-                            <p className="mt-1">
-                                To switch between Real and Demo accounts, you must provide both tokens below.
-                            </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="text-sm font-medium block mb-1">Deriv Demo Token</label>
+                                <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                                    Demo Account Token
+                                    <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded text-muted-foreground">VRTC...</span>
+                                </label>
                                 <div className="relative">
                                     <input
                                         type={showDemoToken ? "text" : "password"}
                                         value={config.derivDemoToken || config.derivApiToken || ''}
                                         onChange={(e) => setConfig({ ...config, derivDemoToken: e.target.value })}
-                                        placeholder="Enter Demo Token"
-                                        className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm pr-10"
+                                        placeholder="p-XXXXX..."
+                                        className="w-full bg-input border border-border rounded-lg px-4 py-2.5 text-sm pr-11 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowDemoToken(!showDemoToken)}
-                                        className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                                        className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors p-1"
                                     >
                                         {showDemoToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                     </button>
                                 </div>
                             </div>
-                            <div>
-                                <label className="text-sm font-medium block mb-1">Deriv Real Token</label>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                                    Real Account Token
+                                    <span className="text-[10px] bg-green-500/10 text-green-500 border border-green-500/20 px-1.5 py-0.5 rounded uppercase">CR...</span>
+                                </label>
                                 <div className="relative">
                                     <input
                                         type={showRealToken ? "text" : "password"}
                                         value={config.derivRealToken || ''}
                                         onChange={(e) => setConfig({ ...config, derivRealToken: e.target.value })}
-                                        placeholder="Enter Real Token"
-                                        className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm pr-10"
+                                        placeholder="r-XXXXX..."
+                                        className="w-full bg-input border border-border rounded-lg px-4 py-2.5 text-sm pr-11 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowRealToken(!showRealToken)}
-                                        className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                                        className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground transition-colors p-1"
                                     >
                                         {showRealToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <p className="text-xs text-muted-foreground">Tokens are encrypted before storage.</p>
+                        <div className="p-3 bg-secondary/30 rounded-lg flex items-start gap-3 border border-border/50">
+                            <AlertCircle className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                            <p className="text-xs text-muted-foreground leading-relaxed italic">
+                                Note: Tokens are encrypted before storage. To trade on both accounts, please provide your Demo and Real API tokens. You can obtain these from the Deriv dashboard.
+                            </p>
+                        </div>
                     </div>
 
-                    <div className="flex justify-end">
-                        <button
-                            type="submit"
-                            disabled={saving}
-                            className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-                        >
-                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                            Save Configuration
-                        </button>
+                    {/* Messages & Actions */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border mt-8">
+                        <div className="flex-1 w-full sm:w-auto">
+                            {error && (
+                                <div className="flex items-center gap-2 rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-destructive text-sm animate-in fade-in slide-in-from-left-2">
+                                    <AlertCircle className="h-4 w-4" />
+                                    {error}
+                                </div>
+                            )}
+
+                            {success && (
+                                <div className="flex items-center gap-2 rounded-xl bg-green-500/10 border border-green-500/20 p-4 text-green-500 text-sm animate-in fade-in slide-in-from-left-2">
+                                    <Save className="h-4 w-4" />
+                                    {success}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <button
+                                type="button"
+                                onClick={() => router.push('/')}
+                                className="px-6 py-2.5 rounded-xl border border-border hover:bg-accent text-sm font-medium transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={saving}
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-xl bg-primary px-8 py-2.5 font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100"
+                            >
+                                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-5 w-5" />}
+                                Save Changes
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>

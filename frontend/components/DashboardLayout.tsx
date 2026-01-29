@@ -37,7 +37,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     >
                         <Menu className="h-6 w-6" />
                     </button>
-                    <span className="ml-2 font-bold text-lg">SynthBot</span>
+                    <span className="ml-2 font-bold text-lg">SyntoicAi Bot</span>
                 </div>
 
                 <main className="flex-1 overflow-y-auto">

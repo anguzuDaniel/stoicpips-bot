@@ -1,10 +1,9 @@
-# 🤖 StoicPips Automated Trading Platform
-
-> *Professional algorithmic trading system powered by advanced market analysis and Deriv API*
+# 🤖 SyntoicAi Bot
+> *Automated Trading Bot for Synthetic Indices on Deriv.onal algorithmic trading system powered by advanced market analysis and Deriv API*
 
 ## 🎯 Overview
 
-StoicPips is a full-featured algorithmic trading platform that executes automated trades on Deriv's financial markets using sophisticated supply-demand zone analysis and price action strategies.
+SyntoicAi Bot is a full-featured algorithmic trading platform that executes automated trades on Deriv's financial markets using sophisticated supply-demand zone analysis and price action strategies.
 
 ### 🚀 Live Features
 - **Real-time market analysis** across multiple symbols
@@ -110,8 +109,8 @@ StoicPips is a full-featured algorithmic trading platform that executes automate
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/stoicpips-bot.git
-cd stoicpips-bot
+git clone https://github.com/yourusername/syntoicai-bot.git
+cd syntoicai-bot
 
 # Install dependencies
 npm install
@@ -152,7 +151,7 @@ REDIS_URL=redis://localhost:6379
 ## 🏗️ Project Structure
 
 ```
-stoicpips-bot/
+syntoicai-bot/
 ├── src/
 │   ├── frontend/                 # Next.js application
 │   │   ├── app/                  # App router pages
@@ -390,10 +389,10 @@ jobs:
 ## 📚 Documentation
 
 ### Additional Resources
-- [API Documentation](https://docs.stoicpips.com/api)
-- [Strategy Guide](https://docs.stoicpips.com/strategies)
-- [Deployment Guide](https://docs.stoicpips.com/deployment)
-- [Troubleshooting](https://docs.stoicpips.com/troubleshooting)
+- [API Documentation](https://docs.syntoicai.com/api)
+- [Strategy Guide](https://docs.syntoicai.com/strategies)
+- [Deployment Guide](https://docs.syntoicai.com/deployment)
+- [Troubleshooting](https://docs.syntoicai.com/troubleshooting)
 
 ### Contributing
 1. Fork the repository
@@ -414,16 +413,16 @@ jobs:
 - This bot does not provide financial advice
 - Always conduct your own due diligence
 
-The developers of StoicPips are not responsible for any financial losses incurred through the use of this software.
+The developers of SyntoicAi Bot are not responsible for any financial losses incurred through the use of this software.
 
 ---
 
 ## 📞 Support
 
-- **Documentation**: [docs.stoicpips.com](https://docs.stoicpips.com)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/stoicpips-bot/issues)
-- **Discord**: [Join Community](https://discord.gg/stoicpips)
-- **Email**: support@stoicpips.com
+- **Documentation**: [docs.syntoicai.com](https://docs.syntoicai.com)
+- **Issues**: [GitHub Issues](https://github.com/yourusername/syntoicai-bot/issues)
+- **Discord**: [Join Community](https://discord.gg/syntoicai)
+- **Email**: support@syntoicai.com
 
 ---
 
@@ -438,7 +437,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - [Deriv](https://deriv.com/) for their comprehensive trading API
 - [Supabase](https://supabase.com/) for amazing developer tools
 - [TradingView](https://www.tradingview.com/) for charting inspiration
-- All contributors and testers of the StoicPips platform
+- All contributors and testers of the SyntoicAi Bot platform
 
 ---
 

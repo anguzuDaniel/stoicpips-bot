@@ -1,4 +1,4 @@
-serviceId: stoicpips-frontend
+serviceId: syntoicai-frontend
 runConfig:
   cpu: 1
   memoryMiB: 512

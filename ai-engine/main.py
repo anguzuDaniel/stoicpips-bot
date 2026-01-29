@@ -8,7 +8,7 @@ from data_loader import MarketDataLoader
 
 load_dotenv()
 
-app = FastAPI(title="StoicPips AI Engine", version="1.0.0")
+app = FastAPI(title="SyntoicAi AI Engine", version="1.0.0")
 
 # Initialize components
 data_loader = MarketDataLoader()

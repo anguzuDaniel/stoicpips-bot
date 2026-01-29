@@ -264,7 +264,7 @@ export default function Dashboard() {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
 
           {/* Left Column (Chart & Signals) */}
           <div className="lg:col-span-2 space-y-6">
@@ -371,7 +371,7 @@ export default function Dashboard() {
           </div>
 
           {/* Right Column (Live Activity) */}
-          <div className="space-y-6 lg:h-full">
+          <div className="flex flex-col h-full">
             <ActivityLog />
           </div>
         </div>
