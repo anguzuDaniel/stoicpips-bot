@@ -47,7 +47,7 @@ export default function AnalyticsPage() {
     return (
         <DashboardLayout>
             <div className="p-4 md:p-10 max-w-[1600px] mx-auto w-full">
-                <h1 className="text-3xl font-extrabold mb-10 tracking-tight">Performance Analytics</h1>
+                <h1 className="text-2xl md:text-3xl font-black tracking-tight text-foreground mb-8">Performance Analytics</h1>
 
                 {/* Key Metrics */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
