@@ -1,5 +1,5 @@
-const axios = require('axios');
-const { logAdminAction } = require('../../utils/auditLog');
+const axiosClient = require('axios');
+const { logAdminAction: auditLogger } = require('../../utils/auditLog');
 const { botStates } = require('../../types/botStates');
 
 /**
@@ -21,7 +21,7 @@ exports.triggerGreatPause = async (req, res) => {
         let aiEngineResponse = null;
 
         try {
-            aiEngineResponse = await axios.post(`${aiEngineUrl}/admin/pause`, {
+            aiEngineResponse = await axiosClient.post(`${aiEngineUrl}/admin/pause`, {
                 reason,
                 admin_id: req.user.id
             }, { timeout: 5000 });
@@ -34,7 +34,7 @@ exports.triggerGreatPause = async (req, res) => {
         // For now, we'll just return a placeholder count
         const affectedBots = 0; // TODO: Query active trading sessions
 
-        await logAdminAction(req.user.id, 'TRIGGER_GREAT_PAUSE', null, {
+        await auditLogger(req.user.id, 'TRIGGER_GREAT_PAUSE', null, {
             reason,
             ai_engine_notified: !!aiEngineResponse,
             affected_bots: affectedBots
@@ -72,14 +72,14 @@ exports.resumeTrading = async (req, res) => {
         // Notify AI Engine
         const aiEngineUrl = process.env.AI_ENGINE_URL || 'http://localhost:5000';
         try {
-            await axios.post(`${aiEngineUrl}/admin/resume`, {
+            await axiosClient.post(`${aiEngineUrl}/admin/resume`, {
                 admin_id: req.user.id
             }, { timeout: 5000 });
         } catch (error) {
             console.error('[RESUME] Failed to notify AI Engine:', error.message);
         }
 
-        await logAdminAction(req.user.id, 'RESUME_TRADING');
+        await auditLogger(req.user.id, 'RESUME_TRADING');
 
         console.info(`[TRADING RESUMED] By: ${req.user.email}`);
 
@@ -114,3 +114,5 @@ exports.getGlobalBotStatus = async (req, res) => {
         res.status(500).json({ error: 'Failed to get bot status' });
     }
 };
+
+export {};

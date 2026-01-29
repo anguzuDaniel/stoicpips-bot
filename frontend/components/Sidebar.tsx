@@ -8,7 +8,6 @@ import { clsx } from "clsx";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
-  { icon: Activity, label: "Live Trading", href: "/live" },
   { icon: Settings, label: "Bot Settings", href: "/settings" },
   { icon: History, label: "Trade History", href: "/history" },
   { icon: BarChart3, label: "Analytics", href: "/analytics" },

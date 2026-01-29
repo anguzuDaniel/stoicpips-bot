@@ -1,5 +1,5 @@
-const axios = require('axios');
-const { logAdminAction } = require('../../utils/auditLog');
+const axiosClient = require('axios');
+const { logAdminAction: auditLogger } = require('../../utils/auditLog');
 
 /**
  * GET /api/v1/admin/infrastructure/health
@@ -25,12 +25,13 @@ exports.getInfrastructureHealth = async (req, res) => {
             service: 'AI Engine',
             status: 'unknown',
             latency: null,
-            url: aiEngineUrl
+            url: aiEngineUrl,
+            error: null
         };
 
         try {
             const aiStart = Date.now();
-            const aiResponse = await axios.get(`${aiEngineUrl}/health`, { timeout: 5000 });
+            const aiResponse = await axiosClient.get(`${aiEngineUrl}/health`, { timeout: 5000 });
             aiEngineHealth.status = aiResponse.status === 200 ? 'healthy' : 'degraded';
             aiEngineHealth.latency = Date.now() - aiStart;
         } catch (error) {
@@ -42,7 +43,7 @@ exports.getInfrastructureHealth = async (req, res) => {
         // TODO: Integrate Google Cloud Monitoring API for memory usage
         // This would require @google-cloud/monitoring package and service account credentials
 
-        await logAdminAction(req.user.id, 'CHECK_INFRASTRUCTURE_HEALTH');
+        await auditLogger(req.user.id, 'CHECK_INFRASTRUCTURE_HEALTH');
 
         res.json({
             timestamp: new Date().toISOString(),
@@ -54,3 +55,5 @@ exports.getInfrastructureHealth = async (req, res) => {
         res.status(500).json({ error: 'Failed to check infrastructure health' });
     }
 };
+
+export {};
