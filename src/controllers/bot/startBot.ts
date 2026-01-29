@@ -87,11 +87,35 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
 
     // Inside startBot function ...
 
-    const token = config.derivApiToken || config.deriv_api_token || process.env.DERIV_API_TOKEN;
+
+    // Prioritize tokens from Database
+    // Default to DEMO token for safety on initial start
+    let token = config.deriv_demo_token || config.derivDemoToken;
+    let activeAccountType = 'demo';
+
+    // If no demo token, fallback to legacy/generic token
+    if (!token) {
+      token = config.deriv_api_token || config.derivApiToken;
+    }
+
+    // Last resort: Environment variable
+    if (!token) {
+      token = process.env.DERIV_API_TOKEN;
+      console.log("⚠️ Using fallback ENV token");
+    }
 
     if (!token) {
-      return res.status(400).json({ error: "No Deriv API Token found. Please configure it in Settings." });
+      // Double check if they ONLY provided a Real token (edge case)
+      if (config.deriv_real_token || config.derivRealToken) {
+        console.warn("⚠️ Only Real Account Token found. Starting in REAL mode.");
+        token = config.deriv_real_token || config.derivRealToken;
+        activeAccountType = 'real';
+      } else {
+        return res.status(400).json({ error: "No Deriv API Token found. Please configure it in Settings." });
+      }
     }
+
+    console.log(`🔑 Using ${activeAccountType.toUpperCase()} Token: ${token.substring(0, 4)}...`);
 
     // Initialize Deriv Connection
     const derivConnection = new DerivWebSocket({
