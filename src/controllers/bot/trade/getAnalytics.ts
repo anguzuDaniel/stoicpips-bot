@@ -128,6 +128,10 @@ const getAnalytics = async (req: AuthenticatedRequest, res: Response) => {
         const winRate = (wins / totalTrades) * 100;
         const averageProfit = totalProfit / totalTrades;
 
+        // Get last 5 trades for dashboard
+        // If trades are sorted by created_at asc (oldest first), we take slice(-5).reverse()
+        const recentTrades = trades.slice(-5).reverse();
+
         res.json({
             totalTrades,
             winRate: parseFloat(winRate.toFixed(2)),
@@ -140,7 +144,8 @@ const getAnalytics = async (req: AuthenticatedRequest, res: Response) => {
                 { name: 'Wins', value: wins, fill: '#22c55e' },
                 { name: 'Losses', value: losses, fill: '#ef4444' },
             ],
-            currentStreak
+            currentStreak,
+            recentTrades
         });
 
     } catch (error: any) {

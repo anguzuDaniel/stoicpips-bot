@@ -31,7 +31,8 @@ export default function Dashboard() {
     profitHistory: [],
     balance: 0,
     currency: 'USD',
-    accountType: 'demo'
+    accountType: 'demo',
+    recentTrades: []
   });
 
   const fetchStats = async () => {
@@ -46,7 +47,8 @@ export default function Dashboard() {
           wins: res.data.winLossData.find((d: any) => d.name === 'Wins')?.value || 0,
           losses: res.data.winLossData.find((d: any) => d.name === 'Losses')?.value || 0,
           streak: res.data.currentStreak || 0,
-          profitHistory: res.data.profitHistory || []
+          profitHistory: res.data.profitHistory || [],
+          recentTrades: res.data.recentTrades || []
         }));
       }
     } catch (e) {
@@ -60,7 +62,7 @@ export default function Dashboard() {
       if (res.data) {
         setIsConnected(true);
         // Assuming status returns if bot is running
-        setIsRunning(res.data.isActive || false);
+        setIsRunning(res.data.isRunning || false);
 
         // Sync account info from status
         if (res.data.derivAccount) {
@@ -308,14 +310,53 @@ export default function Dashboard() {
             </div>
 
             {/* Recent Trades (Full Width now) */}
+            {/* Recent Trades (Last 5) */}
             <div className="rounded-xl border border-border bg-card p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold">Recent Trades</h3>
+                <h3 className="font-bold">Recent Activity</h3>
               </div>
-              <div className="flex flex-col items-center justify-center h-[200px] text-center text-muted-foreground">
-                <Activity className="h-8 w-8 mb-2 opacity-20" />
-                <p className="text-sm">No trades yet. Start trading to see your history.</p>
-              </div>
+
+              {!stats.recentTrades || stats.recentTrades.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-[200px] text-center text-muted-foreground">
+                  <Activity className="h-8 w-8 mb-2 opacity-20" />
+                  <p className="text-sm">No trades yet. Start trading to see your history.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left">
+                    <thead className="bg-muted/50 text-muted-foreground">
+                      <tr>
+                        <th className="px-4 py-2 font-medium">Symbol</th>
+                        <th className="px-4 py-2 font-medium">Type</th>
+                        <th className="px-4 py-2 font-medium">Result</th>
+                        <th className="px-4 py-2 font-medium text-right">P/L</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {stats.recentTrades.map((trade: any, i: number) => (
+                        <tr key={i} className="hover:bg-accent/50 transition-colors">
+                          <td className="px-4 py-3 font-medium">{trade.symbol}</td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center gap-1 font-medium ${trade.contract_type === "CALL" ? "text-green-500" : "text-red-500"}`}>
+                              {trade.contract_type}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${trade.status === "won" ? "bg-green-500/20 text-green-500" : "bg-red-500/20 text-red-500"
+                              }`}>
+                              {trade.status}
+                            </span>
+                          </td>
+                          <td className={`px-4 py-3 text-right font-bold ${(trade.pnl || 0) >= 0 ? "text-green-500" : "text-red-500"
+                            }`}>
+                            {(trade.pnl || 0) > 0 ? "+" : ""}{(trade.pnl || 0).toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
           </div>
