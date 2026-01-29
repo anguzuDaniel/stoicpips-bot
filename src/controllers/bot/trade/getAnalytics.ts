@@ -16,6 +16,14 @@ const getAnalytics = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const userId = req.user.id;
         const botState = botStates.get(userId);
+        const now = Date.now();
+        const CACHE_TTL = 30 * 1000; // 30 seconds
+
+        // 0. Check Cache
+        if (botState && botState.analyticsCache && (now - botState.analyticsCache.timestamp < CACHE_TTL)) {
+            console.log(`🚀 [${userId}] Serving analytics from CACHE`);
+            return res.json(botState.analyticsCache.data);
+        }
 
         // 1. Sync from Deriv if connected
         if (botState && botState.derivWS && botState.derivWS.getStatus().authorized) {
@@ -113,7 +121,7 @@ const getAnalytics = async (req: AuthenticatedRequest, res: Response) => {
         // If trades are sorted by created_at asc (oldest first), we take slice(-5).reverse()
         const recentTrades = trades.slice(-5).reverse();
 
-        res.json({
+        const responseData = {
             totalTrades,
             winRate: parseFloat(winRate.toFixed(2)),
             totalProfit: parseFloat(totalProfit.toFixed(2)),
@@ -127,7 +135,17 @@ const getAnalytics = async (req: AuthenticatedRequest, res: Response) => {
             ],
             currentStreak,
             recentTrades
-        });
+        };
+
+        // 4. Update Cache
+        if (botState) {
+            botState.analyticsCache = {
+                data: responseData,
+                timestamp: Date.now()
+            };
+        }
+
+        res.json(responseData);
 
     } catch (error: any) {
         console.error('Analytics error:', error);

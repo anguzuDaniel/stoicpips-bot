@@ -1,5 +1,8 @@
 const { supabase } = require('../../../config/supabase');
 import { DerivWebSocket } from "../../../deriv/DerivWebSocket";
+const botStates = require('../../../types/botStates');
+
+const SYNC_COOLDOWN = 60 * 1000; // 60 seconds
 
 /**
  * Syncs trade history from Deriv profit table to Supabase trades table.
@@ -9,9 +12,22 @@ import { DerivWebSocket } from "../../../deriv/DerivWebSocket";
  */
 export const syncDerivTrades = async (userId: string, derivWS: DerivWebSocket, limit: number = 50) => {
     try {
+        const botState = botStates.get(userId);
+        const now = Date.now();
+
+        if (botState && botState.lastSyncTime && (now - botState.lastSyncTime < SYNC_COOLDOWN)) {
+            console.log(`ℹ️ [${userId}] Skipping Deriv sync (Cooldown active: ${(SYNC_COOLDOWN - (now - botState.lastSyncTime)) / 1000}s left)`);
+            return 0;
+        }
+
         console.log(`📡 [${userId}] Starting Deriv trade sync...`);
 
         const derivTrades = await derivWS.getProfitTable(limit);
+
+        // Update lastSyncTime even if no trades found to respect the cooldown
+        if (botState) {
+            botState.lastSyncTime = now;
+        }
 
         if (!derivTrades || derivTrades.length === 0) {
             console.log(`ℹ️ [${userId}] No trades found in Deriv profit table.`);

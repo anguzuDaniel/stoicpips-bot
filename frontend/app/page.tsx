@@ -17,6 +17,16 @@ export default function Dashboard() {
   const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
+    // 1. Initial Load from Cache for Instant UI
+    const cachedStats = localStorage.getItem("syntoic_last_stats");
+    if (cachedStats) {
+      try {
+        setStats(JSON.parse(cachedStats));
+      } catch (e) {
+        console.error("Failed to parse cached stats", e);
+      }
+    }
+
     checkConnection();
     fetchStats();
   }, []);
@@ -39,8 +49,8 @@ export default function Dashboard() {
     try {
       const res = await botApi.getAnalytics();
       if (res.data) {
-        setStats(prev => ({
-          ...prev,
+        const newStats = {
+          ...stats,
           totalTrades: res.data.totalTrades,
           winRate: res.data.winRate,
           netProfit: res.data.totalProfit,
@@ -49,7 +59,9 @@ export default function Dashboard() {
           streak: res.data.currentStreak || 0,
           profitHistory: res.data.profitHistory || [],
           recentTrades: res.data.recentTrades || []
-        }));
+        };
+        setStats(newStats);
+        localStorage.setItem("syntoic_last_stats", JSON.stringify(newStats));
       }
     } catch (e) {
       console.error("Failed to fetch stats", e);
@@ -66,12 +78,14 @@ export default function Dashboard() {
 
         // Sync account info from status
         if (res.data.derivAccount) {
-          setStats(prev => ({
-            ...prev,
+          const newStats = {
+            ...stats,
             balance: res.data.derivAccount.balance || 0,
             currency: res.data.derivAccount.currency || 'USD',
             accountType: res.data.derivAccount.accountType || 'demo'
-          }));
+          };
+          setStats(newStats);
+          localStorage.setItem("syntoic_last_stats", JSON.stringify(newStats));
         }
       }
     } catch (e) {

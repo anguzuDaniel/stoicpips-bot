@@ -12,6 +12,11 @@ const botStates = new Map<string, {
   derivWS?: any; // Store the DerivWebSocket instance
   dailyTrades?: number;
   lastTradeDate?: string;
+  lastSyncTime?: number;
+  analyticsCache?: {
+    data: any;
+    timestamp: number;
+  };
   config: any;
 }>();
 
