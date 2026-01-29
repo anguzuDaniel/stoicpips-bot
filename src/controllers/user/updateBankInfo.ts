@@ -8,8 +8,17 @@ import { supabase } from '../../config/supabase';
  */
 export const updateBankInfo = async (req: any, res: Response) => {
     try {
-        const userId = req.user.id;
-        const { bankName, accountNumber, accountName } = req.body;
+        const userId = req.user?.id;
+        const body = req.body;
+
+        console.log(`[DEBUG] Update Card Info request for user: ${userId}`);
+        console.log(`[DEBUG] Received body:`, body);
+
+        if (!userId) {
+            return res.status(401).json({ error: "User ID missing from request." });
+        }
+
+        const { bankName, accountNumber, accountName } = body;
 
         if (!bankName || !accountNumber || !accountName) {
             return res.status(400).json({ error: "All card information fields (Cardholder Name, Card Number, Expiry) are required." });
@@ -28,8 +37,13 @@ export const updateBankInfo = async (req: any, res: Response) => {
             .single();
 
         if (error) {
-            console.error("Update card info error:", error.message);
-            return res.status(400).json({ error: "Failed to update card information." });
+            console.error("Update card info DB error:", error.message);
+            return res.status(400).json({ error: `Failed to update card information: ${error.message}` });
+        }
+
+        if (!data) {
+            console.error("Update card info - No data returned after update.");
+            return res.status(404).json({ error: "Profile not found or no changes made." });
         }
 
         res.json({
@@ -42,7 +56,10 @@ export const updateBankInfo = async (req: any, res: Response) => {
         });
 
     } catch (err: any) {
-        console.error("updateCardInfo error:", err);
-        res.status(500).json({ error: "Server error while updating card information." });
+        console.error("updateCardInfo exception:", err);
+        res.status(500).json({
+            error: "Server error while updating card information.",
+            details: err.message
+        });
     }
 };
