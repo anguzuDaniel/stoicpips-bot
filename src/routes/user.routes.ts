@@ -5,5 +5,6 @@ const router = Router();
 
 router.get("/profile", userController.getUserProfile);
 router.post("/update-plan", userController.updatePlan);
+router.post("/update-bank-info", userController.updateBankInfo);
 
 module.exports = router;

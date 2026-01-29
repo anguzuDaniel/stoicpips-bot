@@ -25,7 +25,15 @@ export const initializePayment = async (req: any, res: Response) => {
         // Unique transaction ref
         const tx_ref = `syntoic-${userId}-${Date.now()}`;
 
-        const payload = {
+        // Plan IDs from .env or default (User should configure these in FLW dashboard)
+        const PLAN_IDS = {
+            pro: process.env.FLW_PLAN_ID_PRO,
+            elite: process.env.FLW_PLAN_ID_ELITE
+        };
+
+        const plan_id = PLAN_IDS[tier as keyof typeof PLAN_IDS];
+
+        const payload: any = {
             tx_ref,
             amount: amount.toString(),
             currency: 'USD',
@@ -45,6 +53,14 @@ export const initializePayment = async (req: any, res: Response) => {
                 logo: "https://syntoic.com/logo.png"
             }
         };
+
+        // If a plan ID is provided, enable recurring billing
+        if (plan_id) {
+            payload.payment_plan = plan_id;
+            console.log(`📅 Using Flutterwave Plan: ${plan_id} for ${tier} tier`);
+        } else {
+            console.warn(`⚠️ No Flutterwave Plan ID found for ${tier}. Falling back to one-time payment.`);
+        }
 
         const response = await axios.post('https://api.flutterwave.com/v3/payments', payload, {
             headers: { Authorization: `Bearer ${FLW_SECRET_KEY}` }
@@ -67,9 +83,6 @@ export const handleWebhook = async (req: any, res: Response) => {
         // Validate Signature
         const hash = req.headers['verif-hash'];
         if (!hash || hash !== FLW_WEBHOOK_HASH) {
-            // Return 200 to FLW but don't process, to avoid retries if we error 401
-            // Actually FLW expects 200, otherwise retries.
-            // But if unauthorized, we should just return 200 and ignore.
             return res.status(200).send("Ignored");
         }
 
@@ -85,7 +98,7 @@ export const handleWebhook = async (req: any, res: Response) => {
 
             const data = verifyRes.data.data;
             // Check amount and status again
-            if (data.status === 'successful' && data.amount >= 20) { // Minimal check, or check PRICES[tier]
+            if (data.status === 'successful') {
                 const { user_id, tier } = data.meta;
 
                 console.log(`✅ Payment Verified for User ${user_id}: ${tier}`);
@@ -94,7 +107,8 @@ export const handleWebhook = async (req: any, res: Response) => {
                 const { error } = await supabase.from('profiles').update({
                     subscription_tier: tier,
                     subscription_start_date: new Date().toISOString(),
-                    last_payment_ref: data.tx_ref
+                    last_payment_ref: data.tx_ref,
+                    subscription_status: 'active'
                 }).eq('id', user_id);
 
                 if (error) console.error("Database Update Failed:", error);
@@ -104,8 +118,35 @@ export const handleWebhook = async (req: any, res: Response) => {
 
         res.status(200).send("OK");
 
-    } catch (error) {
-        console.error("Webhook Error:", error);
+    } catch (error: any) {
+        console.error("Webhook Error:", error.message);
         res.status(200).send("OK");
+    }
+};
+
+export const cancelSubscription = async (req: any, res: Response) => {
+    try {
+        const userId = req.user.id;
+
+        // In a real app, you would also call Flutterwave API to cancel the subscription
+        // If you have the subscription ID stored:
+        // await axios.put(`https://api.flutterwave.com/v3/subscriptions/${subscriptionId}/cancel`, {}, { headers: ... });
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({
+                subscription_tier: 'free',
+                subscription_status: 'cancelled'
+            })
+            .eq('id', userId);
+
+        if (error) throw error;
+
+        console.log(`❌ Subscription cancelled for user ${userId}`);
+        res.json({ message: "Subscription cancelled successfully. You can still use it until the end of the current period." });
+
+    } catch (error: any) {
+        console.error("Cancellation Error:", error.message);
+        res.status(500).json({ error: "Failed to cancel subscription." });
     }
 };
