@@ -34,6 +34,14 @@ export default function SettingsPage() {
     const [showRealToken, setShowRealToken] = useState(false);
     const [showOpenAiKey, setShowOpenAiKey] = useState(false);
 
+    // Bank Info State
+    const [bankInfo, setBankInfo] = useState({
+        bankName: "",
+        accountNumber: "",
+        accountName: ""
+    });
+    const [savingBank, setSavingBank] = useState(false);
+
     const [config, setConfig] = useState<BotConfig>({
         symbols: ["R_100"],
         amountPerTrade: 10,
@@ -74,6 +82,17 @@ export default function SettingsPage() {
                 });
                 setSymbolsString(fetchedConfig.symbols ? fetchedConfig.symbols.join(", ") : "R_100");
             }
+
+            // Fetch Bank Info from Profile
+            const profileRes = await botApi.getProfile();
+            if (profileRes.data && profileRes.data.user) {
+                const profile = profileRes.data.user;
+                setBankInfo({
+                    bankName: profile.bank_name || "",
+                    accountNumber: profile.account_number || "",
+                    accountName: profile.account_name || ""
+                });
+            }
         } catch (error) {
             console.error("Failed to fetch settings:", error);
         } finally {
@@ -102,6 +121,23 @@ export default function SettingsPage() {
             setError(err.response?.data?.error || "Failed to save configuration");
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleSaveBank = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSavingBank(true);
+        setError(null);
+        setSuccess(null);
+
+        try {
+            await botApi.updateBankInfo(bankInfo);
+            setSuccess("Bank information updated successfully!");
+            setTimeout(() => setSuccess(null), 3000);
+        } catch (err: any) {
+            setError(err.response?.data?.error || "Failed to save bank information");
+        } finally {
+            setSavingBank(false);
         }
     };
 
@@ -404,6 +440,61 @@ export default function SettingsPage() {
                             <p className="text-xs text-muted-foreground leading-relaxed italic">
                                 Note: Tokens are encrypted before storage. To trade on both accounts, please provide your Demo and Real API tokens. You can obtain these from the Deriv dashboard.
                             </p>
+                        </div>
+                    </div>
+
+                    {/* Bank Account Information Section */}
+                    <div className="rounded-xl border border-border bg-card p-6 space-y-6">
+                        <div className="flex items-center justify-between border-b border-border pb-2">
+                            <h2 className="text-lg font-semibold flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-blue-500" />
+                                Bank Account Information
+                            </h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-muted-foreground">Bank Name</label>
+                                <input
+                                    type="text"
+                                    value={bankInfo.bankName}
+                                    onChange={(e) => setBankInfo({ ...bankInfo, bankName: e.target.value })}
+                                    placeholder="e.g. Stanbic Bank"
+                                    className="w-full bg-input border border-border rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-muted-foreground">Account Number</label>
+                                <input
+                                    type="text"
+                                    value={bankInfo.accountNumber}
+                                    onChange={(e) => setBankInfo({ ...bankInfo, accountNumber: e.target.value })}
+                                    placeholder="00XXX..."
+                                    className="w-full bg-input border border-border rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-muted-foreground">Account Name</label>
+                                <input
+                                    type="text"
+                                    value={bankInfo.accountName}
+                                    onChange={(e) => setBankInfo({ ...bankInfo, accountName: e.target.value })}
+                                    placeholder="Your Full Name"
+                                    className="w-full bg-input border border-border rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end">
+                            <button
+                                type="button"
+                                onClick={handleSaveBank}
+                                disabled={savingBank}
+                                className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-500 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                            >
+                                {savingBank ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                Save Bank Details
+                            </button>
                         </div>
                     </div>
 
