@@ -2,6 +2,7 @@
 
 import { LayoutDashboard, Activity, Settings, History, BarChart3, HelpCircle, LogOut, Cpu } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 
@@ -50,7 +51,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div>
           <div className="flex items-center justify-between px-2 pb-8 pt-4">
             <div className="flex items-center gap-2">
-              <Activity className="h-8 w-8 text-primary" />
+              <Image
+                src="/logo.png"
+                alt="SyntoicAi Logo"
+                width={32}
+                height={32}
+                className="rounded-full"
+                priority
+              />
               <span className="text-xl font-bold tracking-tight">SyntoicAi Bot <span className="text-xs font-normal text-primary border border-primary/20 bg-primary/10 px-1 rounded">Beta</span></span>
             </div>
             {/* Mobile Close Button */}

@@ -2,12 +2,18 @@
 
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatsCard } from "@/components/StatsCard";
-import { ActivityLog } from "@/components/ActivityLog";
-import { ProfitChart } from "@/components/ProfitChart";
+import dynamic from "next/dynamic";
+const ActivityLog = dynamic(() => import("@/components/ActivityLog").then(mod => mod.ActivityLog), { ssr: false });
+const ProfitChart = dynamic(() => import("@/components/ProfitChart").then(mod => mod.ProfitChart), {
+  ssr: false,
+  loading: () => <div className="h-[250px] w-full bg-secondary/10 animate-pulse rounded-lg mt-4" />
+});
 import { Bell, Wallet, ChevronDown, Activity, Play, RefreshCw, XCircle, Power, Loader2, CheckCircle, AlertTriangle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { botApi } from "@/lib/api";
+import { botApi, fetcher } from "@/lib/api";
+import useSWR from "swr";
+import { Skeleton } from "@/components/Skeleton";
 
 export default function Dashboard() {
   const router = useRouter(); // Initialize router
@@ -15,21 +21,6 @@ export default function Dashboard() {
   const [connecting, setConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
-
-  useEffect(() => {
-    // 1. Initial Load from Cache for Instant UI
-    const cachedStats = localStorage.getItem("syntoic_last_stats");
-    if (cachedStats) {
-      try {
-        setStats(JSON.parse(cachedStats));
-      } catch (e) {
-        console.error("Failed to parse cached stats", e);
-      }
-    }
-
-    checkConnection();
-    fetchStats();
-  }, []);
 
   const [stats, setStats] = useState({
     totalTrades: 0,
@@ -45,65 +36,76 @@ export default function Dashboard() {
     recentTrades: []
   });
 
-  const fetchStats = async () => {
-    try {
-      const res = await botApi.getAnalytics();
-      if (res.data) {
-        const newStats = {
-          ...stats,
-          totalTrades: res.data.totalTrades,
-          winRate: res.data.winRate,
-          netProfit: res.data.totalProfit,
-          wins: res.data.winLossData.find((d: any) => d.name === 'Wins')?.value || 0,
-          losses: res.data.winLossData.find((d: any) => d.name === 'Losses')?.value || 0,
-          streak: res.data.currentStreak || 0,
-          profitHistory: res.data.profitHistory || [],
-          recentTrades: res.data.recentTrades || []
-        };
-        setStats(newStats);
-        localStorage.setItem("syntoic_last_stats", JSON.stringify(newStats));
-      }
-    } catch (e) {
-      console.error("Failed to fetch stats", e);
+  // 1. Data Fetching with SWR
+  const { data: analytics, mutate: refreshAnalytics } = useSWR('/bot/analytics', fetcher, {
+    refreshInterval: 30000, // 30s
+    revalidateOnFocus: false
+  });
+
+  const { data: status, mutate: refreshStatus } = useSWR('/bot/status', fetcher, {
+    refreshInterval: 10000, // 10s
+  });
+
+  // 2. Synchronize SWR data to state and localStorage
+  useEffect(() => {
+    if (analytics) {
+      setStats(prev => ({
+        ...prev,
+        totalTrades: analytics.totalTrades,
+        winRate: analytics.winRate,
+        netProfit: analytics.totalProfit,
+        wins: analytics.winLossData?.find((d: any) => d.name === 'Wins')?.value || 0,
+        losses: analytics.winLossData?.find((d: any) => d.name === 'Losses')?.value || 0,
+        streak: analytics.currentStreak || 0,
+        profitHistory: analytics.profitHistory || [],
+        recentTrades: analytics.recentTrades || []
+      }));
     }
+  }, [analytics]);
+
+  useEffect(() => {
+    if (status) {
+      setIsConnected(true);
+      setIsRunning(status.isRunning || false);
+      if (status.derivAccount) {
+        setStats(prev => ({
+          ...prev,
+          balance: status.derivAccount.balance || 0,
+          currency: status.derivAccount.currency || 'USD',
+          accountType: status.derivAccount.accountType || 'demo'
+        }));
+      }
+    }
+  }, [status]);
+
+  useEffect(() => {
+    // 1. Initial Load from Cache for Instant UI
+    const cachedStats = localStorage.getItem("syntoic_last_stats");
+    if (cachedStats) {
+      try {
+        setStats(JSON.parse(cachedStats));
+      } catch (e) {
+        console.error("Failed to parse cached stats", e);
+      }
+    }
+  }, []);
+
+  // 2. Consolidate Caching Logic
+  useEffect(() => {
+    if (stats.balance > 0 || stats.totalTrades > 0) {
+      localStorage.setItem("syntoic_last_stats", JSON.stringify(stats));
+    }
+  }, [stats]);
+
+  const fetchStats = async () => {
+    await refreshAnalytics();
   };
 
   const checkConnection = async () => {
-    try {
-      const res = await botApi.getStatus();
-      if (res.data) {
-        setIsConnected(true);
-        // Assuming status returns if bot is running
-        setIsRunning(res.data.isRunning || false);
-
-        // Sync account info from status
-        if (res.data.derivAccount) {
-          const newStats = {
-            ...stats,
-            balance: res.data.derivAccount.balance || 0,
-            currency: res.data.derivAccount.currency || 'USD',
-            accountType: res.data.derivAccount.accountType || 'demo'
-          };
-          setStats(newStats);
-          localStorage.setItem("syntoic_last_stats", JSON.stringify(newStats));
-        }
-      }
-    } catch (e) {
-      console.error("Connection check failed", e);
-      setIsConnected(false);
-    }
+    await refreshStatus();
   };
 
-  // Poll stats every 10 seconds if connected
-  useEffect(() => {
-    if (isConnected) {
-      const interval = setInterval(() => {
-        fetchStats();
-        checkConnection(); // Fetch latest balance/status
-      }, 10000);
-      return () => clearInterval(interval);
-    }
-  }, [isConnected]);
+  // useSWR refresh provides the polling now
 
   const handleConnect = async () => {
     setConnecting(true);
@@ -267,14 +269,33 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-          <StatsCard label="Total Trades" value={stats.totalTrades.toString()} />
-          <StatsCard label="% Win Rate" value={`${stats.winRate}%`} color={stats.winRate >= 50 ? "green" : "red"} />
-          <StatsCard label="$ Net Profit" value={`${stats.netProfit >= 0 ? '+' : ''}${stats.netProfit.toFixed(2)}`} color={stats.netProfit >= 0 ? "green" : "red"} />
-          <StatsCard label="Wins" value={stats.wins.toString()} color="green" icon={Activity} />
-          <StatsCard label="Losses" value={stats.losses.toString()} color="red" icon={XCircle} />
-          <StatsCard label="Streak" value={stats.streak.toString()} color={stats.streak > 0 ? "green" : stats.streak < 0 ? "red" : "default"} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <StatsCard
+            label="Account Balance"
+            value={`$${stats.balance.toLocaleString()}`}
+            icon={Wallet}
+            isLoading={!status && stats.balance === 0}
+          />
+          <StatsCard
+            label="Net Profit"
+            value={`$${stats.netProfit.toFixed(2)}`}
+            color={stats.netProfit >= 0 ? "green" : "red"}
+            icon={Activity}
+            isLoading={!analytics && stats.netProfit === 0}
+          />
+          <StatsCard
+            label="Win Rate"
+            value={`${stats.winRate}%`}
+            icon={RefreshCw}
+            isLoading={!analytics && stats.winRate === 0}
+          />
+          <StatsCard
+            label="Current Streak"
+            value={stats.streak.toString()}
+            icon={stats.streak >= 0 ? CheckCircle : AlertTriangle}
+            color={stats.streak > 0 ? "green" : stats.streak < 0 ? "red" : "default"}
+            isLoading={!analytics && stats.streak === 0}
+          />
         </div>
 
         {/* Main Content Grid */}

@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { botApi } from "@/lib/api";
+import { botApi, fetcher } from "@/lib/api";
 import { format } from "date-fns";
 import { Loader2, ArrowUpRight, ArrowDownRight, RefreshCw } from "lucide-react";
+import useSWR from "swr";
+import { Skeleton } from "@/components/Skeleton";
 
 interface Trade {
     id: string;
@@ -20,29 +22,25 @@ interface Trade {
 }
 
 export default function TradeHistory() {
-    const [trades, setTrades] = useState<Trade[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [statusFilter, setStatusFilter] = useState<"all" | "won" | "lost">("all");
+    const [currentPage, setCurrentPage] = useState(1);
     const [refreshing, setRefreshing] = useState(false);
+    const ITEMS_PER_PAGE = 10;
 
-    useEffect(() => {
-        fetchHistory();
-    }, []);
+    const { data, mutate, isValidating: loading } = useSWR(
+        `/bot/history?page=${currentPage}&limit=${ITEMS_PER_PAGE}&status=${statusFilter}`,
+        fetcher,
+        { keepPreviousData: true }
+    );
 
-    const fetchHistory = async () => {
-        try {
-            const response = await botApi.getHistory();
-            setTrades(response.data.trades || []);
-        } catch (error) {
-            console.error("Failed to fetch history:", error);
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
-    };
+    const trades: Trade[] = data?.trades || [];
+    const totalPages = data?.pagination?.pages || 1;
+    const totalCount = data?.pagination?.total || 0;
 
-    const handleRefresh = () => {
+    const handleRefresh = async () => {
         setRefreshing(true);
-        fetchHistory();
+        await mutate();
+        setRefreshing(false);
     };
 
     return (
@@ -50,14 +48,33 @@ export default function TradeHistory() {
             <div className="p-4 md:p-6">
                 <header className="flex items-center justify-between mb-8">
                     <h1 className="text-2xl font-bold">Trade History</h1>
-                    <button
-                        onClick={handleRefresh}
-                        disabled={refreshing}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card border border-border hover:bg-accent transition-colors disabled:opacity-50"
-                    >
-                        <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-                        Refresh
-                    </button>
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center bg-secondary/20 rounded-lg p-1 border border-border">
+                            {(["all", "won", "lost"] as const).map((f) => (
+                                <button
+                                    key={f}
+                                    onClick={() => {
+                                        setStatusFilter(f);
+                                        setCurrentPage(1);
+                                    }}
+                                    className={`px-4 py-1 text-xs font-medium rounded-md transition-all capitalize ${statusFilter === f
+                                        ? "bg-primary text-primary-foreground shadow-sm"
+                                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                                        }`}
+                                >
+                                    {f}
+                                </button>
+                            ))}
+                        </div>
+                        <button
+                            onClick={handleRefresh}
+                            disabled={refreshing}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card border border-border hover:bg-accent transition-colors disabled:opacity-50"
+                        >
+                            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                            Refresh
+                        </button>
+                    </div>
                 </header>
 
                 <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -119,6 +136,32 @@ export default function TradeHistory() {
                                     ))}
                                 </tbody>
                             </table>
+
+                            {/* Pagination Controls */}
+                            <div className="flex items-center justify-between px-6 py-4 bg-muted/30 border-t border-border">
+                                <span className="text-xs text-muted-foreground font-medium">
+                                    Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} of {totalCount} trades
+                                </span>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1 || loading}
+                                        className="px-3 py-1.5 text-xs font-bold rounded-lg border border-border hover:bg-accent disabled:opacity-50 transition-colors"
+                                    >
+                                        Previous
+                                    </button>
+                                    <span className="text-xs font-bold px-3">
+                                        Page {currentPage} of {totalPages}
+                                    </span>
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages || loading}
+                                        className="px-3 py-1.5 text-xs font-bold rounded-lg border border-border hover:bg-accent disabled:opacity-50 transition-colors"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>

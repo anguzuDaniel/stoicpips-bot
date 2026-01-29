@@ -33,7 +33,14 @@ const saveTradeToDatabase = async (userId: string, trade: any) => {
       BotLogger.log(userId, `Failed to save trade: ${error.message}`, 'error');
     } else {
       console.log(`💾 [${userId}] Trade saved to database: ${trade.id}`);
-      // BotLogger.log(userId, `Trade saved to DB: #${trade.contractId}`, 'info');
+
+      // Invalidate analytics cache to show new trade immediately
+      const botStates = require('../../../types/botStates');
+      const botState = botStates.get(userId);
+      if (botState) {
+        botState.analyticsCache = undefined;
+        botState.lastSyncTime = 0; // Force sync on next refresh
+      }
     }
   } catch (error: any) {
     console.error(`❌ [${userId}] Save trade error:`, error.message);

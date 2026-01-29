@@ -15,7 +15,7 @@ import { syncDerivTrades } from './syncDerivTrades';
 const getTradeHistory = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const userId = req.user.id;
-        const { page = 1, limit = 50, start_date, end_date } = req.query;
+        const { page = 1, limit = 50, start_date, end_date, status } = req.query;
 
         const limitNum = Number(limit);
         const botStates = require('../../../types/botStates');
@@ -39,6 +39,10 @@ const getTradeHistory = async (req: AuthenticatedRequest, res: Response) => {
             .eq('user_id', userId)
             .order('created_at', { ascending: false })
             .range(offset, offset + limitNum - 1);
+
+        if (status && status !== 'all') {
+            query = query.eq('status', status);
+        }
 
         if (start_date) {
             query = query.gte('created_at', start_date);

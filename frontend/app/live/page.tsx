@@ -3,8 +3,15 @@
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { TradeForm } from "@/components/TradeForm";
-import { TradingChart } from "@/components/TradingChart";
-import { botApi } from "@/lib/api";
+import dynamic from "next/dynamic";
+const TradingChart = dynamic(() => import("@/components/TradingChart").then(mod => mod.TradingChart), {
+    ssr: false,
+    loading: () => <div className="h-full w-full bg-secondary/10 animate-pulse rounded-xl" />
+});
+import { botApi, fetcher } from "@/lib/api";
+import useSWR from "swr";
+import { Skeleton } from "@/components/Skeleton";
+import { ConfidenceGauge } from "@/components/ConfidenceGauge";
 import { Loader2, Activity, Play, StopCircle, RefreshCw, ChevronDown } from "lucide-react";
 
 const AVAILABLE_SYMBOLS = [
@@ -21,29 +28,14 @@ const AVAILABLE_SYMBOLS = [
 ];
 
 export default function LiveTradingPage() {
-    const [loading, setLoading] = useState(true);
     const [activeSymbol, setActiveSymbol] = useState("R_100");
-    const [botStatus, setBotStatus] = useState<any>(null);
-    const [isRunning, setIsRunning] = useState(false);
+    const { data: statusData, mutate: refreshStatus, error } = useSWR('/bot/status', fetcher, {
+        refreshInterval: 5000, // 5s
+    });
 
-    useEffect(() => {
-        fetchStatus();
-        // Poll status every 5 seconds
-        const interval = setInterval(fetchStatus, 5000);
-        return () => clearInterval(interval);
-    }, []);
-
-    const fetchStatus = async () => {
-        try {
-            const response = await botApi.getStatus();
-            setBotStatus(response.data);
-            setIsRunning(response.data.isRunning);
-        } catch (error) {
-            console.error("Failed to fetch status:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const botStatus = statusData;
+    const isRunning = statusData?.isRunning || false;
+    const loading = !statusData && !error;
 
     const handleStartBot = async () => {
         try {
@@ -52,7 +44,7 @@ export default function LiveTradingPage() {
             } else {
                 await botApi.startBot();
             }
-            fetchStatus();
+            refreshStatus();
         } catch (error) {
             console.error("Failed to toggle bot:", error);
         }
@@ -175,6 +167,9 @@ export default function LiveTradingPage() {
                                 <span className="text-xs font-medium text-green-500">+2.4%</span>
                             </div>
                             <div className="text-2xl font-bold">$10,024.50</div>
+                            <div className="mt-4">
+                                <ConfidenceGauge value={botStatus?.performance?.confidence || 85} isLoading={loading} />
+                            </div>
                         </div>
                         <TradeForm />
 

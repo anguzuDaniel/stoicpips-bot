@@ -50,7 +50,12 @@ const updateExistingTrades = async (userId: string): Promise<number> => {
             })
             .eq('trade_id', trade.id);
 
-          if (!error) updatedTrades++;
+          if (!error) {
+            updatedTrades++;
+            // Invalidate analytics cache
+            botState.analyticsCache = undefined;
+            botState.lastSyncTime = 0;
+          }
         }
 
       } catch (err: any) {

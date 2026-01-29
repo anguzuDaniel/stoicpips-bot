@@ -1,4 +1,6 @@
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
+
+export const fetcher = (url: string) => api.get(url).then(res => res.data);
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 
@@ -34,7 +36,7 @@ export const botApi = {
     stopBot: () => api.post("/bot/stop"),
     getStatus: () => api.get("/bot/status"),
     forceTrade: (data: { amount: number; symbol: string; contractType: 'CALL' | 'PUT'; duration: number }) => api.post("/bot/force-trade", data),
-    getHistory: (params?: { page?: number; limit?: number }) => api.get("/bot/history", { params }),
+    getHistory: (params?: { page?: number; limit?: number; status?: string }) => api.get("/bot/history", { params }),
     getAnalytics: () => api.get("/bot/analytics"),
     getLogs: () => api.get("/bot/logs"),
 

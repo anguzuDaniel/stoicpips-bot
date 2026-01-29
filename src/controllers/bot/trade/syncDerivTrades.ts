@@ -87,6 +87,12 @@ export const syncDerivTrades = async (userId: string, derivWS: DerivWebSocket, l
         }
 
         console.log(`✅ [${userId}] Successfully synced ${tradesToInsert.length} new trades.`);
+
+        // Invalidate analytics cache since we have new data
+        if (botState && tradesToInsert.length > 0) {
+            botState.analyticsCache = undefined;
+        }
+
         return tradesToInsert.length;
 
     } catch (error: any) {
