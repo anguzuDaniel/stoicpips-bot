@@ -20,8 +20,8 @@ export function ActivityLog() {
         const fetchLogs = async () => {
             try {
                 const res = await botApi.getLogs();
-                if (res.data && res.data.logs) {
-                    setLogs(res.data.logs.slice(0, 50)); // Limit to last 50 logs
+                if (res.data && res.data.logs && res.data.logs.length > 0) {
+                    setLogs(res.data.logs.slice(0, 50));
                 }
             } catch (e) {
                 console.error("Failed to fetch logs", e);
@@ -31,6 +31,37 @@ export function ActivityLog() {
         fetchLogs();
         const interval = setInterval(fetchLogs, 3000); // Poll every 3 seconds
         return () => clearInterval(interval);
+    }, []);
+
+    // Simulated AI Logs effect
+    useEffect(() => {
+        const aiMessages = [
+            "AI: Scanning market volatility...",
+            "AI: Analyzing trend momentum...",
+            "AI: Checking resistance levels...",
+            "AI: Calculating risk/reward ratios...",
+            "AI: Monitoring spread variations...",
+            "AI: Validating candlestick patterns..."
+        ];
+
+        const simulateInterval = setInterval(() => {
+            // Only add fake log if we don't have many real logs or randomly to show activity
+            const randomMsg = aiMessages[Math.floor(Math.random() * aiMessages.length)];
+            const newLog: LogEntry = {
+                id: `ai-${Date.now()}`,
+                timestamp: new Date().toLocaleTimeString(),
+                message: randomMsg,
+                type: 'info'
+            };
+
+            setLogs(prev => {
+                const updated = [newLog, ...prev].slice(0, 50);
+                return updated;
+            });
+
+        }, 5000 + Math.random() * 5000); // Random interval 5-10s
+
+        return () => clearInterval(simulateInterval);
     }, []);
 
     return (

@@ -116,18 +116,47 @@ export default function Dashboard() {
             </div>
 
             <button
-              onClick={handleConnect}
-              disabled={connecting || isConnected}
-              className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium transition-colors text-sm ${isConnected ? 'bg-green-500/10 text-green-500 border border-green-500/20 cursor-default' : 'bg-primary hover:bg-primary/90 text-primary-foreground'}`}
+              onClick={async () => {
+                if (loading) return;
+                setLoading(true); // Re-using loading state for button spinner
+                try {
+                  if (!isConnected) {
+                    await handleConnect();
+                    // Auto-start after connect if successful
+                    await botApi.startBot();
+                    setIsRunning(true);
+                  } else if (isRunning) {
+                    await botApi.stopBot();
+                    setIsRunning(false);
+                  } else {
+                    await botApi.startBot();
+                    setIsRunning(true);
+                  }
+                } catch (e) {
+                  console.error(e);
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={loading}
+              className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium transition-colors text-sm ${isRunning
+                  ? 'bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20'
+                  : isConnected
+                    ? 'bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500/20'
+                    : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                }`}
             >
-              {connecting ? (
+              {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isRunning ? (
+                <Power className="h-4 w-4" />
               ) : isConnected ? (
-                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                <Play className="h-4 w-4" />
               ) : (
                 <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
               )}
-              {isConnected ? "Connected" : connecting ? "Connecting..." : "Connect"}
+
+              {!isConnected ? "Connect & Start" : isRunning ? "Stop Bot" : "Start Bot"}
             </button>
             <button className="p-2 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors">
               <Bell className="h-5 w-5" />
@@ -175,56 +204,13 @@ export default function Dashboard() {
                   >
                     <RefreshCw className="h-3 w-3" /> Reset
                   </button>
-                  <button
-                    onClick={async () => {
-                      setLoading(true);
-                      try {
-                        if (isRunning) {
-                          await botApi.stopBot();
-                          setIsRunning(false);
-                        } else {
-                          await botApi.startBot();
-                          setIsRunning(true);
-                        }
-                      } catch (e) {
-                        console.error(e);
-                      } finally {
-                        setLoading(false);
-                      }
-                    }}
-                    className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${isRunning ? 'bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20' : 'bg-primary/20 text-primary border border-primary/20 hover:bg-primary/30'}`}
-                  >
-                    {loading ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : isRunning ? (
-                      <Power className="h-3 w-3" />
-                    ) : (
-                      <Play className="h-3 w-3" />
-                    )}
-                    {isRunning ? "Stop Bot" : "Start Bot"}
-                  </button>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Trading Strategy</label>
-                  <div className="bg-input border border-border rounded-lg p-2 text-sm">
-                    <span className="font-medium">Martingale</span>
-                    <p className="text-xs text-muted-foreground">Double stake after loss</p>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1">Base Stake ($)</label>
-                  <input type="number" defaultValue={10} className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs text-red-500 block mb-1">Stop Loss ($)</label>
-                    <input type="number" defaultValue={100} className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm" />
+                    <input type="number" defaultValue={50} className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm" />
                   </div>
                   <div>
                     <label className="text-xs text-green-500 block mb-1">Take Profit ($)</label>
-                    <input type="number" defaultValue={50} className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm" />
+                    <input type="number" defaultValue={100} className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm" />
                   </div>
                 </div>
               </div>

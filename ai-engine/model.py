@@ -81,14 +81,13 @@ class TradePredictor:
         buy_prob = probas[1]
         sell_prob = probas[2]
         
-        # 4. Determine Action
-        action = "HOLD"
-        confidence = hold_prob
+        # 4. Determine Action by forcing BUY or SELL
+        # Ignoring hold_prob completely as per user request to bypass hold
         
-        if buy_prob > 0.6 and buy_prob > sell_prob:
+        if buy_prob >= sell_prob:
             action = "BUY"
             confidence = buy_prob
-        elif sell_prob > 0.6 and sell_prob > buy_prob:
+        else:
             action = "SELL"
             confidence = sell_prob
             

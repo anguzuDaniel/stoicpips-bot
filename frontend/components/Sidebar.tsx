@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, Activity, Settings, History, BarChart3, HelpCircle, LogOut } from "lucide-react";
+import { LayoutDashboard, Activity, Settings, History, BarChart3, HelpCircle, LogOut, Cpu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
@@ -74,6 +74,31 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               </Link>
             ))}
           </nav>
+        </div>
+
+        <div className="px-3 py-2 mt-auto mb-2">
+          <div className="rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-indigo-500 flex items-center gap-1.5">
+                <Cpu className="h-3.5 w-3.5" />
+                AI Engine
+              </span>
+              <span className="flex h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse" />
+            </div>
+            <div className="space-y-1">
+              <div className="flex justify-between text-[10px] text-muted-foreground">
+                <span>Status</span>
+                <span className="text-green-500 font-medium">Online</span>
+              </div>
+              <div className="flex justify-between text-[10px] text-muted-foreground">
+                <span>Latency</span>
+                <span className="font-mono">45ms</span>
+              </div>
+              <div className="w-full bg-secondary/50 h-1 rounded-full overflow-hidden mt-1">
+                <div className="bg-indigo-500 h-full w-[85%] animate-[pulse_3s_ease-in-out_infinite]" />
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-1 border-t border-border pt-4">
