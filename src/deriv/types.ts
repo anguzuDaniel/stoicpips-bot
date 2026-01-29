@@ -45,7 +45,7 @@ export interface TradeResult {
   longcode: string;
   proposal_id?: string;
 }
- 
+
 export interface SupplyDemandZone {
   top: number;
   bottom: number;
@@ -86,4 +86,6 @@ export interface TradingSignal {
   confidence: number;
   zone: SupplyDemandZone;
   timestamp: number;
+  takeProfit?: number;
+  stopLoss?: number;
 }
