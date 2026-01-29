@@ -123,9 +123,18 @@ export default function Dashboard() {
       // Regardless of isConnected (which might just mean idle balance connection),
       // we want to ensure the bot is actually STARTED if the user clicks this.
       console.log("🚀 Attempting to start the bot...");
-      await botApi.startBot();
+      const response = await botApi.startBot();
       setIsConnected(true);
       setIsRunning(true);
+
+      if (response.data?.welcomeMessage) {
+        setAlertState({
+          isOpen: true,
+          type: "success",
+          title: "Trial Activated! 🚀",
+          message: response.data.welcomeMessage
+        });
+      }
 
       // Refresh status to get updated account info
       await checkConnection();
@@ -189,7 +198,17 @@ export default function Dashboard() {
       <div className="p-4 md:p-10 max-w-[1600px] mx-auto w-full">
         {/* Top Header */}
         <header className="flex items-center justify-between mb-8 gap-4">
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-foreground">Dashboard</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-foreground">Dashboard</h1>
+            {status && (
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${status.subscriptionTier === 'elite' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                status.subscriptionTier === 'pro' ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20' :
+                  'bg-slate-500/10 text-slate-500 border-slate-500/20'
+                }`}>
+                {status.subscriptionTier === 'free' ? 'Free Tier' : (status.subscriptionTier || 'Free') + ' Tier'}
+              </span>
+            )}
+          </div>
 
           <div className="flex items-center gap-2 md:gap-4">
             {/* Account Toggle - Fixed event propagation */}
@@ -319,7 +338,7 @@ export default function Dashboard() {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* Left Column (Chart & Signals) */}
           <div className="lg:col-span-2 space-y-6">

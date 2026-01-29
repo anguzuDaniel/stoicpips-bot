@@ -275,10 +275,16 @@ export default function ProfilePage() {
                                     {!isProfileIncomplete && (
                                         <button
                                             type="button"
-                                            onClick={() => router.push("/")}
-                                            className="inline-flex items-center justify-center gap-3 rounded-2xl bg-white border border-border px-10 py-4 font-black text-sm text-foreground shadow-sm transition-all hover:bg-accent hover:scale-[1.02] active:scale-[0.98]"
+                                            onClick={() => {
+                                                if (profile?.subscription_tier === 'free' || !profile?.subscription_tier) {
+                                                    router.push("/pricing");
+                                                } else {
+                                                    router.push("/");
+                                                }
+                                            }}
+                                            className="inline-flex items-center justify-center gap-3 rounded-2xl bg-white border border-border px-10 py-4 font-black text-sm text-slate-900 shadow-sm transition-all hover:bg-slate-100 hover:scale-[1.02] active:scale-[0.98]"
                                         >
-                                            Continue to Dashboard
+                                            {profile?.subscription_tier === 'free' || !profile?.subscription_tier ? "Select a Plan" : "Continue to Dashboard"}
                                             <ExternalLink className="h-4 w-4" />
                                         </button>
                                     )}

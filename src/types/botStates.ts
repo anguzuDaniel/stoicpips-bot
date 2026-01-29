@@ -16,6 +16,7 @@ export const botStates = new Map<string, {
     data: any;
     timestamp: number;
   };
+  cachedDbStatus?: any; // Cached database status for optimization
   config: any;
   executionMode?: string;
   subscriptionTier?: string;

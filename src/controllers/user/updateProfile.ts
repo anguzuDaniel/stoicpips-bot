@@ -13,11 +13,22 @@ export const updateProfile = async (req: any, res: Response) => {
 
         const { fullName, username, tradingExperience, bankName, accountNumber, accountName } = req.body;
 
+        const email = req.user?.email;
+
         const updateData: any = {
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
+            email: email, // Ensure email is present for upsert/creation
+            phone: "", // Default empty phone to satisfy not-null constraint
+            country_code: "US" // Default country code to satisfy not-null constraint
         };
 
-        if (fullName !== undefined) updateData.full_name = fullName;
+        if (fullName !== undefined) {
+            updateData.full_name = fullName;
+            // Split full name into first and last name for legacy/schema compatibility
+            const names = fullName.trim().split(' ');
+            updateData.first_name = names[0];
+            updateData.last_name = names.length > 1 ? names.slice(1).join(' ') : '';
+        }
         if (username !== undefined) updateData.username = username;
         if (tradingExperience !== undefined) updateData.trading_experience = tradingExperience;
 

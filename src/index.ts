@@ -41,8 +41,11 @@ app.use((err: any, req: any, res: any, next: any) => {
   });
 });
 
+import { resurrectBots } from './utils/resurrectBots';
+
 const PORT = Number(process.env.PORT) || 3000;
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
+  resurrectBots(); // Restore running bots
 });

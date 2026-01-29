@@ -14,6 +14,10 @@ export const getUserProfile = async (req: any, res: any) => {
       .single();
 
     if (error) {
+      if (error.code === 'PGRST116') {
+        // No profile found, return null user so frontend can show empty form
+        return res.json({ user: null });
+      }
       console.error(`❌ [${userId}] Fetch profile error:`, error.message);
       return res.status(400).json({ error: error.message });
     }

@@ -68,7 +68,7 @@ export function ActivityLog() {
     }, []);
 
     return (
-        <div className="rounded-xl border border-border bg-card h-[500px] flex flex-col">
+        <div className="rounded-xl border border-border bg-card h-full flex flex-col">
             <div className="p-6 border-b border-border flex items-center justify-between">
                 <h3 className="font-bold flex items-center gap-2">
                     <Activity className="h-4 w-4 text-primary" />

@@ -37,7 +37,10 @@ export function UpgradeModal({ isOpen, onClose, message }: UpgradeModalProps) {
 
                     <div className="grid gap-3 w-full">
                         <button
-                            onClick={() => window.location.href = '/settings'}
+                            onClick={() => {
+                                // Redirect to pricing page
+                                window.location.href = '/pricing';
+                            }}
                             className="w-full bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold py-3 px-6 rounded-lg transition-all shadow-lg hover:shadow-amber-500/20"
                         >
                             Upgrade to Elite

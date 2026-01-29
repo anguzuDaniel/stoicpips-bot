@@ -111,14 +111,15 @@ export const startBot = async (req: AuthenticatedRequest, res: Response) => {
         });
       }
 
-      if (hasTakenFirstTrade) {
-        return res.status(403).json({
-          error: "The Emperor has spoken. You have seen the power of SyntoicAi. Upgrade to Elite for full automation.",
-          code: "UPGRADE_REQUIRED"
-        });
+      // Allow full access for 1 week
+      executionMode = 'auto'; // Was 'first_trade'
+
+      // If this is effectively their "first" real run (even if we reset them), let's show the welcome
+      if (!hasTakenFirstTrade) {
+        // modifying the response object later to include this
+        // We can attach it to req or just set a local var
       }
-      executionMode = 'first_trade';
-      BotLogger.log(userId, "Welcome! You are currently in your 1-week free trial. Enjoy!", "info");
+      BotLogger.log(userId, "Welcome! You are currently in your 1-week free trial. Enjoy full access!", "info");
     } else if (tier === 'pro') {
       executionMode = 'signal_only';
     } else {
@@ -265,7 +266,8 @@ export const startBot = async (req: AuthenticatedRequest, res: Response) => {
       status: "running",
       startedAt: botState.startedAt,
       user: { id: userId, email: userEmail, subscription, subscriptionTier: tier },
-      config
+      config,
+      welcomeMessage: (tier === 'free' && !hasTakenFirstTrade) ? "Welcome to your 1-week free trial! 🚀 Enjoy the full power of SyntoicAi. Consider upgrading to Elite if you love the experience!" : undefined
     });
 
   } catch (error: any) {

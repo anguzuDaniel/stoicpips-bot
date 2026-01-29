@@ -51,14 +51,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       )}>
         <div>
           <div className="flex items-center justify-between px-2 pb-8 pt-4">
-            <div className="flex items-center gap-2">
-              <Image
+            <div className="flex items-center gap-3">
+              <img
                 src="/logo.png"
                 alt="SyntoicAi Logo"
-                width={32}
-                height={32}
-                className="rounded-full"
-                priority
+                className="h-10 w-10 drop-shadow-md rounded-full"
               />
               <span className="text-xl font-bold tracking-tight">SyntoicAi Bot <span className="text-xs font-normal text-primary border border-primary/20 bg-primary/10 px-1 rounded">Beta</span></span>
             </div>
