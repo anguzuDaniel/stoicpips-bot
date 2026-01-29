@@ -111,6 +111,26 @@ export default function Dashboard() {
     }
   };
 
+  const handleAccountSwitch = async (type: 'real' | 'demo') => {
+    if (stats.accountType === type) return;
+
+    const confirmMsg = type === 'real'
+      ? "Switching to REAL account. Real funds will be used. Continue?"
+      : "Switching to Demo account.";
+
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      setLoading(true);
+      await botApi.toggleAccount(type);
+      await checkConnection(); // Refresh status immediately
+    } catch (e: any) {
+      alert("Failed to switch account. Ensure tokens are configured in Settings.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="p-4 md:p-6">
