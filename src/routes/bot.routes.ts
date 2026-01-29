@@ -1,5 +1,5 @@
-const { Router } = require('express');
-const { authenticateToken, requirePaidUser } = require('../middleware/auth.middleware');
+import { Router } from 'express';
+import { authenticateToken, requirePaidUser } from '../middleware/auth.middleware';
 import { saveBotConfig } from "../controllers/bot/config/saveBotConfig";
 import { getBotConfig } from "../controllers/bot/config/getBotConfig";
 import { startBot } from "../controllers/bot/startBot";
@@ -30,4 +30,4 @@ router.post("/toggle-account", authenticateToken, toggleAccount);
 // AI Endpoint (Pro Users Only)
 router.post("/ai-signal", authenticateToken, requirePaidUser, getAiSignal);
 
-module.exports = router;
+export default router;

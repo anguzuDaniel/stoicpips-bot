@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import { authenticateToken, requireAdmin } from '../middleware/auth.middleware';
+
 const router = express.Router();
-const { authenticateToken, requireAdmin } = require('../middleware/auth.middleware');
 
 // Admin controllers
 const usersController = require('../controllers/admin/users');
@@ -27,4 +28,4 @@ router.get('/bot/status', botControlController.getGlobalBotStatus);
 // Analytics
 router.get('/analytics/global', analyticsController.getGlobalAnalytics);
 
-module.exports = router;
+export default router;
