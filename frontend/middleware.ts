@@ -54,7 +54,14 @@ export async function middleware(request: NextRequest) {
 
     // Admin route protection
     if (session && request.nextUrl.pathname.startsWith('/admin')) {
-        // Fetch user profile to check admin status
+        // 1. Check User Metadata (Fastest & fail-safe)
+        const userMetadata = session.user.user_metadata;
+        if (userMetadata?.is_admin === true) {
+            console.log('[Middleware] Admin access granted via metadata');
+            return response;
+        }
+
+        // 2. Fallback: Fetch user profile from DB (if metadata missing)
         const { data: profile, error } = await supabase
             .from('profiles')
             .select('is_admin, email')
