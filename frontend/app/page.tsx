@@ -4,6 +4,8 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatsCard } from "@/components/StatsCard";
 import { ConfidenceGauge } from "@/components/ConfidenceGauge";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { AlertModal } from "@/components/AlertModal";
+import { ConfirmModal } from "@/components/ConfirmModal";
 import dynamic from "next/dynamic";
 const ActivityLog = dynamic(() => import("@/components/ActivityLog").then(mod => mod.ActivityLog), { ssr: false });
 const ProfitChart = dynamic(() => import("@/components/ProfitChart").then(mod => mod.ProfitChart), {
@@ -25,6 +27,9 @@ export default function Dashboard() {
   const [isRunning, setIsRunning] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
+
+  const [alertState, setAlertState] = useState<{ isOpen: boolean, type: "error" | "success" | "info", title?: string, message: string }>({ isOpen: false, type: "error", message: "" });
+  const [confirmState, setConfirmState] = useState<{ isOpen: boolean, title?: string, message: string, onConfirm: () => void }>({ isOpen: false, message: "", onConfirm: () => { } });
 
   const [stats, setStats] = useState({
     totalTrades: 0,
@@ -131,24 +136,13 @@ export default function Dashboard() {
         return;
       }
       const errorMsg = e.response?.data?.error || "Failed to start bot. Please check Settings.";
-      alert(errorMsg);
-      if (errorMsg.includes("Token")) {
-        router.push("/settings");
-      }
+      setAlertState({ isOpen: true, type: "error", message: errorMsg });
     } finally {
       setConnecting(false);
     }
   };
 
-  const handleAccountSwitch = async (type: 'real' | 'demo') => {
-    if (stats.accountType === type) return;
-
-    const confirmMsg = type === 'real'
-      ? "Switching to REAL account. Real funds will be used. Continue?"
-      : "Switching to Demo account.";
-
-    if (!confirm(confirmMsg)) return;
-
+  const performAccountSwitch = async (type: "real" | "demo") => {
     try {
       setLoading(true);
       console.log(`🔄 Switching account to ${type}...`);
@@ -159,13 +153,34 @@ export default function Dashboard() {
 
       await checkConnection(); // Refresh status immediately
       console.log("✅ Account switched successfully:", response.data);
+      setAlertState({
+        isOpen: true,
+        type: "success",
+        title: "Switched Successfully",
+        message: type === "real" ? "You are now trading with REAL funds." : "Switched to Demo account."
+      });
     } catch (e: any) {
       console.error("❌ Toggle failed:", e);
       const errorMsg = e.response?.data?.error || "Failed to switch account. Ensure tokens are configured in Settings.";
-      alert(errorMsg);
+      setAlertState({ isOpen: true, type: "error", message: errorMsg });
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAccountSwitch = (type: "real" | "demo") => {
+    if (stats.accountType === type) return;
+
+    const confirmMsg = type === "real"
+      ? "Switching to REAL account. Real funds will be used. Continue?"
+      : "Switching to Demo account.";
+
+    setConfirmState({
+      isOpen: true,
+      title: "Confirm Switch",
+      message: confirmMsg,
+      onConfirm: () => performAccountSwitch(type)
+    });
   };
 
   return (
@@ -436,6 +451,22 @@ export default function Dashboard() {
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
         message={upgradeMessage}
+      />
+
+      <AlertModal
+        isOpen={alertState.isOpen}
+        onClose={() => setAlertState(prev => ({ ...prev, isOpen: false }))}
+        type={alertState.type}
+        title={alertState.title}
+        message={alertState.message}
+      />
+
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        onClose={() => setConfirmState(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmState.onConfirm}
+        title={confirmState.title}
+        message={confirmState.message}
       />
     </DashboardLayout>
   );
