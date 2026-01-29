@@ -84,15 +84,27 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
     // Check Subscription Tier & First Trade Logic
     const { data: profile } = await supabase
       .from('profiles')
-      .select('subscription_tier, has_taken_first_trade')
+      .select('subscription_tier, has_taken_first_trade, created_at')
       .eq('id', userId)
       .single();
 
     const tier = profile?.subscription_tier || 'free';
     const hasTakenFirstTrade = profile?.has_taken_first_trade || false;
+    const createdAt = profile?.created_at;
     let executionMode = 'auto'; // Default for Elite
 
+    // 1-Week Trial Check
+    const trialDurationMs = 7 * 24 * 60 * 60 * 1000;
+    const isTrialExpired = createdAt && (new Date().getTime() - new Date(createdAt).getTime()) > trialDurationMs;
+
     if (tier === 'free') {
+      if (isTrialExpired) {
+        return res.status(403).json({
+          error: "Your 1-week free trial has expired. Upgrade to Pro or Elite to continue using SyntoicAi.",
+          code: "UPGRADE_REQUIRED"
+        });
+      }
+
       if (hasTakenFirstTrade) {
         return res.status(403).json({
           error: "The Emperor has spoken. You have seen the power of SyntoicAi. Upgrade to Elite for full automation.",
@@ -100,7 +112,8 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
         });
       }
       executionMode = 'first_trade';
-      console.log(`🎁 [${userId}] User granted First Trade Exception.`);
+      console.log(`🎁 [${userId}] User granted First Trade Exception (Trial Active).`);
+      BotLogger.log(userId, "Welcome! You are currently in your 1-week free trial. Enjoy!", "info");
     } else if (tier === 'pro') {
       executionMode = 'signal_only';
       console.log(`🛡️ [${userId}] Pro Tier: Signal Only Mode.`);

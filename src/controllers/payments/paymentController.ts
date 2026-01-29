@@ -8,8 +8,8 @@ const FLW_WEBHOOK_HASH = process.env.FLW_WEBHOOK_HASH;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 const PRICES = {
-    pro: 49,
-    elite: 99
+    pro: 10,
+    elite: 50
 };
 
 export const initializePayment = async (req: any, res: Response) => {
