@@ -264,35 +264,37 @@ export default function Dashboard() {
 
             {/* Bot Configuration (Moved here) */}
             <div className="rounded-xl border border-border bg-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                <h3 className="font-bold flex items-center gap-2 shrink-0">
                   <SettingsIcon className="h-4 w-4" /> Bot Configuration
                 </h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={async () => {
-                      if (confirm("Are you sure you want to reset all trade history and stats? This cannot be undone.")) {
-                        try {
-                          await botApi.resetBot();
-                          await fetchStats(); // Refresh stats immediately
-                          alert("Bot history reset successfully.");
-                        } catch (e) {
-                          console.error("Reset failed", e);
-                          alert("Failed to reset.");
+                <div className="grid grid-cols-2 md:flex items-end gap-3 w-full sm:w-auto">
+                  <div className="col-span-2 md:col-auto flex items-end">
+                    <button
+                      onClick={async () => {
+                        if (confirm("Are you sure you want to reset all trade history and stats? This cannot be undone.")) {
+                          try {
+                            await botApi.resetBot();
+                            await fetchStats(); // Refresh stats immediately
+                            alert("Bot history reset successfully.");
+                          } catch (e) {
+                            console.error("Reset failed", e);
+                            alert("Failed to reset.");
+                          }
                         }
-                      }
-                    }}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border hover:bg-accent text-xs font-medium transition-colors"
-                  >
-                    <RefreshCw className="h-3 w-3" /> Reset
-                  </button>
-                  <div>
-                    <label className="text-xs text-red-500 block mb-1">Stop Loss ($)</label>
-                    <input type="number" defaultValue={50} className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm" />
+                      }}
+                      className="w-full flex items-center justify-center gap-1 px-3 py-2 rounded-lg border border-border hover:bg-accent text-xs font-medium transition-colors h-9"
+                    >
+                      <RefreshCw className="h-3 w-3" /> Reset History
+                    </button>
                   </div>
-                  <div>
-                    <label className="text-xs text-green-500 block mb-1">Take Profit ($)</label>
-                    <input type="number" defaultValue={100} className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm" />
+                  <div className="flex-1 min-w-[100px]">
+                    <label className="text-[10px] text-red-500 font-bold uppercase block mb-1">Stop Loss ($)</label>
+                    <input type="number" defaultValue={50} className="w-full bg-input border border-border rounded-lg px-3 py-1.5 text-sm h-9" />
+                  </div>
+                  <div className="flex-1 min-w-[100px]">
+                    <label className="text-[10px] text-green-500 font-bold uppercase block mb-1">Take Profit ($)</label>
+                    <input type="number" defaultValue={100} className="w-full bg-input border border-border rounded-lg px-3 py-1.5 text-sm h-9" />
                   </div>
                 </div>
               </div>

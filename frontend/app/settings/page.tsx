@@ -157,7 +157,7 @@ export default function SettingsPage() {
             <div className="p-4 md:p-6">
                 <h1 className="text-2xl font-bold mb-8">Bot Settings</h1>
 
-                <form onSubmit={handleSave} className="max-w-2xl space-y-8">
+                <form onSubmit={handleSave} className="max-w-4xl space-y-8">
                     {/* General Settings */}
                     <div className="rounded-xl border border-border bg-card p-6 space-y-6">
                         <h2 className="text-lg font-semibold border-b border-border pb-2">Trading Parameters</h2>
@@ -288,7 +288,7 @@ export default function SettingsPage() {
                         <div className="space-y-4">
                             <div>
                                 <label className="text-sm font-medium block mb-2">AI Signal Provider</label>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <button
                                         type="button"
                                         onClick={() => setConfig({ ...config, aiProvider: 'local' })}
