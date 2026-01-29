@@ -117,6 +117,7 @@ class DerivWebSocket extends EventEmitter {
           type: 'error',
           message: `Authorization failed: ${data.error.message}`
         });
+        this.emit('authorized', { success: false, error: data.error.message });
         return;
       }
 
@@ -127,6 +128,9 @@ class DerivWebSocket extends EventEmitter {
       this.accountType = this.accountLoginId.startsWith('V') ? 'demo' : 'real';
 
       console.log(`✅ Authorized successfully. Account: ${this.accountLoginId} (${this.accountType.toUpperCase()}) | Balance: ${this.currentBalance} ${this.currency}`);
+
+      // Emit specific authorized event for controllers to await
+      this.emit('authorized', { success: true, accountType: this.accountType, loginId: this.accountLoginId });
 
       // Emit debug logs for frontend visibility
       this.emit('log', {

@@ -126,10 +126,18 @@ export default function Dashboard() {
 
     try {
       setLoading(true);
-      await botApi.toggleAccount(type);
+      console.log(`🔄 Switching account to ${type}...`);
+      const response = await botApi.toggleAccount(type);
+
+      // Wait a moment for balance subscription to kick in
+      await new Promise(r => setTimeout(r, 1000));
+
       await checkConnection(); // Refresh status immediately
+      console.log("✅ Account switched successfully:", response.data);
     } catch (e: any) {
-      alert("Failed to switch account. Ensure tokens are configured in Settings.");
+      console.error("❌ Toggle failed:", e);
+      const errorMsg = e.response?.data?.error || "Failed to switch account. Ensure tokens are configured in Settings.";
+      alert(errorMsg);
     } finally {
       setLoading(false);
     }

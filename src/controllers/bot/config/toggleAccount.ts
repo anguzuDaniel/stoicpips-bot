@@ -71,21 +71,48 @@ export const toggleAccount = async (req: AuthenticatedRequest, res: Response) =>
             BotLogger.log(userId, logData.message, logData.type);
         });
 
+        // Create a promise to wait for authorization
+        const authPromise = new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                newWS.off('authorized', authHandler);
+                reject(new Error("Authorization timed out"));
+            }, 10000);
+
+            const authHandler = (authData: any) => {
+                clearTimeout(timeout);
+                if (authData.success) {
+                    resolve(authData);
+                } else {
+                    reject(new Error(authData.error || "Authorization failed"));
+                }
+            };
+            newWS.once('authorized', authHandler);
+        });
+
         newWS.connect();
 
-        // Update state
-        botState.derivWS = newWS;
-        botState.derivConnected = true;
+        try {
+            const authResult: any = await authPromise;
+            console.log(`✅ Account switch confirmed: ${authResult.accountType} (${authResult.loginId})`);
 
-        // Update active token in config purely in memory for this session
-        // so if we restart, it might revert unless we persist 'lastActiveAccount' pref
-        // For now, in-memory switch is sufficient for the session.
+            // Update state
+            botState.derivWS = newWS;
+            botState.derivConnected = true;
 
-        return res.json({
-            success: true,
-            message: `Switched to ${targetType} account`,
-            accountType: targetType
-        });
+            return res.json({
+                success: true,
+                message: `Switched to ${targetType} account`,
+                accountType: authResult.accountType,
+                loginId: authResult.loginId
+            });
+        } catch (authErr: any) {
+            console.error("❌ Authorization failed during toggle:", authErr.message);
+            // Cleanup the failed connection
+            newWS.disconnect();
+            return res.status(401).json({
+                error: `Failed to switch to ${targetType} account: ${authErr.message}`
+            });
+        }
 
     } catch (error: any) {
         console.error('Toggle account error:', error);
