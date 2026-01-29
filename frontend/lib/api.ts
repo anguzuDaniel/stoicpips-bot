@@ -46,5 +46,5 @@ export const botApi = {
 
     // User endpoints
     getProfile: () => api.get("/user/profile"),
-    updateBankInfo: (data: { bankName: string; accountNumber: string; accountName: string }) => api.post("/user/update-bank-info", data),
+    updateCardInfo: (data: { bankName: string; accountNumber: string; accountName: string }) => api.post("/user/update-bank-info", data),
 };
