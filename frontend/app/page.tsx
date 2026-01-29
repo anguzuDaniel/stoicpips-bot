@@ -38,7 +38,8 @@ export default function Dashboard() {
     try {
       const res = await botApi.getAnalytics();
       if (res.data) {
-        setStats({
+        setStats(prev => ({
+          ...prev,
           totalTrades: res.data.totalTrades,
           winRate: res.data.winRate,
           netProfit: res.data.totalProfit,
@@ -46,7 +47,7 @@ export default function Dashboard() {
           losses: res.data.winLossData.find((d: any) => d.name === 'Losses')?.value || 0,
           streak: res.data.currentStreak || 0,
           profitHistory: res.data.profitHistory || []
-        });
+        }));
       }
     } catch (e) {
       console.error("Failed to fetch stats", e);
