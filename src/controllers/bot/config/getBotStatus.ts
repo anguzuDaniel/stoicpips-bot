@@ -64,12 +64,14 @@ const getBotStatus = async (req: AuthenticatedRequest, res: Response) => {
         tradesExecuted: botState.tradesExecuted,
         activeTrades: activeTrades.length,
         closedTrades: closedTrades.length,
-        winRate: botState.tradesExecuted > 0 ? 
+        winRate: botState.tradesExecuted > 0 ?
           ((botState.tradesExecuted - closedTrades.filter((t: any) => t.pnl < 0).length) / botState.tradesExecuted * 100).toFixed(1) : 0
       },
       activeTrades: activeTrades,
       config: botState.config,
+      config: botState.config,
       derivConnected: botState.derivConnected,
+      derivAccount: botState.derivWS ? botState.derivWS.getStatus() : null,
       status: botState.isRunning ? "running" : "stopped",
       user: {
         id: userId,

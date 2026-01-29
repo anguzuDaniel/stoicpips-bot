@@ -28,7 +28,10 @@ export default function Dashboard() {
     wins: 0,
     losses: 0,
     streak: 0,
-    profitHistory: []
+    profitHistory: [],
+    balance: 0,
+    currency: 'USD',
+    accountType: 'demo'
   });
 
   const fetchStats = async () => {
@@ -57,6 +60,16 @@ export default function Dashboard() {
         setIsConnected(true);
         // Assuming status returns if bot is running
         setIsRunning(res.data.isActive || false);
+
+        // Sync account info from status
+        if (res.data.derivAccount) {
+          setStats(prev => ({
+            ...prev,
+            balance: res.data.derivAccount.balance || 0,
+            currency: res.data.derivAccount.currency || 'USD',
+            accountType: res.data.derivAccount.accountType || 'demo'
+          }));
+        }
       }
     } catch (e) {
       console.error("Connection check failed", e);
@@ -108,11 +121,35 @@ export default function Dashboard() {
             <div className="hidden md:flex items-center gap-2 bg-card border border-border px-3 py-1.5 rounded-lg">
               <Wallet className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium text-muted-foreground">Balance:</span>
-              <span className="text-sm font-bold text-foreground">$10,000.00</span>
+              <span className="text-sm font-bold text-foreground">
+                {stats.currency} {stats.balance.toFixed(2)}
+              </span>
             </div>
-            {/* Mobile Balance (Compact) */}
+            {/* Mobile Balance */}
             <div className="md:hidden flex items-center bg-card border border-border px-2 py-1.5 rounded-lg">
-              <span className="text-sm font-bold text-foreground">$10k</span>
+              <span className="text-sm font-bold text-foreground">{stats.currency} {stats.balance.toFixed(0)}</span>
+            </div>
+
+            {/* Account Toggle */}
+            <div className="flex items-center bg-secondary/20 rounded-lg p-1 border border-border">
+              <button
+                onClick={() => handleAccountSwitch('real')}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${stats.accountType === 'real'
+                  ? 'bg-green-500 text-white shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+                  }`}
+              >
+                Real
+              </button>
+              <button
+                onClick={() => handleAccountSwitch('demo')}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${stats.accountType === 'demo'
+                  ? 'bg-indigo-500 text-white shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+                  }`}
+              >
+                Demo
+              </button>
             </div>
 
             <button
@@ -140,10 +177,10 @@ export default function Dashboard() {
               }}
               disabled={loading}
               className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium transition-colors text-sm ${isRunning
-                  ? 'bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20'
-                  : isConnected
-                    ? 'bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500/20'
-                    : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                ? 'bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20'
+                : isConnected
+                  ? 'bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500/20'
+                  : 'bg-primary hover:bg-primary/90 text-primary-foreground'
                 }`}
             >
               {loading ? (

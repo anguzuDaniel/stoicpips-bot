@@ -37,5 +37,7 @@ export const botApi = {
     getHistory: (params?: { page?: number; limit?: number }) => api.get("/bot/history", { params }),
     getAnalytics: () => api.get("/bot/analytics"),
     getLogs: () => api.get("/bot/logs"),
+    getLogs: () => api.get("/bot/logs"),
     resetBot: () => api.post("/bot/reset", {}),
+    toggleAccount: (type: 'real' | 'demo') => api.post("/bot/toggle-account", { targetType: type }),
 };

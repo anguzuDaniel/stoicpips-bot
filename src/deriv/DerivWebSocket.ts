@@ -98,20 +98,57 @@ class DerivWebSocket extends EventEmitter {
     this.heartbeatTimer = null;
   }
 
+  private currentBalance: number = 0;
+  private currency: string = 'USD';
+  private accountType: 'real' | 'demo' = 'demo';
+  private accountLoginId: string = '';
+
   private handleMessage(data: any) {
     if (data.msg_type === "ping") return;
+
     if (data.msg_type === "authorize") {
       this.isAuthorized = true;
-      console.log("✅ Authorized successfully");
+      this.currentBalance = data.authorize.balance;
+      this.currency = data.authorize.currency;
+      this.accountLoginId = data.authorize.loginid;
+      this.accountType = this.accountLoginId.startsWith('V') ? 'demo' : 'real';
+
+      console.log(`✅ Authorized successfully. Account: ${this.accountLoginId} (${this.accountType.toUpperCase()}) | Balance: ${this.currentBalance} ${this.currency}`);
+
+      // Subscribe to balance updates
+      this.send({ balance: 1, subscribe: 1 });
+    }
+
+    if (data.msg_type === "balance") {
+      this.currentBalance = data.balance.balance;
+      this.currency = data.balance.currency;
+      // Emit balance update
+      this.emit('balance_update', {
+        balance: this.currentBalance,
+        currency: this.currency,
+        accountType: this.accountType
+      });
     }
 
     // Emit event for external handling
     this.emit('message', data);
-    
+
     // Process trading logic if authorized
     if (this.isAuthorized) {
       this.processTradingData(data);
     }
+  }
+
+  // Public getter for status
+  public getStatus() {
+    return {
+      connected: this.ws?.readyState === WebSocket.OPEN,
+      authorized: this.isAuthorized,
+      balance: this.currentBalance,
+      currency: this.currency,
+      accountType: this.accountType,
+      loginId: this.accountLoginId
+    };
   }
 
   private processTradingData(data: any) {
@@ -120,7 +157,7 @@ class DerivWebSocket extends EventEmitter {
       const candles = data.candles || data.history.prices;
       this.analyzeCandles(candles, data.echo_req?.ticks_history || 'R_100');
     }
-    
+
     // Handle tick data for real-time signals
     if (data.tick) {
       this.analyzeTick(data.tick);
@@ -152,19 +189,19 @@ class DerivWebSocket extends EventEmitter {
 
     for (let i = 0; i <= candles.length - minConsolidationBars; i++) {
       const consolidationBars = candles.slice(i, i + minConsolidationBars);
-      
+
       if (this.isConsolidation(consolidationBars, consolidationThreshold)) {
         const baseHigh = Math.max(...consolidationBars.map(c => c.high));
         const baseLow = Math.min(...consolidationBars.map(c => c.low));
-        
+
         // Check for next candle breakout
         if (i + minConsolidationBars < candles.length) {
           const impulseCandle = candles[i + minConsolidationBars];
-          
+
           // Demand zone: price breaks below consolidation
-          if (impulseCandle.close < baseLow && 
-              (impulseCandle.close - impulseCandle.low) / impulseCandle.close > impulseThreshold) {
-            
+          if (impulseCandle.close < baseLow &&
+            (impulseCandle.close - impulseCandle.low) / impulseCandle.close > impulseThreshold) {
+
             const zone: SupplyDemandZone = {
               top: baseHigh,
               bottom: baseLow,
@@ -175,14 +212,14 @@ class DerivWebSocket extends EventEmitter {
               created: Date.now(),
               touched: 0
             };
-            
+
             this.addZone(zone);
           }
-          
+
           // Supply zone: price breaks above consolidation
           if (impulseCandle.close > baseHigh &&
-              (impulseCandle.high - impulseCandle.close) / impulseCandle.close > impulseThreshold) {
-            
+            (impulseCandle.high - impulseCandle.close) / impulseCandle.close > impulseThreshold) {
+
             const zone: SupplyDemandZone = {
               top: baseHigh,
               bottom: baseLow,
@@ -193,7 +230,7 @@ class DerivWebSocket extends EventEmitter {
               created: Date.now(),
               touched: 0
             };
-            
+
             this.addZone(zone);
           }
         }
@@ -211,21 +248,21 @@ class DerivWebSocket extends EventEmitter {
     const minLow = Math.min(...lows);
     const range = maxHigh - minLow;
     const avgPrice = bars.reduce((sum, b) => sum + b.close, 0) / bars.length;
-    
+
     return (range / avgPrice) < threshold;
   }
 
   private calculateZoneStrength(consolidationBars: DerivCandle[], impulseCandle: DerivCandle): number {
     let strength = 5;
-    
+
     // Calculate impulse strength
     const impulseStrength = Math.abs(impulseCandle.close - impulseCandle.open) / impulseCandle.open;
     if (impulseStrength > 0.05) strength += 2;
-    
+
     // Clean break (no wick crossing back)
     const baseHigh = Math.max(...consolidationBars.map(c => c.high));
     const baseLow = Math.min(...consolidationBars.map(c => c.low));
-    
+
     if (impulseCandle.close < baseLow) {
       // Demand zone
       if (impulseCandle.low <= baseLow * 0.995) strength += 1;
@@ -233,12 +270,12 @@ class DerivWebSocket extends EventEmitter {
       // Supply zone
       if (impulseCandle.high >= baseHigh * 1.005) strength += 1;
     }
-    
+
     return Math.min(strength, 10);
   }
 
   private addZone(zone: SupplyDemandZone) {
-    const existingIndex = this.activeZones.findIndex(z => 
+    const existingIndex = this.activeZones.findIndex(z =>
       Math.abs(z.top - zone.top) / zone.top < 0.01 &&
       Math.abs(z.bottom - zone.bottom) / zone.bottom < 0.01 &&
       z.symbol === zone.symbol &&
@@ -261,7 +298,7 @@ class DerivWebSocket extends EventEmitter {
 
   private cleanupZones() {
     const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
-    this.activeZones = this.activeZones.filter(z => 
+    this.activeZones = this.activeZones.filter(z =>
       z.created > twentyFourHoursAgo && z.touched < 3
     );
   }
@@ -269,18 +306,18 @@ class DerivWebSocket extends EventEmitter {
   private analyzeTick(tick: any) {
     const currentPrice = tick.quote;
     const symbol = tick.symbol;
-    
+
     // Find active zone for this symbol
-    const activeZone = this.activeZones.find(z => 
+    const activeZone = this.activeZones.find(z =>
       z.symbol === symbol &&
-      currentPrice >= z.bottom && 
+      currentPrice >= z.bottom &&
       currentPrice <= z.top
     );
-    
+
     if (activeZone) {
       // Mark zone as touched
       activeZone.touched++;
-      
+
       // Generate trading signal
       this.generateSignal(currentPrice, activeZone, symbol);
     }
@@ -288,23 +325,23 @@ class DerivWebSocket extends EventEmitter {
 
   private generateSignal(currentPrice: number, zone: SupplyDemandZone, symbol: string) {
     const currentTime = Date.now();
-    
+
     // Prevent too frequent signals
     if (currentTime - this.lastSignalTime < this.minSignalGap) return;
 
     // Simple RSI calculation (simplified for example)
     const rsi = this.calculateRSI(symbol); // You'd need to track price history
-    
+
     let confidence = 0.5;
     confidence += (10 - zone.strength) * 0.05;
-    
+
     const duration = this.calculateDuration(zone.timeframe);
     const baseAmount = 10; // Base trade amount
 
     if (zone.type === 'demand' && (rsi < 35 || !rsi)) {
       confidence += 0.3;
       this.lastSignalTime = currentTime;
-      
+
       const signal: TradingSignal = {
         action: 'BUY_CALL',
         symbol,
@@ -316,15 +353,15 @@ class DerivWebSocket extends EventEmitter {
         zone,
         timestamp: currentTime
       };
-      
+
       console.log(`📈 BUY_CALL Signal: ${symbol} at ${currentPrice} (RSI: ${rsi})`);
       this.emit('trading_signal', signal);
       this.executeTrade(signal);
-      
+
     } else if (zone.type === 'supply' && (rsi > 65 || !rsi)) {
       confidence += 0.3;
       this.lastSignalTime = currentTime;
-      
+
       const signal: TradingSignal = {
         action: 'BUY_PUT',
         symbol,
@@ -336,7 +373,7 @@ class DerivWebSocket extends EventEmitter {
         zone,
         timestamp: currentTime
       };
-      
+
       console.log(`📉 BUY_PUT Signal: ${symbol} at ${currentPrice} (RSI: ${rsi})`);
       this.emit('trading_signal', signal);
       this.executeTrade(signal);
@@ -376,10 +413,10 @@ class DerivWebSocket extends EventEmitter {
     try {
       // First get proposal
       this.send(contractParams);
-      
+
       // The actual buy would happen in response to the proposal
       // You need to handle the proposal response and then send buy request
-      
+
     } catch (error) {
       console.error("❌ Trade execution failed:", error);
     }
@@ -476,7 +513,7 @@ class DerivWebSocket extends EventEmitter {
     };
 
     console.log('🚀 Sending test trade...');
-    
+
     const contractParams = {
       proposal: 1,
       amount: testSignal.amount,
@@ -491,25 +528,25 @@ class DerivWebSocket extends EventEmitter {
     try {
       // First get proposal
       this.send(contractParams);
-      
+
       // Listen for proposal response
       const proposalHandler = (data: any) => {
         if (data.msg_type === 'proposal' && data.echo_req?.contract_type === 'CALL') {
           console.log('📊 Proposal received:', data.proposal);
-          
+
           // Send buy request
           this.send({
             buy: data.proposal.id,
             price: testSignal.amount
           });
-          
+
           // Remove this listener
           this.off('message', proposalHandler);
         }
       };
-      
+
       this.on('message', proposalHandler);
-      
+
       // Listen for buy response
       const buyHandler = (data: any) => {
         if (data.msg_type === 'buy') {
@@ -520,9 +557,9 @@ class DerivWebSocket extends EventEmitter {
           this.off('message', buyHandler);
         }
       };
-      
+
       this.on('message', buyHandler);
-      
+
     } catch (error) {
       console.error("❌ Test trade failed:", error);
     }

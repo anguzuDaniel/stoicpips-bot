@@ -5,6 +5,8 @@ const stopBot = require('./stopBot');
 const getBotStatus = require('./config/getBotStatus');
 const forceTrade = require('./trade/forceTrade');
 
+const { toggleAccount } = require('./config/toggleAccount');
+
 module.exports = {
   saveBotConfig,
   getBotConfig,
@@ -12,4 +14,5 @@ module.exports = {
   stopBot,
   getBotStatus,
   forceTrade,
+  toggleAccount,
 };
