@@ -28,8 +28,10 @@ export const updateProfile = async (req: any, res: Response) => {
 
         const { data, error } = await supabase
             .from("profiles")
-            .update(updateData)
-            .eq("id", userId)
+            .upsert({
+                ...updateData,
+                id: userId
+            })
             .select()
             .single();
 
