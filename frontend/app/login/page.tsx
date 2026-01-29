@@ -49,8 +49,12 @@ export default function LoginPage() {
             <div className="w-full max-w-md space-y-8 rounded-2xl border border-border bg-card p-8 shadow-lg">
                 <div className="text-center">
                     <div className="flex justify-center mb-4">
-                        <div className="rounded-full bg-primary/10 p-3">
-                            <Activity className="h-10 w-10 text-primary" />
+                        <div className="rounded-full bg-primary/10 p-4">
+                            <img
+                                src="/logo-new.png"
+                                alt="SyntoicAi Logo"
+                                className="h-12 w-auto"
+                            />
                         </div>
                     </div>
                     <h2 className="text-3xl font-bold tracking-tight">Welcome back</h2>

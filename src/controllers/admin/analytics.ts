@@ -1,5 +1,5 @@
-const supabase = require('../../config/supabase').supabase;
-const { logAdminAction } = require('../../utils/auditLog');
+const supabaseClient = require('../../config/supabase').supabase;
+const { logAdminAction: logAction } = require('../../utils/auditLog');
 
 /**
  * GET /api/v1/admin/analytics/global
@@ -8,7 +8,7 @@ const { logAdminAction } = require('../../utils/auditLog');
 exports.getGlobalAnalytics = async (req, res) => {
     try {
         // Fetch all trades
-        const { data: allTrades, error: tradesError } = await supabase
+        const { data: allTrades, error: tradesError } = await supabaseClient
             .from('trades')
             .select('status, pnl, user_id, created_at');
 
@@ -21,15 +21,15 @@ exports.getGlobalAnalytics = async (req, res) => {
         const totalTrades = allTrades.length;
         const wonTrades = allTrades.filter(t => t.status === 'won').length;
         const lostTrades = allTrades.filter(t => t.status === 'lost').length;
-        const winRate = totalTrades > 0 ? ((wonTrades / totalTrades) * 100).toFixed(2) : 0;
+        const winRate = totalTrades > 0 ? ((wonTrades / totalTrades) * 100).toFixed(2) : "0.00";
         const totalPnL = allTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
 
         // Get unique active users (users who have traded)
         const activeUsers = new Set(allTrades.map(t => t.user_id)).size;
 
         // Fetch user tiers
-        const { data: users, error: usersError } = await supabase
-            .from('users')
+        const { data: users, error: usersError } = await supabaseClient
+            .from('profiles')
             .select('id, subscription_tier');
 
         if (usersError) {
@@ -62,7 +62,7 @@ exports.getGlobalAnalytics = async (req, res) => {
         // Calculate average AI confidence (placeholder - would come from AI engine)
         const avgAiConfidence = 85; // TODO: Fetch from AI engine or bot states
 
-        await logAdminAction(req.user.id, 'VIEW_GLOBAL_ANALYTICS');
+        await logAction(req.user.id, 'VIEW_GLOBAL_ANALYTICS');
 
         res.json({
             timestamp: new Date().toISOString(),
@@ -82,3 +82,5 @@ exports.getGlobalAnalytics = async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch global analytics' });
     }
 };
+
+export {};

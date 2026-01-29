@@ -2,13 +2,14 @@
 
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatsCard } from "@/components/StatsCard";
+import { ConfidenceGauge } from "@/components/ConfidenceGauge";
 import dynamic from "next/dynamic";
 const ActivityLog = dynamic(() => import("@/components/ActivityLog").then(mod => mod.ActivityLog), { ssr: false });
 const ProfitChart = dynamic(() => import("@/components/ProfitChart").then(mod => mod.ProfitChart), {
   ssr: false,
   loading: () => <div className="h-[250px] w-full bg-secondary/10 animate-pulse rounded-lg mt-4" />
 });
-import { Bell, Wallet, ChevronDown, Activity, Play, RefreshCw, XCircle, Power, Loader2, CheckCircle, AlertTriangle } from "lucide-react";
+import { Bell, Wallet, ChevronDown, Activity, Play, RefreshCw, XCircle, Power, Loader2, CheckCircle, AlertTriangle, Cpu } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { botApi, fetcher } from "@/lib/api";
@@ -167,22 +168,13 @@ export default function Dashboard() {
           <h1 className="text-xl md:text-2xl font-bold">Dashboard</h1>
 
           <div className="flex items-center gap-2 md:gap-4">
-            <div className="hidden md:flex items-center gap-2 bg-card border border-border px-3 py-1.5 rounded-lg">
-              <Wallet className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-muted-foreground">Balance:</span>
-              <span className="text-sm font-bold text-foreground">
-                {stats.currency} {stats.balance.toFixed(2)}
-              </span>
-            </div>
-            {/* Mobile Balance */}
-            <div className="md:hidden flex items-center bg-card border border-border px-2 py-1.5 rounded-lg">
-              <span className="text-sm font-bold text-foreground">{stats.currency} {stats.balance.toFixed(0)}</span>
-            </div>
-
-            {/* Account Toggle */}
+            {/* Account Toggle - Fixed event propagation */}
             <div className="flex items-center bg-secondary/20 rounded-lg p-1 border border-border">
               <button
-                onClick={() => handleAccountSwitch('real')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAccountSwitch('real');
+                }}
                 className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${stats.accountType === 'real'
                   ? 'bg-green-500 text-white shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
@@ -191,7 +183,10 @@ export default function Dashboard() {
                 Real
               </button>
               <button
-                onClick={() => handleAccountSwitch('demo')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAccountSwitch('demo');
+                }}
                 className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${stats.accountType === 'demo'
                   ? 'bg-indigo-500 text-white shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
@@ -226,7 +221,9 @@ export default function Dashboard() {
               className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium transition-colors text-sm ${isRunning
                 ? 'bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20'
                 : isConnected
-                  ? 'bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500/20'
+                  ? stats.accountType === 'real'
+                    ? 'bg-yellow-500/10 text-yellow-500 border-2 border-yellow-500/50 hover:bg-yellow-500/20'
+                    : 'bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500/20'
                   : 'bg-primary hover:bg-primary/90 text-primary-foreground'
                 }`}
             >
@@ -271,10 +268,11 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <StatsCard
-            label="Account Balance"
-            value={`$${stats.balance.toLocaleString()}`}
+            label={`${stats.accountType === 'real' ? 'Live' : 'Demo'} Account Balance`}
+            value={`${stats.currency} ${stats.balance.toLocaleString()}`}
             icon={Wallet}
             isLoading={!status && stats.balance === 0}
+            color={stats.accountType === 'real' ? 'default' : 'default'}
           />
           <StatsCard
             label="Net Profit"
@@ -406,8 +404,23 @@ export default function Dashboard() {
           </div>
 
           {/* Right Column (Live Activity) */}
-          <div className="flex flex-col h-full">
-            <ActivityLog />
+          <div className="flex flex-col h-full gap-6">
+            {/* AI Confidence Widget */}
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-sm flex items-center gap-2">
+                  <Cpu className="h-4 w-4 text-primary" /> AI Probability Engine
+                </h3>
+                {status?.isRunning && (
+                  <span className="flex h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse" />
+                )}
+              </div>
+              <ConfidenceGauge value={status?.performance?.confidence ?? 85} isLoading={!status} />
+            </div>
+
+            <div className="flex-1 min-h-[400px]">
+              <ActivityLog />
+            </div>
           </div>
         </div>
       </div>
