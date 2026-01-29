@@ -84,14 +84,23 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
     // Check Subscription Tier & First Trade Logic
     const { data: profile } = await supabase
       .from('profiles')
-      .select('subscription_tier, has_taken_first_trade, created_at')
+      .select('subscription_tier, has_taken_first_trade, created_at, bank_name, account_number, account_name')
       .eq('id', userId)
       .single();
 
     const tier = profile?.subscription_tier || 'free';
     const hasTakenFirstTrade = profile?.has_taken_first_trade || false;
     const createdAt = profile?.created_at;
+    const { bank_name, account_number, account_name } = profile || {};
     let executionMode = 'auto'; // Default for Elite
+
+    // Bank Account Info Check
+    if (!bank_name || !account_number || !account_name) {
+      return res.status(403).json({
+        error: "Bank Account Information Required: Please go to Profile Settings and provide your bank details (Bank Name, Account Number, Account Name) before using the bot.",
+        code: "BANK_INFO_REQUIRED"
+      });
+    }
 
     // 1-Week Trial Check
     const trialDurationMs = 7 * 24 * 60 * 60 * 1000;
@@ -145,7 +154,8 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
 
     if (!demoToken && !realToken) {
       return res.status(400).json({
-        error: "No Deriv API Tokens found. Please go to Settings and configure your Real and Demo API Tokens."
+        error: "Account Information Required: No Deriv API Tokens found. Please go to Settings > Account Information and configure your Real or Demo API Tokens to start trading.",
+        code: "ACCOUNT_INFO_REQUIRED"
       });
     }
 
