@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { botApi } from "@/lib/api";
-import { Loader2, Save, AlertCircle } from "lucide-react";
+import { Loader2, Save, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface BotConfig {
@@ -28,6 +28,11 @@ export default function SettingsPage() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+
+    // Visibility toggles
+    const [showDemoToken, setShowDemoToken] = useState(false);
+    const [showRealToken, setShowRealToken] = useState(false);
+    const [showOpenAiKey, setShowOpenAiKey] = useState(false);
 
     const [config, setConfig] = useState<BotConfig>({
         symbols: ["R_100"],
@@ -312,13 +317,22 @@ export default function SettingsPage() {
                             {config.aiProvider === 'openai' && (
                                 <div className="animate-in fade-in slide-in-from-top-2">
                                     <label className="text-sm font-medium block mb-1">OpenAI API Key</label>
-                                    <input
-                                        type="password"
-                                        value={config.openaiApiKey || ''}
-                                        onChange={(e) => setConfig({ ...config, openaiApiKey: e.target.value })}
-                                        placeholder="sk-..."
-                                        className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm"
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            type={showOpenAiKey ? "text" : "password"}
+                                            value={config.openaiApiKey || ''}
+                                            onChange={(e) => setConfig({ ...config, openaiApiKey: e.target.value })}
+                                            placeholder="sk-..."
+                                            className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm pr-10"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowOpenAiKey(!showOpenAiKey)}
+                                            className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                                        >
+                                            {showOpenAiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                        </button>
+                                    </div>
                                     <p className="text-xs text-muted-foreground mt-1">
                                         Your key is used locally and sent to your own backend.
                                     </p>
@@ -341,23 +355,41 @@ export default function SettingsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className="text-sm font-medium block mb-1">Deriv Demo Token</label>
-                                <input
-                                    type="password"
-                                    value={config.derivDemoToken || config.derivApiToken || ''}
-                                    onChange={(e) => setConfig({ ...config, derivDemoToken: e.target.value })}
-                                    placeholder="Enter Demo Token"
-                                    className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm"
-                                />
+                                <div className="relative">
+                                    <input
+                                        type={showDemoToken ? "text" : "password"}
+                                        value={config.derivDemoToken || config.derivApiToken || ''}
+                                        onChange={(e) => setConfig({ ...config, derivDemoToken: e.target.value })}
+                                        placeholder="Enter Demo Token"
+                                        className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowDemoToken(!showDemoToken)}
+                                        className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                                    >
+                                        {showDemoToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                </div>
                             </div>
                             <div>
                                 <label className="text-sm font-medium block mb-1">Deriv Real Token</label>
-                                <input
-                                    type="password"
-                                    value={config.derivRealToken || ''}
-                                    onChange={(e) => setConfig({ ...config, derivRealToken: e.target.value })}
-                                    placeholder="Enter Real Token"
-                                    className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm"
-                                />
+                                <div className="relative">
+                                    <input
+                                        type={showRealToken ? "text" : "password"}
+                                        value={config.derivRealToken || ''}
+                                        onChange={(e) => setConfig({ ...config, derivRealToken: e.target.value })}
+                                        placeholder="Enter Real Token"
+                                        className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowRealToken(!showRealToken)}
+                                        className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                                    >
+                                        {showRealToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <p className="text-xs text-muted-foreground">Tokens are encrypted before storage.</p>

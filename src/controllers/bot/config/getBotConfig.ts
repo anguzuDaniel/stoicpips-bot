@@ -20,7 +20,10 @@ const getBotConfig = async (req: AuthenticatedRequest, res: Response) => {
     res.json({
       botConfig: {
         ...data,
-        derivApiToken: data?.deriv_api_token || '' // Return the token
+        derivApiToken: data?.deriv_api_token || '',
+        derivRealToken: data?.deriv_real_token || '',
+        derivDemoToken: data?.deriv_demo_token || '',
+        openaiApiKey: data?.openai_api_key || ''
       },
       user: {
         id: userId,
