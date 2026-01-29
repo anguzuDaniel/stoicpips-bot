@@ -19,9 +19,20 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
 
     console.log(`🚀 Starting bot for user ${userId} (${userEmail})`);
 
-    // Prevent multiple bots
-    if (botStates.has(userId) && botStates.get(userId).isRunning) {
-      return res.status(400).json({ error: "You already have a bot running. Stop the current bot first." });
+    // Prevent multiple bots (Running)
+    if (botStates.has(userId)) {
+      const existingState = botStates.get(userId);
+      if (existingState.isRunning) {
+        return res.status(400).json({ error: "You already have a bot running. Stop the current bot first." });
+      }
+
+      // If exists but not running (Idle), disconnect old socket to start fresh
+      if (existingState.derivWS) {
+        console.log(`♻️ Cleaning up idle connection for user ${userId}`);
+        try {
+          existingState.derivWS.disconnect();
+        } catch (e) { console.error("Error disconnecting old socket", e); }
+      }
     }
 
     // Cleanup stale bot status

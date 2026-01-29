@@ -35,13 +35,16 @@ const stopBot = async (req: AuthenticatedRequest, res: Response) => {
       botState.tradingInterval = null;
     }
 
+    /* 
+    // Don't disconnect, keep alive for balance updates
     if (botState.deriv) {
       console.log(`🔌 Disconnecting Deriv session for user ${userId}`);
       botState.deriv.disconnect();
     }
+    */
 
     botState.isRunning = false;
-    botState.derivConnected = false;
+    // botState.derivConnected = false; // Keep connected
 
     const stoppedAt = new Date();
     const { error } = await supabase
@@ -57,7 +60,8 @@ const stopBot = async (req: AuthenticatedRequest, res: Response) => {
       console.log('Database error:', error);
     }
 
-    botStates.delete(userId);
+    // botStates.delete(userId); // Don't delete state, keep for monitoring
+    console.log(`⏸️ Bot paused for user ${userId} (Connection kept alive)`);
 
     console.log(`✅ Bot stopped for user ${userId}`);
     console.log(`📊 Final stats: ${botState.tradesExecuted} trades, P&L: $${botState.totalProfit.toFixed(2)}`);
