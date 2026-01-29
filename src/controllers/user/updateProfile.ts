@@ -20,6 +20,8 @@ export const updateProfile = async (req: any, res: Response) => {
         if (fullName !== undefined) updateData.full_name = fullName;
         if (username !== undefined) updateData.username = username;
         if (tradingExperience !== undefined) updateData.trading_experience = tradingExperience;
+
+        // Map card info to the database columns (bank_name, account_number, account_name)
         if (bankName !== undefined) updateData.bank_name = bankName;
         if (accountNumber !== undefined) updateData.account_number = accountNumber;
         if (accountName !== undefined) updateData.account_name = accountName;
