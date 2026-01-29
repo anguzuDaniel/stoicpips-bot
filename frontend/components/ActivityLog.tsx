@@ -1,9 +1,10 @@
 "use client";
 
 // import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Activity } from "lucide-react";
 import { botApi } from "@/lib/api";
+import { useToast } from "@/context/ToastContext";
 
 interface LogEntry {
     id: string;
@@ -15,13 +16,41 @@ interface LogEntry {
 
 export function ActivityLog() {
     const [logs, setLogs] = useState<LogEntry[]>([]);
+    const { addToast } = useToast();
+    const lastLogIdRef = useRef<string | null>(null);
 
     useEffect(() => {
         const fetchLogs = async () => {
             try {
                 const res = await botApi.getLogs();
                 if (res.data && res.data.logs && res.data.logs.length > 0) {
-                    setLogs(res.data.logs.slice(0, 50));
+                    const latestLogs = res.data.logs;
+                    const newestId = latestLogs[0].id;
+
+                    // Check for new logs if we have a history
+                    if (lastLogIdRef.current && lastLogIdRef.current !== newestId) {
+                        const previousId = lastLogIdRef.current;
+                        // Find logs newer than previousId
+                        const newItems = [];
+                        for (const log of latestLogs) {
+                            if (log.id === previousId) break;
+                            newItems.push(log);
+                        }
+
+                        // Notify for relevant new items (reverse to show oldest first if multiple)
+                        newItems.reverse().forEach(log => {
+                            if (log.type === 'success') {
+                                addToast(`Trade Executed: ${log.message}`, 'success', 'New Trade');
+                            } else if (log.type === 'warning') {
+                                addToast(log.message, 'warning', 'Signal Detected');
+                            } else if (log.type === 'error') {
+                                addToast(log.message, 'error', 'Error');
+                            }
+                        });
+                    }
+
+                    lastLogIdRef.current = newestId;
+                    setLogs(latestLogs.slice(0, 50));
                 }
             } catch (e) {
                 console.error("Failed to fetch logs", e);
