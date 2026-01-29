@@ -54,7 +54,7 @@ export default function SettingsPage() {
     const fetchConfig = async () => {
         try {
             const response = await botApi.getConfigs();
-            const fetchedConfig = response.data.botConfig;
+            const fetchedConfig = response.data;
 
             if (fetchedConfig && Object.keys(fetchedConfig).length > 0) {
                 setConfig({
