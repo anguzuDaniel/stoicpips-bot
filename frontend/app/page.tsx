@@ -94,21 +94,20 @@ export default function Dashboard() {
   const handleConnect = async () => {
     setConnecting(true);
     try {
-      if (isConnected) {
-        // If already connected, maybe just refresh status
-        await checkConnection();
-      } else {
-        // Attempt to start the bot
-        await botApi.startBot();
-        setIsConnected(true);
-        setIsRunning(true);
-        // You might want to show a success toast here
-      }
+      // Regardless of isConnected (which might just mean idle balance connection),
+      // we want to ensure the bot is actually STARTED if the user clicks this.
+      console.log("🚀 Attempting to start the bot...");
+      await botApi.startBot();
+      setIsConnected(true);
+      setIsRunning(true);
+
+      // Refresh status to get updated account info
+      await checkConnection();
     } catch (e: any) {
       console.error(e);
-      // Simple alert for now, or use a toast component if available
-      alert(e.response?.data?.error || "Failed to connect. Please check Settings.");
-      if (e.response?.data?.error?.includes("Token")) {
+      const errorMsg = e.response?.data?.error || "Failed to start bot. Please check Settings.";
+      alert(errorMsg);
+      if (errorMsg.includes("Token")) {
         router.push("/settings");
       }
     } finally {
