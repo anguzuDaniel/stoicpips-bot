@@ -5,6 +5,7 @@ const DerivWebSocket_1 = require("../deriv/DerivWebSocket");
 const DerivSupplyDemandStrategy_1 = require("../strategies/DerivSupplyDemandStrategy");
 class TradingService {
     constructor(apiToken, appId = '1089') {
+        this.activeZones = [];
         this.activeSymbols = [];
         this.isRunning = false;
         this.pendingRequests = new Map();
@@ -17,7 +18,6 @@ class TradingService {
             heartbeatInterval: 15000
         });
         this.strategy = new DerivSupplyDemandStrategy_1.DerivSupplyDemandStrategy();
-        // Set up event listeners
         this.setupEventListeners();
     }
     setupEventListeners() {
@@ -175,7 +175,7 @@ class TradingService {
             const params = {
                 amount: signal.amount,
                 basis: 'stake',
-                contract_type: signal.contract_type,
+                contract_type: signal.contract_type === "RISE" ? "CALL" : signal.contract_type,
                 currency: 'USD',
                 duration: signal.duration,
                 duration_unit: signal.duration_unit,
@@ -288,7 +288,7 @@ class TradingService {
         return [...this.activeSymbols];
     }
     getActiveZones() {
-        return this.strategy.getActiveZones();
+        return this.activeZones;
     }
     disconnect() {
         this.derivWS.disconnect();

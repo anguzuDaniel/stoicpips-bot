@@ -12,6 +12,7 @@ const app = express();
 app.use((0, cors_1.default)());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/bot', botRoutes);
 app.use('/api/v1/user', userRoutes);

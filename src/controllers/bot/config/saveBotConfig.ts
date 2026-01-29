@@ -17,6 +17,8 @@ const supabase = require('../../../config/supabase').supabase;
  * - dailyTradeLimit: 5
  * - derivRealToken: string
  * - derivDemoToken: string
+ * - openaiApiKey: string
+ * - aiProvider: 'local' | 'openai'
  * @param {AuthenticatedRequest} req - The request object containing the authenticated user and bot configuration.
  * @param {Response} res - The response object to send back to the client.
  * @returns {Promise<Response>} - A promise that resolves to the response object.
@@ -44,6 +46,8 @@ const saveBotConfig = async (req: AuthenticatedRequest, res: Response) => {
           deriv_api_token: config.derivApiToken, // Legacy support
           deriv_real_token: config.derivRealToken,
           deriv_demo_token: config.derivDemoToken,
+          openai_api_key: config.openaiApiKey,
+          ai_provider: config.aiProvider || 'local',
           amount_per_trade: config.amountPerTrade ?? 10,
           timeframe: config.timeframe ?? 5,
           candle_count: config.candleCount ?? 10,

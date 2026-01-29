@@ -16,6 +16,10 @@ interface BotConfig {
     maxTradesPerCycle: number;
     dailyTradeLimit: number;
     derivApiToken?: string;
+    derivRealToken?: string;
+    derivDemoToken?: string;
+    openaiApiKey?: string;
+    aiProvider?: 'local' | 'openai';
 }
 
 export default function SettingsPage() {
@@ -57,6 +61,11 @@ export default function SettingsPage() {
                     contractPreference: fetchedConfig.contract_preference || "RISE/FALL",
                     maxTradesPerCycle: fetchedConfig.max_trades_per_cycle || 3,
                     dailyTradeLimit: fetchedConfig.daily_trade_limit || 5,
+                    derivApiToken: fetchedConfig.deriv_api_token,
+                    derivRealToken: fetchedConfig.deriv_real_token,
+                    derivDemoToken: fetchedConfig.deriv_demo_token,
+                    openaiApiKey: fetchedConfig.openai_api_key,
+                    aiProvider: fetchedConfig.ai_provider || 'local',
                 });
                 setSymbolsString(fetchedConfig.symbols ? fetchedConfig.symbols.join(", ") : "R_100");
             }
@@ -268,31 +277,90 @@ export default function SettingsPage() {
                         </div>
                     )}
 
+                    {/* AI Configuration */}
+                    <div className="rounded-xl border border-border bg-card p-6 space-y-6">
+                        <h2 className="text-lg font-semibold border-b border-border pb-2">AI Engine Configuration</h2>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-sm font-medium block mb-2">AI Signal Provider</label>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setConfig({ ...config, aiProvider: 'local' })}
+                                        className={`p-4 rounded-xl border text-left transition-all ${config.aiProvider !== 'openai'
+                                            ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                                            : 'border-border hover:border-primary/50'
+                                            }`}
+                                    >
+                                        <div className="font-semibold mb-1">Internal AI Model</div>
+                                        <p className="text-xs text-muted-foreground">Uses the built-in Python XGBoost model. Free and fast.</p>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setConfig({ ...config, aiProvider: 'openai' })}
+                                        className={`p-4 rounded-xl border text-left transition-all ${config.aiProvider === 'openai'
+                                            ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                                            : 'border-border hover:border-primary/50'
+                                            }`}
+                                    >
+                                        <div className="font-semibold mb-1">OpenAI (ChatGPT)</div>
+                                        <p className="text-xs text-muted-foreground">Uses GPT-3.5/4 for market analysis. Requires API Key.</p>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {config.aiProvider === 'openai' && (
+                                <div className="animate-in fade-in slide-in-from-top-2">
+                                    <label className="text-sm font-medium block mb-1">OpenAI API Key</label>
+                                    <input
+                                        type="password"
+                                        value={config.openaiApiKey || ''}
+                                        onChange={(e) => setConfig({ ...config, openaiApiKey: e.target.value })}
+                                        placeholder="sk-..."
+                                        className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm"
+                                    />
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        Your key is used locally and sent to your own backend.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Deriv Configuration */}
                     <div className="space-y-4">
                         <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-400 text-sm">
                             <p className="font-semibold flex items-center gap-2">
                                 ⚠ Important
                             </p>
                             <p className="mt-1">
-                                Your Deriv API Token is required for the bot to place trades.
-                                You can generate one in your Deriv Security Settings.
-                                Make sure it has "Read" and "Trade" scopes.
+                                To switch between Real and Demo accounts, you must provide both tokens below.
                             </p>
                         </div>
 
-                        <div>
-                            <label className="text-sm font-medium block mb-1">Deriv API Token</label>
-                            <div className="relative">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="text-sm font-medium block mb-1">Deriv Demo Token</label>
                                 <input
                                     type="password"
-                                    name="derivApiToken"
-                                    defaultValue={config?.derivApiToken || ''}
-                                    placeholder="Enter your Deriv API Token"
-                                    className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm pr-10"
+                                    value={config.derivDemoToken || config.derivApiToken || ''}
+                                    onChange={(e) => setConfig({ ...config, derivDemoToken: e.target.value })}
+                                    placeholder="Enter Demo Token"
+                                    className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm"
                                 />
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1">Stored securely and encrypted.</p>
+                            <div>
+                                <label className="text-sm font-medium block mb-1">Deriv Real Token</label>
+                                <input
+                                    type="password"
+                                    value={config.derivRealToken || ''}
+                                    onChange={(e) => setConfig({ ...config, derivRealToken: e.target.value })}
+                                    placeholder="Enter Real Token"
+                                    className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm"
+                                />
+                            </div>
                         </div>
+                        <p className="text-xs text-muted-foreground">Tokens are encrypted before storage.</p>
                     </div>
 
                     <div className="flex justify-end">

@@ -11,6 +11,18 @@ export interface BotConfig {
   candleCount?: number;
   cycleInterval?: number;
   contractPreference?: ContractPreference;
-  maxTradesPerCycle?: number;   // new
-  dailyTradeLimit?: number;     // new
+  derivRealToken?: string;
+  derivDemoToken?: string;
+  openaiApiKey?: string;
+  aiProvider?: 'local' | 'openai';
+
+  // DB column mapping
+  deriv_real_token?: string;
+  deriv_demo_token?: string;
+  openai_api_key?: string;
+  ai_provider?: 'local' | 'openai';
+
+
+  maxTradesPerCycle?: number;
+  dailyTradeLimit?: number;
 }

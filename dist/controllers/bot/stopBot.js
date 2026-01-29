@@ -1,5 +1,23 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.stopBot = void 0;
+// const deriv = require('../../config/deriv');
+const botStates = require('../../types/botStates');
+const supabase = require('../../config/supabase').supabase;
+/**
+ * Stops a running bot and updates the database with the final stats.
+ * Returns a response with the final stats and a success message.
+ * @param {AuthenticatedRequest} req - The authenticated request object.
+ * @param {Response} res - The response object to send the result.
+ * @returns {Promise<Response>} - A promise that resolves to a response object.
+ * The response object contains the following properties:
+ * - message: A message indicating whether the bot was stopped successfully.
+ * - status: A string indicating whether the bot is running or not.
+ * - startedAt: The timestamp when the bot was started.
+ * - stoppedAt: The timestamp when the bot was stopped.
+ * - performance: An object containing the performance metrics of the bot.
+ * - user: An object containing the user ID and subscription status.
+ */
 const stopBot = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -8,24 +26,16 @@ const stopBot = async (req, res) => {
         if (!botState || !botState.isRunning) {
             return res.status(400).json({ error: "Bot is not running for your account" });
         }
-        // Stop the interval
         if (botState.tradingInterval) {
             clearInterval(botState.tradingInterval);
             botState.tradingInterval = null;
         }
-        // Remove signal handler
-        if (botState.config._signalHandler) {
-            deriv.off('trading_signal', botState.config._signalHandler);
+        if (botState.deriv) {
+            console.log(`🔌 Disconnecting Deriv session for user ${userId}`);
+            botState.deriv.disconnect();
         }
-        // Unsubscribe from all symbols
-        if (botState.config.symbols) {
-            // Note: You might need to implement unsubscribe in DerivWebSocket
-            console.log(`🔇 Unsubscribed from symbols for user ${userId}`);
-        }
-        // Update bot state
         botState.isRunning = false;
         botState.derivConnected = false;
-        // Update database
         const stoppedAt = new Date();
         const { error } = await supabase
             .from("bot_status")
@@ -38,7 +48,6 @@ const stopBot = async (req, res) => {
         if (error) {
             console.log('Database error:', error);
         }
-        // Remove from memory
         botStates.delete(userId);
         console.log(`✅ Bot stopped for user ${userId}`);
         console.log(`📊 Final stats: ${botState.tradesExecuted} trades, P&L: $${botState.totalProfit.toFixed(2)}`);
@@ -63,4 +72,4 @@ const stopBot = async (req, res) => {
         res.status(500).json({ error: 'Failed to stop bot' });
     }
 };
-module.exports = stopBot;
+exports.stopBot = stopBot;

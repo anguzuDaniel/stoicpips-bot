@@ -16,6 +16,10 @@ class DerivWebSocket extends events_1.default {
         this.lastSignalTime = 0;
         this.minSignalGap = 300000; // 5 minutes between signals
         this.isAuthorized = false;
+        this.currentBalance = 0;
+        this.currency = 'USD';
+        this.accountType = 'demo';
+        this.accountLoginId = '';
         this.options = {
             reconnect: true,
             maxReconnectAttempts: 10,
@@ -87,7 +91,23 @@ class DerivWebSocket extends events_1.default {
             return;
         if (data.msg_type === "authorize") {
             this.isAuthorized = true;
-            console.log("✅ Authorized successfully");
+            this.currentBalance = data.authorize.balance;
+            this.currency = data.authorize.currency;
+            this.accountLoginId = data.authorize.loginid;
+            this.accountType = this.accountLoginId.startsWith('V') ? 'demo' : 'real';
+            console.log(`✅ Authorized successfully. Account: ${this.accountLoginId} (${this.accountType.toUpperCase()}) | Balance: ${this.currentBalance} ${this.currency}`);
+            // Subscribe to balance updates
+            this.send({ balance: 1, subscribe: 1 });
+        }
+        if (data.msg_type === "balance") {
+            this.currentBalance = data.balance.balance;
+            this.currency = data.balance.currency;
+            // Emit balance update
+            this.emit('balance_update', {
+                balance: this.currentBalance,
+                currency: this.currency,
+                accountType: this.accountType
+            });
         }
         // Emit event for external handling
         this.emit('message', data);
@@ -95,6 +115,17 @@ class DerivWebSocket extends events_1.default {
         if (this.isAuthorized) {
             this.processTradingData(data);
         }
+    }
+    // Public getter for status
+    getStatus() {
+        return {
+            connected: this.ws?.readyState === ws_1.default.OPEN,
+            authorized: this.isAuthorized,
+            balance: this.currentBalance,
+            currency: this.currency,
+            accountType: this.accountType,
+            loginId: this.accountLoginId
+        };
     }
     processTradingData(data) {
         // Handle candle data for analysis

@@ -6,26 +6,15 @@ class DerivSupplyDemandStrategy {
     constructor() {
         this.activeZones = [];
         this.lastSignalTime = 0;
-        this.minSignalGap = 300000; // 5 minutes between signals
+        this.minSignalGap = 30000; // 30 seconds for testing (was 5 mins)
         this.zoneDetector = new ZoneDetector_1.ZoneDetector();
     }
     analyzeCandles(candles, symbol, timeframe) {
-        const currentTime = Date.now();
-        // Prevent too frequent signals
-        if (currentTime - this.lastSignalTime < this.minSignalGap) {
-            return {
-                action: 'HOLD',
-                symbol,
-                contract_type: 'CALL',
-                amount: 0,
-                duration: 0,
-                duration_unit: 'm',
-                confidence: 0,
-                zone: this.getEmptyZone(symbol, timeframe),
-                timestamp: currentTime
-            };
+        const now = Date.now();
+        // Prevent rapid-fire signals
+        if (now - this.lastSignalTime < this.minSignalGap) {
+            return this.HoldSignal(symbol, timeframe, `Cooldown active (${Math.round((this.minSignalGap - (now - this.lastSignalTime)) / 1000)}s remaining)`);
         }
-        // Convert Deriv candles to standard format
         const standardCandles = candles.map(c => ({
             open: c.open,
             high: c.high,
@@ -35,34 +24,18 @@ class DerivSupplyDemandStrategy {
             timestamp: new Date(c.epoch * 1000),
             timeframe: timeframe.toString()
         }));
-        // Detect zones
+        // Detect new zones
         this.updateZones(standardCandles, symbol, timeframe);
-        // Get current price
         const currentPrice = candles[candles.length - 1].close;
-        // Find active zones
         const activeZone = this.findActiveZone(currentPrice, symbol);
+        // If price is inside a zone → evaluate entry
         if (activeZone) {
             return this.evaluateZoneEntry(currentPrice, activeZone, standardCandles);
         }
-        return {
-            action: 'HOLD',
-            symbol,
-            contract_type: 'CALL',
-            amount: 0,
-            duration: 0,
-            duration_unit: 'm',
-            confidence: 0,
-            zone: this.getEmptyZone(symbol, timeframe),
-            timestamp: currentTime
-        };
-    }
-    setMinSignalGap(ms) {
-        this.minSignalGap = ms;
-        console.log(`⏱️ Min signal gap updated to ${ms}ms (${ms / 60000} minutes)`);
+        return this.HoldSignal(symbol, timeframe, 'Price not in any active supply/demand zone');
     }
     updateZones(candles, symbol, timeframe) {
         const newZones = this.zoneDetector.detectZones(candles);
-        // Convert to Deriv format and update
         newZones.forEach(zone => {
             const derivZone = {
                 top: zone.top,
@@ -74,13 +47,11 @@ class DerivSupplyDemandStrategy {
                 created: Date.now(),
                 touched: 0
             };
-            // Check if similar zone exists
             const existingIndex = this.activeZones.findIndex(z => Math.abs(z.top - derivZone.top) / derivZone.top < 0.01 &&
                 Math.abs(z.bottom - derivZone.bottom) / derivZone.bottom < 0.01 &&
                 z.symbol === symbol &&
                 z.type === derivZone.type);
             if (existingIndex >= 0) {
-                // Update existing zone
                 this.activeZones[existingIndex] = {
                     ...this.activeZones[existingIndex],
                     strength: Math.max(this.activeZones[existingIndex].strength, derivZone.strength),
@@ -88,36 +59,34 @@ class DerivSupplyDemandStrategy {
                 };
             }
             else {
-                // Add new zone
                 this.activeZones.push(derivZone);
             }
         });
-        // Clean up old zones (keep for 24 hours max)
-        const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
-        this.activeZones = this.activeZones.filter(z => z.created > twentyFourHoursAgo && z.touched < 3);
+        // Remove zones older than 24 hours or over-used
+        const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+        this.activeZones = this.activeZones.filter(z => z.created > cutoff && z.touched < 3);
     }
-    findActiveZone(currentPrice, symbol) {
-        return this.activeZones.find(z => z.symbol === symbol &&
-            currentPrice >= z.bottom &&
-            currentPrice <= z.top) || null;
+    findActiveZone(price, symbol) {
+        return (this.activeZones.find(z => z.symbol === symbol &&
+            price >= z.bottom &&
+            price <= z.top) || null);
     }
     evaluateZoneEntry(currentPrice, zone, candles) {
         const rsi = this.calculateRSI(candles.map(c => c.close));
         const latestRSI = rsi[rsi.length - 1];
         let confidence = 0.5;
         confidence += (10 - zone.strength) * 0.05;
-        // For Deriv, we need to decide on contract parameters
-        const baseAmount = 10; // Base amount in USD
+        const baseAmount = 5; // You can adjust
         const duration = this.calculateDuration(zone.timeframe);
+        // Demand zone = expect price to RISE
         if (zone.type === 'demand') {
-            // Buy CALL contract when price is in demand zone
             if (latestRSI < 35) {
-                confidence += 0.3;
                 this.lastSignalTime = Date.now();
+                confidence += 0.3;
                 return {
-                    action: 'BUY_CALL',
+                    action: 'BUY_RISE',
                     symbol: zone.symbol,
-                    contract_type: 'CALL',
+                    contract_type: 'RISE',
                     amount: baseAmount * confidence,
                     duration: duration.value,
                     duration_unit: duration.unit,
@@ -126,16 +95,19 @@ class DerivSupplyDemandStrategy {
                     timestamp: Date.now()
                 };
             }
+            else {
+                return this.HoldSignal(zone.symbol, zone.timeframe, `In Demand Zone but RSI too high (${latestRSI.toFixed(2)} >= 35)`);
+            }
         }
-        else {
-            // Buy PUT contract when price is in supply zone
+        // Supply zone = expect price to FALL
+        if (zone.type === 'supply') {
             if (latestRSI > 65) {
-                confidence += 0.3;
                 this.lastSignalTime = Date.now();
+                confidence += 0.3;
                 return {
-                    action: 'BUY_PUT',
+                    action: 'BUY_FALL',
                     symbol: zone.symbol,
-                    contract_type: 'PUT',
+                    contract_type: 'FALL',
                     amount: baseAmount * confidence,
                     duration: duration.value,
                     duration_unit: duration.unit,
@@ -144,18 +116,11 @@ class DerivSupplyDemandStrategy {
                     timestamp: Date.now()
                 };
             }
+            else {
+                return this.HoldSignal(zone.symbol, zone.timeframe, `In Supply Zone but RSI too low (${latestRSI.toFixed(2)} <= 65)`);
+            }
         }
-        return {
-            action: 'HOLD',
-            symbol: zone.symbol,
-            contract_type: 'CALL',
-            amount: 0,
-            duration: 0,
-            duration_unit: 'm',
-            confidence: 0,
-            zone,
-            timestamp: Date.now()
-        };
+        return this.HoldSignal(zone.symbol, zone.timeframe, 'In zone but conditions not met');
     }
     calculateRSI(prices, period = 14) {
         const rsi = [];
@@ -163,38 +128,40 @@ class DerivSupplyDemandStrategy {
             const gains = [];
             const losses = [];
             for (let j = i - period + 1; j <= i; j++) {
-                const change = prices[j] - prices[j - 1];
-                if (change > 0) {
-                    gains.push(change);
-                    losses.push(0);
-                }
-                else {
-                    gains.push(0);
-                    losses.push(Math.abs(change));
-                }
+                const diff = prices[j] - prices[j - 1];
+                gains.push(diff > 0 ? diff : 0);
+                losses.push(diff < 0 ? Math.abs(diff) : 0);
             }
             const avgGain = gains.reduce((a, b) => a + b, 0) / period;
             const avgLoss = losses.reduce((a, b) => a + b, 0) / period;
-            const rs = avgGain / (avgLoss || 0.0001); // Avoid division by zero
-            const rsiValue = 100 - (100 / (1 + rs));
+            const rs = avgGain / (avgLoss || 0.0001);
+            const rsiValue = 100 - 100 / (1 + rs);
             rsi.push(isNaN(rsiValue) ? 50 : rsiValue);
         }
         return rsi;
     }
     calculateDuration(timeframe) {
-        // Determine contract duration based on timeframe
-        if (timeframe <= 60) {
-            return { value: 5, unit: 'm' }; // 5 minutes for 1-minute charts
-        }
-        else if (timeframe <= 300) {
-            return { value: 15, unit: 'm' }; // 15 minutes for 5-minute charts
-        }
-        else if (timeframe <= 900) {
-            return { value: 60, unit: 'm' }; // 1 hour for 15-minute charts
-        }
-        else {
-            return { value: 120, unit: 'm' }; // 2 hours for higher timeframes
-        }
+        if (timeframe <= 60)
+            return { value: 5, unit: 'm' };
+        if (timeframe <= 300)
+            return { value: 15, unit: 'm' };
+        if (timeframe <= 900)
+            return { value: 60, unit: 'm' };
+        return { value: 120, unit: 'm' };
+    }
+    HoldSignal(symbol, timeframe, reason = '') {
+        return {
+            action: 'HOLD',
+            symbol,
+            contract_type: 'RISE', // Neutral, ignored
+            amount: 0,
+            duration: 0,
+            duration_unit: 'm',
+            confidence: 0,
+            zone: this.getEmptyZone(symbol, timeframe),
+            timestamp: Date.now(),
+            reason
+        };
     }
     getEmptyZone(symbol, timeframe) {
         return {
@@ -208,11 +175,9 @@ class DerivSupplyDemandStrategy {
             touched: 0
         };
     }
-    getActiveZones() {
-        return [...this.activeZones];
-    }
-    clearZones() {
-        this.activeZones = [];
+    setMinSignalGap(ms) {
+        this.minSignalGap = ms;
+        console.log(`⏱️ Test strategy: Min signal gap updated to ${ms}ms`);
     }
 }
 exports.DerivSupplyDemandStrategy = DerivSupplyDemandStrategy;

@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { supabase } = require('../config/supabase');
+const supabase = require('../config/supabase').supabase;
 exports.authenticateToken = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -17,7 +17,8 @@ exports.authenticateToken = async (req, res, next) => {
             id: data.user.id,
             email: data.user.email,
             // Get subscription from user_metadata or profiles table
-            subscription_status: data.user.user_metadata?.subscription_status || 'free'
+            subscription_status: data.user.user_metadata?.subscription_status || 'free',
+            isAdmin: data.user.user_metadata?.isAdmin || false
         };
         next();
     }

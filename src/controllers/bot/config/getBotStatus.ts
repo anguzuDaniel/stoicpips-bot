@@ -69,7 +69,7 @@ const getBotStatus = async (req: AuthenticatedRequest, res: Response) => {
       },
       activeTrades: activeTrades,
       config: botState.config,
-      config: botState.config,
+
       derivConnected: botState.derivConnected,
       derivAccount: botState.derivWS ? botState.derivWS.getStatus() : null,
       status: botState.isRunning ? "running" : "stopped",
