@@ -3,6 +3,7 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatsCard } from "@/components/StatsCard";
 import { ConfidenceGauge } from "@/components/ConfidenceGauge";
+import { UpgradeModal } from "@/components/UpgradeModal";
 import dynamic from "next/dynamic";
 const ActivityLog = dynamic(() => import("@/components/ActivityLog").then(mod => mod.ActivityLog), { ssr: false });
 const ProfitChart = dynamic(() => import("@/components/ProfitChart").then(mod => mod.ProfitChart), {
@@ -22,6 +23,8 @@ export default function Dashboard() {
   const [connecting, setConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState("");
 
   const [stats, setStats] = useState({
     totalTrades: 0,
@@ -122,6 +125,11 @@ export default function Dashboard() {
       await checkConnection();
     } catch (e: any) {
       console.error(e);
+      if (e.response?.data?.code === 'UPGRADE_REQUIRED') {
+        setUpgradeMessage(e.response.data.error);
+        setShowUpgradeModal(true);
+        return;
+      }
       const errorMsg = e.response?.data?.error || "Failed to start bot. Please check Settings.";
       alert(errorMsg);
       if (errorMsg.includes("Token")) {
@@ -297,7 +305,7 @@ export default function Dashboard() {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
           {/* Left Column (Chart & Signals) */}
           <div className="lg:col-span-2 space-y-6">
@@ -424,6 +432,11 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        message={upgradeMessage}
+      />
     </DashboardLayout>
   );
 }

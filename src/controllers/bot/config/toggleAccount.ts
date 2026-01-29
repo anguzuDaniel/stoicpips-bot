@@ -95,9 +95,30 @@ export const toggleAccount = async (req: AuthenticatedRequest, res: Response) =>
             const authResult: any = await authPromise;
             console.log(`✅ Account switch confirmed: ${authResult.accountType} (${authResult.loginId})`);
 
+            // Validate that the authorized account matches the requested type
+            if (targetType === 'real' && authResult.accountType === 'demo') {
+                // Disconnect immediately as this is invalid
+                newWS.disconnect();
+                return res.status(400).json({
+                    error: "Compliance Error: The token provided for Real Account is actually a Demo token (starts with V). Please update your Real Account Token in Settings."
+                });
+            }
+            // Note: We allow using a Real token for Demo mode technically, but rarely happens. 
+            // Usually we want strict separation.
+            if (targetType === 'demo' && authResult.accountType === 'real') {
+                newWS.disconnect();
+                return res.status(400).json({
+                    error: "Compliance Error: The token provided for Demo Account is actually a Real Account token. Please use a Virtual (Demo) token."
+                });
+            }
+
             // Update state
             botState.derivWS = newWS;
             botState.derivConnected = true;
+
+            // Update local config to reflect active token type for current session
+            // forcing the bot status to report correct type
+            botState.config.activeAccountType = authResult.accountType;
 
             return res.json({
                 success: true,

@@ -81,8 +81,35 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(400).json({ error: "Please configure trading symbols first" });
     }
 
+    // Check Subscription Tier & First Trade Logic
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('subscription_tier, has_taken_first_trade')
+      .eq('id', userId)
+      .single();
+
+    const tier = profile?.subscription_tier || 'free';
+    const hasTakenFirstTrade = profile?.has_taken_first_trade || false;
+    let executionMode = 'auto'; // Default for Elite
+
+    if (tier === 'free') {
+      if (hasTakenFirstTrade) {
+        return res.status(403).json({
+          error: "The Emperor has spoken. You have seen the power of SyntoicAi. Upgrade to Elite for full automation.",
+          code: "UPGRADE_REQUIRED"
+        });
+      }
+      executionMode = 'first_trade';
+      console.log(`🎁 [${userId}] User granted First Trade Exception.`);
+    } else if (tier === 'pro') {
+      executionMode = 'signal_only';
+      console.log(`🛡️ [${userId}] Pro Tier: Signal Only Mode.`);
+    } else {
+      console.log(`👑 [${userId}] Elite Tier: Full Automation.`);
+    }
+
     const baseAmount = config.amountPerTrade || 10;
-    if (subscription === 'free' && baseAmount > 10) {
+    if (tier === 'free' && baseAmount > 10) {
       return res.status(403).json({
         error: "Free users are limited to $10 per trade. Upgrade to premium for higher limits."
       });
@@ -151,6 +178,7 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
       derivWS: derivConnection, // Store connection as derivWS to match other controllers
       dailyTrades: 0,
       lastTradeDate: new Date().toISOString().slice(0, 10),
+      executionMode,
       config
     };
     botStates.set(userId, botState);
