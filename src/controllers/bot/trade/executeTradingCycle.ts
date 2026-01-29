@@ -11,6 +11,7 @@ import { checkCircuitBreaker } from "../risk/checkCircuitBreaker";
 const fetchLatestCandles = require("../../../strategies/fetchLatestCandles");
 const executeTradeOnDeriv = require("./../deriv/executeTradeOnDeriv");
 const botStates = require("../../../types/botStates");
+const supabase = require("../../../config/supabase").supabase;
 
 
 
@@ -110,7 +111,24 @@ export const executeTradingCycle = async (
 
       BotLogger.log(userId, `Signal found for ${symbol} (${signal.action} ${signal.contract_type})`, 'success', symbol);
 
+      // --- Tier Execution Logic ---
+      const mode = botState.executionMode || 'auto';
+
+      if (mode === 'signal_only') {
+        console.log(`🛡️ [${userId}] Signal Only Mode. Skipping execution.`);
+        BotLogger.log(userId, `Philosopher's Signal: Opportunity detected but Automation is reserved for Elite Tier.`, 'warning', symbol);
+        continue;
+      }
+
       const tradeResult = await executeTradeOnDeriv(userId, signal, config, botState.derivWS);
+
+      if (tradeResult && mode === 'first_trade') {
+        console.log(`🎁 [${userId}] First trade executed. Disabling further automation.`);
+        await supabase.from('profiles').update({ has_taken_first_trade: true }).eq('id', userId);
+        botState.executionMode = 'signal_only';
+        BotLogger.log(userId, `The Emperor has spoken. First trade used. Upgrade to Elite for full automation.`, 'info');
+      }
+      // -----------------------------
 
       if (tradeResult) {
         botState.tradesExecuted++;
