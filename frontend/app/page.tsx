@@ -167,34 +167,28 @@ export default function Dashboard() {
           <h1 className="text-xl md:text-2xl font-bold">Dashboard</h1>
 
           <div className="flex items-center gap-2 md:gap-4">
-            <div className="hidden md:flex items-center gap-2 bg-card border border-border px-3 py-1.5 rounded-lg">
-              <Wallet className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-muted-foreground">Balance:</span>
-              <span className="text-sm font-bold text-foreground">
-                {stats.currency} {stats.balance.toFixed(2)}
-              </span>
-            </div>
-            {/* Mobile Balance */}
-            <div className="md:hidden flex items-center bg-card border border-border px-2 py-1.5 rounded-lg">
-              <span className="text-sm font-bold text-foreground">{stats.currency} {stats.balance.toFixed(0)}</span>
-            </div>
-
-            {/* Account Toggle */}
+            {/* Account Toggle - Fixed event propagation */}
             <div className="flex items-center bg-secondary/20 rounded-lg p-1 border border-border">
               <button
-                onClick={() => handleAccountSwitch('real')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAccountSwitch('real');
+                }}
                 className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${stats.accountType === 'real'
-                  ? 'bg-green-500 text-white shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-green-500 text-white shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
                   }`}
               >
                 Real
               </button>
               <button
-                onClick={() => handleAccountSwitch('demo')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAccountSwitch('demo');
+                }}
                 className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${stats.accountType === 'demo'
-                  ? 'bg-indigo-500 text-white shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-indigo-500 text-white shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
                   }`}
               >
                 Demo
@@ -224,10 +218,12 @@ export default function Dashboard() {
               }}
               disabled={loading}
               className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium transition-colors text-sm ${isRunning
-                ? 'bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20'
-                : isConnected
-                  ? 'bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500/20'
-                  : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                  ? 'bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20'
+                  : isConnected
+                    ? stats.accountType === 'real'
+                      ? 'bg-yellow-500/10 text-yellow-500 border-2 border-yellow-500/50 hover:bg-yellow-500/20'
+                      : 'bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500/20'
+                    : 'bg-primary hover:bg-primary/90 text-primary-foreground'
                 }`}
             >
               {loading ? (
@@ -271,10 +267,11 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <StatsCard
-            label="Account Balance"
-            value={`$${stats.balance.toLocaleString()}`}
+            label={`${stats.accountType === 'real' ? 'Live' : 'Demo'} Account Balance`}
+            value={`${stats.currency} ${stats.balance.toLocaleString()}`}
             icon={Wallet}
             isLoading={!status && stats.balance === 0}
+            color={stats.accountType === 'real' ? 'default' : 'default'}
           />
           <StatsCard
             label="Net Profit"
