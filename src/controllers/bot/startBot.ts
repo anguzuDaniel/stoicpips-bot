@@ -126,8 +126,9 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
     // Inside startBot function ...
 
 
-    const demoToken = config.deriv_demo_token || config.derivDemoToken;
-    const realToken = config.deriv_real_token || config.derivRealToken;
+    const sanitizeToken = (t: string) => t ? t.trim().replace(/[\[\]"]/g, '') : '';
+    const demoToken = sanitizeToken(config.deriv_demo_token || config.derivDemoToken);
+    const realToken = sanitizeToken(config.deriv_real_token || config.derivRealToken);
 
     if (!demoToken && !realToken) {
       return res.status(400).json({
@@ -155,12 +156,47 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
       reconnect: true
     });
 
-    derivConnection.connect();
-
     // Wire up logs to frontend
     derivConnection.on('log', (logData: any) => {
       BotLogger.log(userId, logData.message, logData.type);
     });
+
+    // Wait for connection & authorization check
+    try {
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          // Don't disconnect here, let the catch block handle cleanup
+          reject(new Error("Timeout waiting for Deriv authorization"));
+        }, 15000);
+
+        derivConnection.once('authorized', (auth: any) => {
+          clearTimeout(timeout);
+          if (auth.success) resolve(auth);
+          else reject(new Error(auth.error || "Authorization failed"));
+        });
+
+        // Also listen for error during connect
+        // derivConnection emits 'error' event? Checked source, yes.
+        // But 'error' might restart connection. We want to catch fatal auth/connect errors.
+
+        derivConnection.connect();
+      });
+
+      // Check Balance for Real Accounts
+      const status = derivConnection.getStatus();
+      if (activeAccountType === 'real' && status.balance <= 0.5) {
+        console.warn(`🛑 [${userId}] Real account empty (${status.balance}). Blocking start.`);
+        derivConnection.disconnect();
+        return res.status(400).json({
+          error: `Insufficient Funds: Your Real Account balance is ${status.balance} ${status.currency || 'USD'}. Please deposit funds to start trading.`
+        });
+      }
+
+    } catch (err: any) {
+      console.error("❌ Connection failed during start:", err.message);
+      derivConnection.disconnect();
+      return res.status(400).json({ error: `Connection failed: ${err.message}` });
+    }
 
     // Map timeframe to allowed granularity
     // ... existing granularity logic ...

@@ -37,13 +37,15 @@ export const toggleAccount = async (req: AuthenticatedRequest, res: Response) =>
         const config = botState.config;
 
 
+        const sanitizeToken = (t: string) => t ? t.trim().replace(/[\[\]"]/g, '') : '';
+
         let newToken = '';
         if (targetType === 'real') {
-            newToken = config.deriv_real_token || config.derivRealToken;
+            newToken = sanitizeToken(config.deriv_real_token || config.derivRealToken);
             if (!newToken) return res.status(400).json({ error: "Real account token not configured." });
         } else {
             // Fallback chain: Demo Token -> Legacy DB Token -> Legacy Config Token
-            newToken = config.deriv_demo_token || config.derivDemoToken || config.deriv_api_token || config.derivApiToken;
+            newToken = sanitizeToken(config.deriv_demo_token || config.derivDemoToken || config.deriv_api_token || config.derivApiToken);
             if (!newToken) return res.status(400).json({ error: "Demo account token not configured." });
         }
 
