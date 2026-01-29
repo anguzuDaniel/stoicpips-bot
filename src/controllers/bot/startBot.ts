@@ -88,31 +88,24 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
     // Inside startBot function ...
 
 
-    // Prioritize tokens from Database
-    // Default to DEMO token for safety on initial start
-    let token = config.deriv_demo_token || config.derivDemoToken;
+    const demoToken = config.deriv_demo_token || config.derivDemoToken;
+    const realToken = config.deriv_real_token || config.derivRealToken;
+
+    if (!demoToken && !realToken) {
+      return res.status(400).json({
+        error: "No Deriv API Tokens found. Please go to Settings and configure your Real and Demo API Tokens."
+      });
+    }
+
+    // Default to demo if available for safety
+    let token = demoToken;
     let activeAccountType = 'demo';
 
-    // If no demo token, fallback to legacy/generic token
     if (!token) {
-      token = config.deriv_api_token || config.derivApiToken;
-    }
-
-    // Last resort: Environment variable
-    if (!token) {
-      token = process.env.DERIV_API_TOKEN;
-      console.log("⚠️ Using fallback ENV token");
-    }
-
-    if (!token) {
-      // Double check if they ONLY provided a Real token (edge case)
-      if (config.deriv_real_token || config.derivRealToken) {
-        console.warn("⚠️ Only Real Account Token found. Starting in REAL mode.");
-        token = config.deriv_real_token || config.derivRealToken;
-        activeAccountType = 'real';
-      } else {
-        return res.status(400).json({ error: "No Deriv API Token found. Please configure it in Settings." });
-      }
+      // Fallback to real if demo is missing
+      console.warn("⚠️ No Demo token found. Starting in REAL mode.");
+      token = realToken;
+      activeAccountType = 'real';
     }
 
     console.log(`🔑 Using ${activeAccountType.toUpperCase()} Token: ${token.substring(0, 4)}...`);
