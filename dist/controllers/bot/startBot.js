@@ -8,6 +8,7 @@ const DerivSupplyDemandStrategy_1 = require("../../strategies/DerivSupplyDemandS
 const ALLOWED_GRANULARITIES_1 = __importDefault(require("./helpers/ALLOWED_GRANULARITIES"));
 const symbolTimeFrames_1 = __importDefault(require("./helpers/symbolTimeFrames"));
 const DerivWebSocket_1 = require("../../deriv/DerivWebSocket");
+const botLogger_1 = require("../../utils/botLogger");
 const botStates = require('../../types/botStates');
 const { executeTradingCycle } = require('./trade/executeTradingCycle');
 const supabase = require('../../config/supabase').supabase;
@@ -68,10 +69,23 @@ const startBot = async (req, res) => {
             strategy.setMinSignalGap(config.minSignalGap * 60000);
         // ... existing imports ...
         // Inside startBot function ...
-        const token = config.derivApiToken || config.deriv_api_token || process.env.DERIV_API_TOKEN;
-        if (!token) {
-            return res.status(400).json({ error: "No Deriv API Token found. Please configure it in Settings." });
+        const demoToken = config.deriv_demo_token || config.derivDemoToken;
+        const realToken = config.deriv_real_token || config.derivRealToken;
+        if (!demoToken && !realToken) {
+            return res.status(400).json({
+                error: "No Deriv API Tokens found. Please go to Settings and configure your Real and Demo API Tokens."
+            });
         }
+        // Default to demo if available for safety
+        let token = demoToken;
+        let activeAccountType = 'demo';
+        if (!token) {
+            // Fallback to real if demo is missing
+            console.warn("⚠️ No Demo token found. Starting in REAL mode.");
+            token = realToken;
+            activeAccountType = 'real';
+        }
+        console.log(`🔑 Using ${activeAccountType.toUpperCase()} Token: ${token.substring(0, 4)}...`);
         // Initialize Deriv Connection
         const derivConnection = new DerivWebSocket_1.DerivWebSocket({
             apiToken: token,
@@ -79,6 +93,10 @@ const startBot = async (req, res) => {
             reconnect: true
         });
         derivConnection.connect();
+        // Wire up logs to frontend
+        derivConnection.on('log', (logData) => {
+            botLogger_1.BotLogger.log(userId, logData.message, logData.type);
+        });
         // Map timeframe to allowed granularity
         // ... existing granularity logic ...
         // Initialize bot state

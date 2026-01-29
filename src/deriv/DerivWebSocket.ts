@@ -11,6 +11,8 @@ class DerivWebSocket extends EventEmitter {
   private lastSignalTime: number = 0;
   private minSignalGap: number = 300000; // 5 minutes between signals
   private isAuthorized: boolean = false;
+  private pendingRequests: Map<number, (data: any) => void> = new Map();
+  private reqIdCounter = 0;
 
   constructor(options: DerivConnectionOptions) {
     super();
@@ -104,7 +106,8 @@ class DerivWebSocket extends EventEmitter {
   private accountLoginId: string = '';
 
   private handleMessage(data: any) {
-    if (data.msg_type === "ping") return;
+    if (data.msg_type === "ping" && !data.req_id) return;
+
 
     if (data.msg_type === "authorize") {
       this.isAuthorized = true;
@@ -138,6 +141,15 @@ class DerivWebSocket extends EventEmitter {
         currency: this.currency,
         accountType: this.accountType
       });
+    }
+
+    // Handle pending requests (Promise resolution)
+    if (data.req_id && this.pendingRequests.has(data.req_id)) {
+      const resolve = this.pendingRequests.get(data.req_id);
+      if (resolve) {
+        resolve(data);
+        this.pendingRequests.delete(data.req_id);
+      }
     }
 
     // Emit event for external handling
@@ -441,6 +453,28 @@ class DerivWebSocket extends EventEmitter {
   }
 
   // ================== PUBLIC METHODS ==================
+
+  public request(data: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+      if (this.ws?.readyState !== WebSocket.OPEN) {
+        return reject(new Error("WebSocket not connected"));
+      }
+
+      const req_id = ++this.reqIdCounter;
+      this.pendingRequests.set(req_id, resolve);
+
+      const payload = { ...data, req_id };
+      this.ws.send(JSON.stringify(payload));
+
+      // Timeout safety
+      setTimeout(() => {
+        if (this.pendingRequests.has(req_id)) {
+          this.pendingRequests.delete(req_id);
+          reject(new Error("Request timed out"));
+        }
+      }, 10000);
+    });
+  }
 
   send(data: any) {
     if (this.ws?.readyState === WebSocket.OPEN) {

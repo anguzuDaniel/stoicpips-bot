@@ -28,10 +28,11 @@ export const toggleAccount = async (req: AuthenticatedRequest, res: Response) =>
 
         let newToken = '';
         if (targetType === 'real') {
-            newToken = config.derivRealToken;
+            newToken = config.deriv_real_token || config.derivRealToken;
             if (!newToken) return res.status(400).json({ error: "Real account token not configured." });
         } else {
-            newToken = config.derivDemoToken || config.derivApiToken; // Fallback to main token if specific demo not set
+            // Fallback chain: Demo Token -> Legacy DB Token -> Legacy Config Token
+            newToken = config.deriv_demo_token || config.derivDemoToken || config.deriv_api_token || config.derivApiToken;
             if (!newToken) return res.status(400).json({ error: "Demo account token not configured." });
         }
 
@@ -51,6 +52,12 @@ export const toggleAccount = async (req: AuthenticatedRequest, res: Response) =>
         const newWS = new DerivWebSocket({
             apiToken: newToken,
             appId: appId
+        });
+
+        // Wire up logs (CRITICAL for frontend visibility)
+        const { BotLogger } = require('../../../utils/botLogger');
+        newWS.on('log', (logData: any) => {
+            BotLogger.log(userId, logData.message, logData.type);
         });
 
         newWS.connect();
