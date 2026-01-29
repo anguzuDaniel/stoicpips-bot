@@ -103,17 +103,17 @@ export default function ProfilePage() {
         <DashboardLayout>
             <div className="p-4 md:p-10 max-w-[1600px] mx-auto w-full">
                 {/* Hero Greeting Section */}
-                <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-indigo-600 to-purple-800 p-8 md:p-12 mb-10 shadow-2xl">
-                    <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-                    <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-                        <div className="h-24 w-24 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-inner">
-                            <Crown className="h-12 w-12 text-amber-300 drop-shadow-[0_0_10px_rgba(252,211,77,0.5)]" />
+                <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-indigo-600 to-purple-800 p-6 md:p-8 mb-8 shadow-xl">
+                    <div className="absolute top-0 right-0 -mt-10 -mr-10 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
+                    <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
+                        <div className="h-16 w-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-inner">
+                            <Crown className="h-8 w-8 text-amber-300 drop-shadow-[0_0_8px_rgba(252,211,77,0.4)]" />
                         </div>
                         <div className="text-center md:text-left text-white">
-                            <h1 className="text-4xl md:text-5xl font-black tracking-tighter mb-2">
+                            <h1 className="text-2xl md:text-3xl font-black tracking-tight mb-1">
                                 Welcome, <span className="text-amber-300">Emperor</span> {greetingName}
                             </h1>
-                            <p className="text-lg text-white/80 font-medium">Command your synthetic empire and master the markets.</p>
+                            <p className="text-sm text-white/80 font-medium">Command your synthetic empire and master the markets.</p>
                         </div>
                     </div>
                 </div>
