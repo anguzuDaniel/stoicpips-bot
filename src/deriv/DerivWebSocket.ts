@@ -114,14 +114,22 @@ class DerivWebSocket extends EventEmitter {
       this.accountType = this.accountLoginId.startsWith('V') ? 'demo' : 'real';
 
       console.log(`✅ Authorized successfully. Account: ${this.accountLoginId} (${this.accountType.toUpperCase()}) | Balance: ${this.currentBalance} ${this.currency}`);
-      console.log('🔍 Debug Authorize Data:', JSON.stringify(data.authorize, null, 2)); // Debug log
+
+      // Emit debug logs for frontend visibility
+      this.emit('log', {
+        type: 'info',
+        message: `🔍 Auth Data: ${JSON.stringify(data.authorize).substring(0, 200)}...`
+      });
 
       // Subscribe to balance updates
       this.send({ balance: 1, subscribe: 1 });
     }
 
     if (data.msg_type === "balance") {
-      console.log('🔍 Debug Balance Event:', JSON.stringify(data.balance, null, 2)); // Debug log
+      this.emit('log', {
+        type: 'info',
+        message: `💰 Balance Event: ${data.balance.balance} ${data.balance.currency}`
+      });
       this.currentBalance = data.balance.balance;
       this.currency = data.balance.currency;
       // Emit balance update

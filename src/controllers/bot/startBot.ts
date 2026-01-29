@@ -4,6 +4,7 @@ import { DerivSupplyDemandStrategy } from '../../strategies/DerivSupplyDemandStr
 import ALLOWED_GRANULARITIES from './helpers/ALLOWED_GRANULARITIES';
 import symbolTimeFrames from './helpers/symbolTimeFrames';
 import { DerivWebSocket } from "../../deriv/DerivWebSocket";
+import { BotLogger } from "../../utils/botLogger";
 
 const botStates = require('../../types/botStates');
 const { executeTradingCycle } = require('./trade/executeTradingCycle');
@@ -100,6 +101,11 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
     });
 
     derivConnection.connect();
+
+    // Wire up logs to frontend
+    derivConnection.on('log', (logData: any) => {
+      BotLogger.log(userId, logData.message, logData.type);
+    });
 
     // Map timeframe to allowed granularity
     // ... existing granularity logic ...
