@@ -49,8 +49,11 @@ const getBotStatus = async (req: AuthenticatedRequest, res: Response) => {
             currentTrades: [],
             totalProfit: 0,
             tradesExecuted: 0,
+            strategy: null,
             derivWS: derivConnection,
             derivConnected: true,
+            dailyTrades: 0,
+            lastTradeDate: new Date().toISOString().slice(0, 10),
             config: config
           };
           botStates.set(userId, newState);

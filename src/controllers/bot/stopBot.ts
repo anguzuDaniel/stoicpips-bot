@@ -37,9 +37,9 @@ const stopBot = async (req: AuthenticatedRequest, res: Response) => {
 
     /* 
     // Don't disconnect, keep alive for balance updates
-    if (botState.deriv) {
+    if (botState.derivWS) {
       console.log(`🔌 Disconnecting Deriv session for user ${userId}`);
-      botState.deriv.disconnect();
+      botState.derivWS.disconnect();
     }
     */
 

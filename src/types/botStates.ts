@@ -7,9 +7,9 @@ const botStates = new Map<string, {
   currentTrades: any[];
   totalProfit: number;
   tradesExecuted: number;
-  strategy: DerivSupplyDemandStrategy;
+  strategy?: any; // Strategy instance
   derivConnected: boolean;
-  deriv?: any; // Store the DerivWebSocket instance
+  derivWS?: any; // Store the DerivWebSocket instance
   dailyTrades?: number;
   lastTradeDate?: string;
   config: any;

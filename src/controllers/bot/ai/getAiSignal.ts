@@ -8,7 +8,7 @@ const { supabase } = require('../../../config/supabase');
 export const getAiSignal = async (req: Request, res: Response) => {
     try {
         const { symbol, timeframe } = req.body;
-        const userId = (req as any).user.userId;
+        const userId = (req as any).user.id;
 
         // 1. Basic Validation
         if (!symbol) {
