@@ -110,9 +110,19 @@ class DerivWebSocket extends EventEmitter {
 
 
     if (data.msg_type === "authorize") {
+      if (data.error) {
+        console.error("❌ Authorization failed:", data.error.message);
+        this.isAuthorized = false;
+        this.emit('log', {
+          type: 'error',
+          message: `Authorization failed: ${data.error.message}`
+        });
+        return;
+      }
+
       this.isAuthorized = true;
-      this.currentBalance = data.authorize.balance;
-      this.currency = data.authorize.currency;
+      this.currentBalance = data.authorize.balance || 0;
+      this.currency = data.authorize.currency || 'USD';
       this.accountLoginId = data.authorize.loginid;
       this.accountType = this.accountLoginId.startsWith('V') ? 'demo' : 'real';
 
@@ -121,7 +131,7 @@ class DerivWebSocket extends EventEmitter {
       // Emit debug logs for frontend visibility
       this.emit('log', {
         type: 'info',
-        message: `🔍 Auth Data: ${JSON.stringify(data.authorize).substring(0, 200)}...`
+        message: `🔍 Authorized on ${this.accountType.toUpperCase()} account (${this.accountLoginId.substring(0, 4)}...)`
       });
 
       // Subscribe to balance updates
