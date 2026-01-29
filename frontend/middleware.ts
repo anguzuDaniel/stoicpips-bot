@@ -55,11 +55,20 @@ export async function middleware(request: NextRequest) {
     // Admin route protection
     if (session && request.nextUrl.pathname.startsWith('/admin')) {
         // Fetch user profile to check admin status
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
             .from('profiles')
-            .select('is_admin')
+            .select('is_admin, email')
             .eq('id', session.user.id)
             .single();
+
+        if (error) {
+            console.error('[Middleware] Admin check error:', error);
+        }
+        if (!profile) {
+            console.error('[Middleware] No profile found for user:', session.user.id);
+        } else {
+            console.log('[Middleware] Admin check result:', profile);
+        }
 
         if (!profile || !profile.is_admin) {
             // User is not an admin, redirect to dashboard
