@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, Activity, Settings, History, BarChart3, HelpCircle, LogOut, Cpu, CreditCard } from "lucide-react";
+import { LayoutDashboard, Activity, Settings, History, BarChart3, HelpCircle, LogOut, Cpu, CreditCard, User } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -8,6 +8,7 @@ import { clsx } from "clsx";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
+  { icon: User, label: "Account Profile", href: "/profile" },
   { icon: Settings, label: "Bot Settings", href: "/settings" },
   { icon: CreditCard, label: "Pricing / Upgrade", href: "/pricing" },
   { icon: History, label: "Trade History", href: "/history" },
