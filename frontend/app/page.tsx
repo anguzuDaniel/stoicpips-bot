@@ -23,6 +23,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 export default function Dashboard() {
   const router = useRouter(); // Initialize router
   const [loading, setLoading] = useState(false);
+  const [isSwitching, setIsSwitching] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
@@ -93,17 +94,36 @@ export default function Dashboard() {
     const cachedStats = localStorage.getItem("syntoic_last_stats");
     if (cachedStats) {
       try {
-        setStats(JSON.parse(cachedStats));
+        const parsed = JSON.parse(cachedStats);
+        // If it's the old format, just load it. If it's new, we need to decide which one to load.
+        // For simplicity, we just load whatever was last saved as "current".
+        // But for better UX, we see if we have `currentAccountType` saved.
+
+        // Actually, let's just support the simple object for now to avoid breaking existing cache,
+        // but we will SAVE in the new structure below.
+        if (parsed.accountType) {
+          setStats(parsed);
+        }
       } catch (e) {
         console.error("Failed to parse cached stats", e);
       }
     }
   }, []);
 
-  // 2. Consolidate Caching Logic
+  // 2. Consolidate Caching Logic (Dual Cache)
   useEffect(() => {
-    if (stats.balance > 0 || stats.totalTrades > 0) {
+    if (stats.accountType) {
+      // Save to general cache for initial load (current state)
       localStorage.setItem("syntoic_last_stats", JSON.stringify(stats));
+
+      // ALSO save to specific cache bucket
+      const bucketKey = `syntoic_cache_${stats.accountType}`;
+      const cacheData = {
+        balance: stats.balance,
+        currency: stats.currency,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(bucketKey, JSON.stringify(cacheData));
     }
   }, [stats]);
 
@@ -154,7 +174,29 @@ export default function Dashboard() {
 
   const performAccountSwitch = async (type: "real" | "demo") => {
     try {
-      setLoading(true);
+      setIsSwitching(true);
+
+      // Optimistic Update from Cache
+      const bucketKey = `syntoic_cache_${type}`;
+      const cachedData = localStorage.getItem(bucketKey);
+      if (cachedData) {
+        try {
+          const parsedCache = JSON.parse(cachedData);
+          if (parsedCache && parsedCache.timestamp) {
+            console.log(`⚡ Optimistically applying cached ${type} stats`);
+            setStats(prev => ({
+              ...prev,
+              balance: parsedCache.balance || 0,
+              currency: parsedCache.currency || 'USD',
+              accountType: type // Switch UI immediately
+            }));
+          }
+        } catch (e) { console.error("Cache parse error", e); }
+      } else {
+        // If no cache, we still want to switch the UI toggle immediately to feel responsive
+        setStats(prev => ({ ...prev, accountType: type }));
+      }
+
       console.log(`🔄 Switching account to ${type}...`);
       const response = await botApi.toggleAccount(type);
 
@@ -174,7 +216,7 @@ export default function Dashboard() {
       const errorMsg = e.response?.data?.error || "Failed to switch account. Ensure tokens are configured in Settings.";
       setAlertState({ isOpen: true, type: "error", message: errorMsg });
     } finally {
-      setLoading(false);
+      setIsSwitching(false);
     }
   };
 
@@ -212,30 +254,30 @@ export default function Dashboard() {
 
           <div className="flex items-center gap-2 md:gap-4">
             {/* Account Toggle - Fixed event propagation */}
-            <div className="flex items-center bg-secondary/20 rounded-lg p-1 border border-border">
+            <div className={`flex items-center bg-secondary/20 rounded-lg p-1 border border-border ${isSwitching ? 'opacity-50 pointer-events-none cursor-wait' : ''}`}>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleAccountSwitch('real');
                 }}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${stats.accountType === 'real'
+                className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md transition-all ${stats.accountType === 'real'
                   ? 'bg-green-500 text-white shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
                   }`}
               >
-                Real
+                {isSwitching && stats.accountType !== 'real' && <Loader2 className="h-3 w-3 animate-spin" />} Real
               </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleAccountSwitch('demo');
                 }}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${stats.accountType === 'demo'
+                className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md transition-all ${stats.accountType === 'demo'
                   ? 'bg-indigo-500 text-white shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
                   }`}
               >
-                Demo
+                {isSwitching && stats.accountType !== 'demo' && <Loader2 className="h-3 w-3 animate-spin" />} Demo
               </button>
             </div>
 

@@ -16,6 +16,7 @@
     "@prisma/client": "^7.1.0",
     "@supabase/supabase-js": "^2.84.0",
     "axios": "^1.13.2",
+    "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
@@ -23,6 +24,7 @@
     "supabase": "^2.62.5"
   },
   "devDependencies": {
+    "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
     "@types/jest": "^30.0.0",
