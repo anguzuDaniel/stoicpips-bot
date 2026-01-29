@@ -94,7 +94,7 @@ export const executeTradingCycle = async (
         continue;
       }
 
-      const signal = botState.strategy.analyzeCandles(
+      const signal = botState.strategy.analyze(
         candles,
         symbol,
         symbolTimeFrames[symbol]
@@ -102,16 +102,32 @@ export const executeTradingCycle = async (
 
       console.log(`Signal debug for ${symbol}:`, signal);
 
-      if (signal.action === "HOLD") {
-        const reason = signal.reason || 'No signal';
-        console.log(`⏸️ [${userId}] HOLD → ${symbol}: ${reason}`);
-        // Removed UI log to prevent spam
+      if (!signal || signal.action === "HOLD") {
+        console.log(`⏸️ [${userId}] HOLD → ${symbol}`);
         continue;
       }
 
-      BotLogger.log(userId, `Signal found for ${symbol} (${signal.action} ${signal.contract_type})`, 'success', symbol);
+      // --- Sentinel Filter & AI Fallback ---
+      const baseAmount = config.amountPerTrade || 10;
+      signal.amount = baseAmount; // Set base amount before sentinel
 
-      // --- Tier Execution Logic ---
+      const sentinelDecision = await botState.sentinel.executeScalpWithFallback(
+        signal,
+        botState.subscriptionTier || 'free',
+        botState.hasTakenFirstTrade || false
+      );
+
+      if (!sentinelDecision.shouldExecute) {
+        console.log(`🛡️ [${userId}] Sentinel Blocked Trade for ${symbol}: Low AI Confidence.`);
+        continue;
+      }
+
+      const executionAmount = sentinelDecision.amount;
+      signal.amount = executionAmount; // Apply adjusted amount (e.g. 50% for fallback)
+
+      BotLogger.log(userId, `Signal approved by Sentinel for ${symbol} (Amount: $${executionAmount})`, 'success', symbol);
+
+      // --- Execution Logic ---
       const mode = botState.executionMode || 'auto';
 
       if (mode === 'signal_only') {
@@ -120,12 +136,15 @@ export const executeTradingCycle = async (
         continue;
       }
 
-      const tradeResult = await executeTradeOnDeriv(userId, signal, config, botState.derivWS);
+      // Execute via the new OCO-supported method in DerivWebSocket
+      // This uses multipliers with exchange-managed TP/SL
+      const tradeResult = await botState.derivWS.executeTrade(signal);
 
       if (tradeResult && mode === 'first_trade') {
         console.log(`🎁 [${userId}] First trade executed. Disabling further automation.`);
         await supabase.from('profiles').update({ has_taken_first_trade: true }).eq('id', userId);
         botState.executionMode = 'signal_only';
+        botState.hasTakenFirstTrade = true;
         BotLogger.log(userId, `The Emperor has spoken. First trade used. Upgrade to Elite for full automation.`, 'info');
       }
       // -----------------------------
@@ -136,7 +155,17 @@ export const executeTradingCycle = async (
         tradesThisCycle++;
         botState.currentTrades.push(tradeResult);
 
-        await saveTradeToDatabase(userId, tradeResult);
+        // Optionally save to DB if structure matches
+        await saveTradeToDatabase(userId, {
+          ...tradeResult,
+          symbol,
+          contractType: signal.contract_type,
+          action: signal.action,
+          amount: signal.amount,
+          entryPrice: tradeResult.entry_tick || 0,
+          status: 'open',
+          timestamp: new Date()
+        });
       }
 
       await delay(2000); // small pause between symbols

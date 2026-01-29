@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from "../../types/AuthenticatedRequest";
-import { DerivSupplyDemandStrategy } from '../../strategies/DerivSupplyDemandStrategy';
+import { HybridScalpStrategy } from '../../strategies/HybridScalpStrategy';
+import { SentinelExecutionLayer } from '../../strategies/SentinelExecutionLayer';
 import ALLOWED_GRANULARITIES from './helpers/ALLOWED_GRANULARITIES';
 import symbolTimeFrames from './helpers/symbolTimeFrames';
 import { DerivWebSocket } from "../../deriv/DerivWebSocket";
@@ -137,9 +138,12 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
       });
     }
 
-    // Initialize strategy
-    const strategy = new DerivSupplyDemandStrategy();
-    if (config.minSignalGap) strategy.setMinSignalGap(config.minSignalGap * 60000);
+    // Initialize strategy & Sentinel
+    const strategy = new HybridScalpStrategy();
+    const sentinel = new SentinelExecutionLayer();
+
+    // @ts-ignore
+    if (config.minSignalGap) strategy.minSignalGap = config.minSignalGap * 60000;
 
 
 
@@ -233,12 +237,15 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
       totalProfit: 0,
       tradesExecuted: 0,
       strategy,
+      sentinel,
       derivConnected: true,
       derivWS: derivConnection, // Store connection as derivWS to match other controllers
       dailyTrades: 0,
       lastTradeDate: new Date().toISOString().slice(0, 10),
       executionMode,
-      config
+      config,
+      subscriptionTier: tier,
+      hasTakenFirstTrade
     };
     botStates.set(userId, botState);
 

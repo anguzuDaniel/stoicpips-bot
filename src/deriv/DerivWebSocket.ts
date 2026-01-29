@@ -439,30 +439,65 @@ class DerivWebSocket extends EventEmitter {
     if (this.currentBalance < signal.amount || this.currentBalance <= 0) {
       const msg = `⚠️ Insufficient balance (${this.currentBalance} ${this.currency}). Cannot place trade of ${signal.amount}.`;
       console.warn(msg);
-      this.emit('log', { type: 'error', message: msg }); // Emit so frontend can potentially pick it up via logs
+      this.emit('log', { type: 'error', message: msg });
       return;
     }
 
-    const contractParams = {
+    // Use Multipliers for OCO-like TP/SL management by the exchange
+    const isMultiplier = signal.symbol.startsWith('R_') || signal.symbol.startsWith('10'); // Synthetic indices
+
+    const contractParams: any = {
       proposal: 1,
       amount: signal.amount,
-      basis: 'stake',
-      contract_type: signal.contract_type,
+      basis: isMultiplier ? 'stake' : 'stake',
+      contract_type: signal.contract_type === 'CALL' ? 'MULTUP' : 'MULTDOWN',
       currency: 'USD',
-      duration: signal.duration,
-      duration_unit: signal.duration_unit,
-      symbol: signal.symbol
+      symbol: signal.symbol,
+      limit_order: {}
     };
 
+    if (signal.takeProfit) {
+      contractParams.limit_order.take_profit = Math.abs(signal.takeProfit - (signal.zone?.bottom || signal.takeProfit)); // Simplified distance
+    }
+
+    if (signal.stopLoss) {
+      contractParams.limit_order.stop_loss = Math.abs(signal.stopLoss - (signal.zone?.top || signal.stopLoss)); // Simplified distance
+    }
+
+    // Fallback to standard CALL/PUT if not using multipliers or if preferred
+    if (!isMultiplier) {
+      contractParams.contract_type = signal.contract_type;
+      delete contractParams.limit_order;
+      contractParams.duration = signal.duration;
+      contractParams.duration_unit = signal.duration_unit;
+    }
+
     try {
-      // First get proposal
-      this.send(contractParams);
+      console.log(`📤 Requesting Proposal: ${contractParams.contract_type} on ${signal.symbol} | TP: ${signal.takeProfit} | SL: ${signal.stopLoss}`);
 
-      // The actual buy would happen in response to the proposal
-      // You need to handle the proposal response and then send buy request
+      const proposal = await this.request(contractParams);
 
-    } catch (error) {
-      console.error("❌ Trade execution failed:", error);
+      if (proposal.error) {
+        throw new Error(proposal.error.message);
+      }
+
+      console.log(`📊 Proposal Received: ${proposal.proposal.id}. Executing Buy...`);
+
+      const buyResult = await this.request({
+        buy: proposal.proposal.id,
+        price: signal.amount
+      });
+
+      if (buyResult.error) {
+        throw new Error(buyResult.error.message);
+      }
+
+      console.log(`✅ Trade Executed! Ticket: ${buyResult.buy.contract_id}`);
+      this.emit('trade_executed', buyResult.buy);
+
+    } catch (error: any) {
+      console.error("❌ Trade execution failed:", error.message);
+      this.emit('log', { type: 'error', message: `Trade failed: ${error.message}` });
     }
   }
 
