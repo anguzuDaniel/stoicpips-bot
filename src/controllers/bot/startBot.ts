@@ -137,7 +137,7 @@ const startBot = async (req: AuthenticatedRequest, res: Response) => {
       tradesExecuted: 0,
       strategy,
       derivConnected: true,
-      deriv: derivConnection, // Store connection
+      derivWS: derivConnection, // Store connection as derivWS to match other controllers
       dailyTrades: 0,
       lastTradeDate: new Date().toISOString().slice(0, 10),
       config

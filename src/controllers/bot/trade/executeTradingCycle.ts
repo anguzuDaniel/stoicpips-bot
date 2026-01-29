@@ -81,7 +81,7 @@ export const executeTradingCycle = async (
 
       try {
 
-        candles = await fetchLatestCandles(symbol, symbolTimeFrames[symbol], botState.deriv);
+        candles = await fetchLatestCandles(symbol, symbolTimeFrames[symbol], botState.derivWS);
 
       } catch (err: any) {
         console.log(`⚠️ Skipping ${symbol}: ${err.message}`);
@@ -110,7 +110,7 @@ export const executeTradingCycle = async (
 
       BotLogger.log(userId, `Signal found for ${symbol} (${signal.action} ${signal.contract_type})`, 'success', symbol);
 
-      const tradeResult = await executeTradeOnDeriv(userId, signal, config, botState.deriv);
+      const tradeResult = await executeTradeOnDeriv(userId, signal, config, botState.derivWS);
 
       if (tradeResult) {
         botState.tradesExecuted++;

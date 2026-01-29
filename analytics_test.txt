@@ -1,0 +1,27 @@
+[
+  {
+    "date": "09/12/2025",
+    "profit": 0,
+    "dailyPnl": 0
+  },
+  {
+    "date": "09/12/2025",
+    "profit": 0,
+    "dailyPnl": 0
+  },
+  {
+    "date": "09/12/2025",
+    "profit": 0,
+    "dailyPnl": 0
+  },
+  {
+    "date": "09/12/2025",
+    "profit": 0,
+    "dailyPnl": 0
+  },
+  {
+    "date": "09/12/2025",
+    "profit": 0,
+    "dailyPnl": 0
+  }
+]
