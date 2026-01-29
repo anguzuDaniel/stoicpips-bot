@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
 import authRoutes from './routes/auth.routes';
 import botRoutes from './routes/bot.routes';
 import userRoutes from './routes/user.routes';
@@ -14,6 +15,8 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
+
+app.use(compression());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

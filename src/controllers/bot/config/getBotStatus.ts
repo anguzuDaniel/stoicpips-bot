@@ -1,5 +1,6 @@
 import { supabase } from '../../../config/supabase';
 import { botStates } from '../../../types/botStates';
+import { DerivWebSocket } from '../../../deriv/DerivWebSocket';
 
 export const getBotStatus = async (req: any, res: any) => {
   try {
@@ -8,13 +9,58 @@ export const getBotStatus = async (req: any, res: any) => {
 
     // 1. Get Balance from active connection if available
     let derivAccount = null;
-    if (botState && botState.derivWS) {
+
+    // Check active state
+    if (botState && botState.derivWS && botState.derivWS.getStatus().connected) {
       const wsStatus = botState.derivWS.getStatus();
       derivAccount = {
         balance: wsStatus.balance,
         currency: wsStatus.currency,
-        accountType: wsStatus.accountType || (botState.config?.deriv_demo_token ? 'demo' : 'real') // simplified fallback
+        accountType: wsStatus.accountType || (botState.config?.deriv_demo_token ? 'demo' : 'real')
       };
+    }
+    // Passive Mode: If not running/connected, try to connect briefly to get status
+    else {
+      // Logic: If user has config, try to connect passively
+      // We can check if we have a config in DB
+      const { data: botConfig } = await supabase.from("bot_configs").select("*").eq("user_id", userId).single();
+
+      if (botConfig) {
+        const config = { ...botConfig, ...botConfig.config_data };
+        const token = config.deriv_demo_token || config.derivDemoToken || config.deriv_real_token || config.derivRealToken;
+
+        if (token) {
+          const passiveWS = new DerivWebSocket({
+            apiToken: token,
+            appId: process.env.DERIV_APP_ID || '1089',
+            reconnect: false
+          });
+
+          // Helper to connect and get balance with timeout
+          try {
+            await new Promise<void>((resolve, reject) => {
+              const timeout = setTimeout(() => reject('Timeout'), 5000);
+              passiveWS.once('authorized', (auth: any) => {
+                clearTimeout(timeout);
+                if (auth.success) resolve(); else reject('Auth Failed');
+              });
+              passiveWS.connect();
+            });
+
+            const status = passiveWS.getStatus();
+            derivAccount = {
+              balance: status.balance,
+              currency: status.currency,
+              accountType: status.accountType
+            };
+            passiveWS.disconnect();
+          } catch (e) {
+            // console.log('Passive connection failed:', e);
+            // Expected if token invalid or timeout
+            if (passiveWS) passiveWS.disconnect();
+          }
+        }
+      }
     }
 
     // 2. Fetch DB status (with simple TTL cache to prevent spamming DB)

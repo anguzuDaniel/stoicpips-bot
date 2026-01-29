@@ -23,7 +23,9 @@ const saveTradeToDatabase = async (userId: string, trade: any) => {
         proposal_id: trade.proposalId,
         pnl: trade.pnl,
         pnl_percentage: trade.pnlPercentage,
-        created_at: trade.timestamp
+        created_at: trade.timestamp,
+        entry_tick: trade.entryPrice, // Entry price is the entry tick
+        transaction_id: trade.transaction_id || null // If available from buy response
       });
 
     if (error) {

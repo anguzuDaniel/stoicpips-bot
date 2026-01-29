@@ -47,14 +47,18 @@ export default function Dashboard() {
     recentTrades: []
   });
 
-  // 1. Data Fetching with SWR
+  // 1. Data Fetching with SWR (Optimized)
   const { data: analytics, mutate: refreshAnalytics } = useSWR('/bot/analytics', fetcher, {
     refreshInterval: 30000, // 30s
-    revalidateOnFocus: false
+    dedupingInterval: 20000, // Don't re-fetch within 20s
+    revalidateOnFocus: false,
+    keepPreviousData: true // Keep showing old data while fetching
   });
 
   const { data: status, mutate: refreshStatus } = useSWR('/bot/status', fetcher, {
     refreshInterval: 10000, // 10s
+    dedupingInterval: 5000,
+    keepPreviousData: true
   });
 
   // 2. Synchronize SWR data to state and localStorage
@@ -487,9 +491,9 @@ export default function Dashboard() {
           </div>
 
           {/* Right Column (Live Activity) */}
-          <div className="flex flex-col h-full gap-6">
+          <div className="flex flex-col h-full gap-6 overflow-hidden">
             {/* AI Confidence Widget */}
-            <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm shrink-0">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-sm flex items-center gap-2">
                   <Cpu className="h-4 w-4 text-primary" /> AI Probability Engine
@@ -501,7 +505,7 @@ export default function Dashboard() {
               <ConfidenceGauge value={status?.performance?.confidence ?? 85} isLoading={!status} />
             </div>
 
-            <div className="flex-1 min-h-[400px]">
+            <div className="flex-1 min-h-0">
               <ActivityLog />
             </div>
           </div>

@@ -27,6 +27,7 @@ export const botStates = new Map<string, {
   pausedBy?: string;
   resumedAt?: string;
   resumedBy?: string;
+  dailyLimitReachedNotificationSent?: boolean;
 }>();
 // Added to handle global flags that are not per-user
 (botStates as any).globalPause = false;

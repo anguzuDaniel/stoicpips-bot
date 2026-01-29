@@ -42,7 +42,7 @@ export function ActivityLog() {
                             if (log.type === 'success') {
                                 addToast(`Trade Executed: ${log.message}`, 'success', 'New Trade');
                             } else if (log.type === 'warning') {
-                                addToast(log.message, 'warning', 'Signal Detected');
+                                addToast(log.message, 'warning', 'Warning');
                             } else if (log.type === 'error') {
                                 addToast(log.message, 'error', 'Error');
                             }

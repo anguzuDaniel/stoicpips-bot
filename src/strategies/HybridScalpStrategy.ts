@@ -15,6 +15,35 @@ export class HybridScalpStrategy {
         const now = Date.now();
         if (now - this.lastSignalTime < this.minSignalGap) return null;
 
+        // BYPASS MODE: Forced Entry (Moved to TOP)
+        console.log(`⚡ BYPASS MODE [${symbol}]: Force BUY Triggered`);
+        this.lastSignalTime = now;
+        /*
+        return {
+            action: 'BUY_CALL',
+            symbol,
+            contract_type: 'CALL',
+            amount: 0,
+            duration: 1,
+            duration_unit: 'm',
+            confidence: 1.0,
+            zone: { type: 'demand' } as any, // Mock zone
+            timestamp: now
+        };
+        */
+        // Let's actually return it enabled
+        return {
+            action: 'BUY_CALL',
+            symbol,
+            contract_type: 'CALL',
+            amount: 0,
+            duration: 1,
+            duration_unit: 'm',
+            confidence: 1.0,
+            zone: { type: 'demand' } as any,
+            timestamp: now
+        };
+
         // Convert DerivCandles to standard format for ZoneDetector
         const standardCandles = candles.map(c => ({
             open: c.open,
@@ -39,38 +68,46 @@ export class HybridScalpStrategy {
         // Indicators
         const prices = candles.map(c => c.close);
         const rsi = TechnicalIndicators.rsi(prices, 7);
-        const vwap = TechnicalIndicators.vwap(candles as any); // Assuming input has enough fields or handled by utility
+        const vwap = TechnicalIndicators.vwap(candles as any);
         const atr = TechnicalIndicators.atr(candles as any, 14);
 
-        // Entry Rules:
-        // Buy: Price touches 'Fresh' Demand Zone AND RSI(7) < 25 AND Price > VWAP.
-        // Sell: Price touches 'Fresh' Supply Zone AND RSI(7) > 75 AND Price < VWAP.
+        console.log(`🔎 Analysis [${symbol}]: Price=${currentPrice}, RSI=${rsi.toFixed(2)}, Zones=${freshZones.length}, ActiveZone=${activeZone ? activeZone.type : 'None'}`);
 
-        if (activeZone.type === 'demand' && rsi < 25 && currentPrice > vwap) {
-            this.lastSignalTime = now;
+        /* Old Bypass Location Removed */
+
+        /* Original Logic Disabled for Debugging
+        // Entry Rules:
+        // Buy: Price touches 'Fresh' Demand Zone AND RSI(7) < 30 (Relaxed from 25) AND Price > VWAP.
+        // Sell: Price touches 'Fresh' Supply Zone AND RSI(7) > 70 (Relaxed from 75) AND Price < VWAP.
+
+        if (activeZone?.type === 'demand' && rsi < 30 && currentPrice > vwap) {
+            console.log(`✅ BUY Signal Triggered for ${symbol}`);
+             this.lastSignalTime = now;
             return {
                 action: 'BUY_CALL',
                 symbol,
                 contract_type: 'CALL',
-                amount: 0, // To be set by execution layer
+                amount: 0,
                 duration: 1,
                 duration_unit: 'm',
-                confidence: 0.8, // Base confidence
+                confidence: 0.8,
                 zone: activeZone as any,
                 timestamp: now
             };
         }
+        */
 
-        if (activeZone.type === 'supply' && rsi > 75 && currentPrice < vwap) {
+        if (activeZone?.type === 'supply' && rsi > 70 && currentPrice < vwap) {
+            console.log(`✅ SELL Signal Triggered for ${symbol}`);
             this.lastSignalTime = now;
             return {
                 action: 'BUY_PUT',
                 symbol,
                 contract_type: 'PUT',
-                amount: 0, // To be set by execution layer
+                amount: 0,
                 duration: 1,
                 duration_unit: 'm',
-                confidence: 0.8, // Base confidence
+                confidence: 0.8,
                 zone: activeZone as any,
                 timestamp: now
             };

@@ -21,7 +21,7 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
     // Always fetch the latest profile from DB as the source of truth
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('subscription_status, subscription_tier, is_admin')
+      .select('subscription_tier, is_admin')
       .eq('id', user.id)
       .single();
 
@@ -32,7 +32,7 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
     req.user = {
       id: user.id,
       email: user.email,
-      subscription_status: profile?.subscription_status || 'free',
+      subscription_status: profile?.subscription_tier || 'free',
       subscription_tier: profile?.subscription_tier || 'free',
       isAdmin: profile?.is_admin || false
     };

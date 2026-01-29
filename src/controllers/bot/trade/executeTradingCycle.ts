@@ -41,6 +41,7 @@ export const executeTradingCycle = async (
   if (botState.lastTradeDate !== today) {
     botState.dailyTrades = 0;
     botState.lastTradeDate = today;
+    botState.dailyLimitReachedNotificationSent = false; // Reset notification flag
   }
 
   let tradesThisCycle = 0;
@@ -56,11 +57,18 @@ export const executeTradingCycle = async (
       break;
 
     // Max daily trades
-    if (config.dailyTradeLimit && botState.dailyTrades! >= config.dailyTradeLimit)
+    if (config.dailyTradeLimit && botState.dailyTrades! >= config.dailyTradeLimit) {
+      if (!botState.dailyLimitReachedNotificationSent) {
+        console.warn(`⚠️ [${userId}] Daily trade limit of ${config.dailyTradeLimit} reached.`);
+        BotLogger.log(userId, `Daily trade limit of ${config.dailyTradeLimit} reached. Trading paused for today.`, 'warning');
+        botState.dailyLimitReachedNotificationSent = true;
+      }
       break;
+    }
 
 
     try {
+      console.log(`🔄 Processing Symbol: ${symbol}`);
       let candles = candlesMap[symbol];
 
       if (!candles || candles.length === 0) {
@@ -86,6 +94,7 @@ export const executeTradingCycle = async (
       );
 
       if (!signal || signal.action === "HOLD") {
+        console.log(`🚫 No signal generated for ${symbol}`);
         continue;
       }
 

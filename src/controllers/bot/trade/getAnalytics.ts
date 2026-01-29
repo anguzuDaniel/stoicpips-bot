@@ -10,23 +10,32 @@ export const getAnalytics = async (req: any, res: any) => {
         const userId = req.user.id;
         const botState = botStates.get(userId);
         const now = Date.now();
-        const CACHE_TTL = 30 * 1000; // 30 seconds
+        const CACHE_TTL = 10000; // 10 seconds (Short cache for responsiveness)
 
         // 0. Check Cache
         if (botState && botState.analyticsCache && (now - botState.analyticsCache.timestamp < CACHE_TTL)) {
-            console.log(`🚀 [${userId}] Serving analytics from CACHE`);
+            // Keep cache active
             return res.json(botState.analyticsCache.data);
         }
 
-        // 1. Fetch all trades from DB as source of truth
-        const { data: trades, error } = await supabase
+        // 1. Trigger Background Sync (Fire & Forget)
+        // We do this to ensure DB is eventually consistent, but we don't wait for it to avoid slow loading.
+        import('../history/syncTrades').then(({ syncTrades }) => {
+            syncTrades(userId).catch(err => console.error("Background sync error:", err));
+        });
+
+        // 2. Fetch exclusively from DB
+        let trades: any[] = [];
+        const { data: dbTrades, error } = await supabase
             .from('trades')
-            .select('entry_price, payout, pnl, status, contract_type, created_at')
+            .select('*') // Select all fields including new ones
             .eq('user_id', userId)
-            .order('created_at', { ascending: true }); // Chart order
+            .order('created_at', { ascending: true }); // Ascending for calculations
+
+        if (dbTrades) trades = dbTrades;
 
         if (error) {
-            console.error(`❌ [${userId}] Fetch trades error for analytics:`, error.message);
+            console.error("DB Fetch Error:", error);
         }
 
         if (!trades || trades.length === 0) {
@@ -56,8 +65,11 @@ export const getAnalytics = async (req: any, res: any) => {
         const profitHistory: any[] = [];
         let cumulativeProfit = 0;
 
+        // Sort by date ascending for charts
+        trades.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
         trades.forEach((trade: any) => {
-            const pnl = parseFloat(trade.pnl || (trade.payout - trade.entry_price)); // Robustness
+            const pnl = parseFloat(trade.pnl);
             totalProfit += pnl;
             cumulativeProfit += pnl;
 
@@ -80,14 +92,14 @@ export const getAnalytics = async (req: any, res: any) => {
             });
         });
 
-        // Calculate Streak (Iterate backwards)
+        // Calculate Streak (Iterate backwards from newest)
         let currentStreak = 0;
         if (trades.length > 0) {
             const reversedTrades = [...trades].reverse();
-            const lastIsWin = reversedTrades[0].pnl >= 0;
+            const lastIsWin = parseFloat(reversedTrades[0].pnl) >= 0;
 
             for (let i = 0; i < reversedTrades.length; i++) {
-                const isWin = reversedTrades[i].pnl >= 0;
+                const isWin = parseFloat(reversedTrades[i].pnl) >= 0;
                 if (isWin === lastIsWin) {
                     currentStreak++;
                 } else {
@@ -98,8 +110,8 @@ export const getAnalytics = async (req: any, res: any) => {
         }
 
         const totalTrades = trades.length;
-        const winRate = (wins / totalTrades) * 100;
-        const averageProfit = totalProfit / totalTrades;
+        const winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0;
+        const averageProfit = totalTrades > 0 ? totalProfit / totalTrades : 0;
 
         // Get last 5 trades for dashboard
         const recentTrades = trades.slice(-5).reverse();
