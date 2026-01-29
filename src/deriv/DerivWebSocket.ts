@@ -519,6 +519,24 @@ class DerivWebSocket extends EventEmitter {
     console.log("🧹 All trading zones cleared");
   }
 
+  public async getProfitTable(limit: number = 50): Promise<any[]> {
+    if (!this.isAuthorized) {
+      throw new Error("Not authorized to fetch profit table.");
+    }
+    const response = await this.request({
+      profit_table: 1,
+      description: 1,
+      sort: "DESC",
+      count: limit
+    });
+
+    if (response.error) {
+      throw new Error(response.error.message);
+    }
+
+    return response.profit_table?.transactions || [];
+  }
+
   updateSettings(settings: {
     minSignalGap?: number;
     consolidationThreshold?: number;

@@ -181,17 +181,15 @@ export default function Dashboard() {
                 if (loading) return;
                 setLoading(true); // Re-using loading state for button spinner
                 try {
-                  if (!isConnected) {
-                    await handleConnect();
-                    // Auto-start after connect if successful
-                    await botApi.startBot();
-                    setIsRunning(true);
-                  } else if (isRunning) {
+                  if (isConnected && isRunning) {
+                    // Stop Bot
                     await botApi.stopBot();
                     setIsRunning(false);
+                    // setIsConnected(false); // Optional: Do we want to disconnect or just stop? Usually stop = running=false
                   } else {
-                    await botApi.startBot();
-                    setIsRunning(true);
+                    // Connect & Start (Handled by handleConnect)
+                    await handleConnect();
+                    // handleConnect already sets isConnected and isRunning
                   }
                 } catch (e) {
                   console.error(e);
