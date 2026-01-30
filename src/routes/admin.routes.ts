@@ -29,6 +29,11 @@ router.get('/bot/status', botControlController.getGlobalBotStatus);
 // Analytics
 router.get('/analytics/global', analyticsController.getGlobalAnalytics);
 
+// Bug Reports
+import * as bugReportsController from '../controllers/admin/bugReports';
+router.get('/bug-reports', bugReportsController.getBugReports);
+router.patch('/bug-reports/:id/status', bugReportsController.updateBugReportStatus);
+
 // Announcements (Admin: Create, Auth: Get)
 router.post('/announcements', announcementsController.createAnnouncement);
 router.get('/announcements', announcementsController.getAnnouncements);

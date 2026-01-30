@@ -51,3 +51,27 @@ export const botApi = {
     updateCardInfo: (data: { bankName: string; accountNumber: string; accountName: string }) => api.post("/user/update-bank-info", data),
     reportBug: (data: { title: string; description: string; steps?: string; severity: string }) => api.post("/user/report-bug", data),
 };
+
+export const adminApi = {
+    // Infrastructure
+    getInfrastructureHealth: () => api.get("/admin/infrastructure/health"),
+
+    // Users
+    listUsers: () => api.get("/admin/users"),
+    updateUserTier: (userId: string, tier: string) => api.patch(`/admin/users/${userId}/tier`, { tier }),
+
+    // Bot Control
+    getGlobalBotStatus: () => api.get("/admin/bot/status"),
+    triggerGreatPause: (reason: string) => api.post("/admin/bot/pause", { reason }),
+    resumeTrading: () => api.post("/admin/bot/resume"),
+
+    // Analytics
+    getGlobalAnalytics: () => api.get("/admin/analytics/global"),
+
+    // Announcements
+    createAnnouncement: (data: { title: string, message: string, type: string, expiresAt?: string }) => api.post("/admin/announcements", data),
+
+    // Bug Reports
+    getBugReports: () => api.get("/admin/bug-reports"),
+    updateBugReportStatus: (id: string, status: string) => api.patch(`/admin/bug-reports/${id}/status`, { status }),
+};
