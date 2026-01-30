@@ -77,10 +77,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               <span className="text-xl font-bold tracking-tight">Dunam Ai <span className="text-xs font-normal text-primary border border-primary/20 bg-primary/10 px-1 rounded">Beta</span></span>
             </div>
 
-            {/* Desktop Notification Bell (hidden on mobile) */}
-            <div className="hidden md:block">
-              <NotificationsPopover />
-            </div>
+            {/* Desktop Notification Bell (hidden on mobile) - REMOVED per user request */}
 
             {/* Mobile Close Button */}
             <button onClick={onClose} className="md:hidden p-1 text-muted-foreground hover:text-foreground">

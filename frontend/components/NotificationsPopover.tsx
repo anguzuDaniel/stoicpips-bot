@@ -14,11 +14,16 @@ export function NotificationsPopover() {
 
     const fetchNotifications = async () => {
         try {
+            console.log("🔔 [Frontend] Fetching notifications...");
             const { data } = await userApi.getNotifications();
-            setNotifications(data.notifications);
-            setUnreadCount(data.notifications.filter((n: any) => !n.is_read).length);
+            console.log("🔔 [Frontend] Received:", data);
+
+            if (data.notifications) {
+                setNotifications(data.notifications);
+                setUnreadCount(data.notifications.filter((n: any) => !n.is_read).length);
+            }
         } catch (error) {
-            console.error("Failed to fetch notifications:", error);
+            console.error("❌ [Frontend] Failed to fetch notifications:", error);
         }
     };
 
@@ -71,14 +76,34 @@ export function NotificationsPopover() {
             <PopoverContent className="w-80 p-0 mr-4" align="end">
                 <div className="flex items-center justify-between p-4 border-b border-border">
                     <h4 className="font-semibold text-sm">Notifications</h4>
-                    {unreadCount > 0 && (
+                    <div className="flex gap-2">
+                        {/* TEST BUTTON (Dev Only) */}
                         <button
-                            onClick={handleMarkAllRead}
-                            className="text-xs text-primary hover:underline flex items-center gap-1"
+                            onClick={() => setNotifications(prev => [
+                                {
+                                    id: `test-${Date.now()}`,
+                                    title: "Test Notification",
+                                    message: "This is a UI test to verify rendering.",
+                                    type: "success",
+                                    is_read: false,
+                                    created_at: new Date().toISOString()
+                                },
+                                ...prev
+                            ])}
+                            className="text-[10px] bg-blue-500/10 text-blue-500 px-2 py-1 rounded hover:bg-blue-500/20"
                         >
-                            <Check className="h-3 w-3" /> Mark all read
+                            Test UI
                         </button>
-                    )}
+
+                        {unreadCount > 0 && (
+                            <button
+                                onClick={handleMarkAllRead}
+                                className="text-xs text-primary hover:underline flex items-center gap-1"
+                            >
+                                <Check className="h-3 w-3" /> Mark all read
+                            </button>
+                        )}
+                    </div>
                 </div>
                 <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
                     {notifications.length === 0 ? (

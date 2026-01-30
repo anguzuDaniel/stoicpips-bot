@@ -3,12 +3,46 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { Bell, Info, CheckCircle, AlertTriangle, Zap, X } from "lucide-react";
-import { useNotifications } from "@/context/NotificationContext";
+// import { useNotifications } from "@/context/NotificationContext";
+import { userApi } from "@/lib/api";
+import { formatDistanceToNow } from "date-fns";
 
 export function NotificationBell() {
     const [isOpen, setIsOpen] = useState(false);
-    const { notifications, unreadCount, markAllRead } = useNotifications();
+    // const { notifications, unreadCount, markAllRead } = useNotifications(); // Use direct API instead
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const fetchNotifications = async () => {
+        try {
+            const { data } = await userApi.getNotifications();
+            if (data.notifications) {
+                setNotifications(data.notifications.map((n: any) => ({
+                    id: n.id,
+                    title: n.title,
+                    description: n.message,
+                    time: formatDistanceToNow(new Date(n.created_at), { addSuffix: true }),
+                    read: n.is_read,
+                    type: n.type
+                })));
+                setUnreadCount(data.notifications.filter((n: any) => !n.is_read).length);
+            }
+        } catch (error) {
+            console.error("Failed to fetch notifications:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchNotifications();
+        const interval = setInterval(fetchNotifications, 10000); // 10s poll
+        return () => clearInterval(interval);
+    }, []);
+
+    const markAllRead = async () => {
+        await userApi.markAllNotificationsRead();
+        fetchNotifications();
+    };
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -58,7 +92,7 @@ export function NotificationBell() {
                     </div>
 
                     {/* List */}
-                    <div className="overflow-y-auto max-h-[350px] divide-y divide-border">
+                    <div className="overflow-y-auto max-h-[350px] divide-y divide-border custom-scrollbar">
                         {notifications.length > 0 ? (
                             notifications.map((n) => (
                                 <div

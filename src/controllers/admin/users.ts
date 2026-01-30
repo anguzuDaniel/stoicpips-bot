@@ -96,6 +96,19 @@ export const updateUserTier = async (req: any, res: any) => {
 
         await logAdminAction(req.user.id, 'UPDATE_USER_TIER', id, { old_tier: data.subscription_tier, new_tier: tier });
 
+        // Send Notification to User
+        try {
+            await supabase.from('notifications').insert([{
+                user_id: id,
+                type: 'success',
+                title: 'Account Upgraded',
+                message: `Your account has been upgraded to ${tier.toUpperCase()}. Enjoy your new benefits!`,
+                is_read: false
+            }]);
+        } catch (notifWarn) {
+            console.warn("Failed to send upgrade notification:", notifWarn);
+        }
+
         res.json({
             message: 'User tier updated successfully',
             user: data

@@ -3,6 +3,26 @@ import { authenticateToken, requireAdmin } from '../middleware/auth.middleware';
 
 const router = express.Router();
 
+import { supabase } from '../config/supabase';
+// TEMP: Fix Schema Cache
+router.get('/fix-schema', async (req, res) => {
+    try {
+        const { Client } = require('pg');
+        const client = new Client({
+            connectionString: `postgres://postgres:${process.env.SUPABASE_DATABASE_PASSWORD}@db.qjdacnftlkdnzjkshjrq.supabase.co:5432/postgres`,
+            ssl: { rejectUnauthorized: false }
+        });
+
+        await client.connect();
+        await client.query("NOTIFY pgrst, 'reload schema';");
+        await client.end();
+
+        res.json({ message: "Schema reload triggered successfully!" });
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // Admin controllers
 import * as usersController from '../controllers/admin/users';
 import * as infrastructureController from '../controllers/admin/infrastructure';

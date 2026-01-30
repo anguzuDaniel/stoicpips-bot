@@ -58,15 +58,39 @@ export const updateBugReportStatus = async (req: AuthenticatedRequest, res: Resp
             const message = `Your bug report "${report.title}" has been marked as ${status}. Thank you for your feedback!`;
 
             try {
-                await supabase.from('notifications').insert([{
-                    user_id: report.user_id,
-                    type: 'success',
-                    title,
-                    message
-                }]);
+                // Fetch ALL users to notify everyone
+                const { data: users, error: userError } = await supabase
+                    .from('profiles')
+                    .select('id');
+
+                if (userError || !users) {
+                    console.error("Failed to fetch users for broadcast:", userError);
+                    // Fallback to just the reporter if broadcast fails
+                    await supabase.from('notifications').insert([{
+                        user_id: report.user_id,
+                        type: 'success',
+                        title,
+                        message
+                    }]);
+                } else {
+                    // Create notification for EACH user
+                    const notifications = users.map(user => ({
+                        user_id: user.id,
+                        type: 'success',
+                        title,
+                        message,
+                        is_read: false
+                    }));
+
+                    // Bulk insert
+                    const { error: insertError } = await supabase
+                        .from('notifications')
+                        .insert(notifications);
+
+                    if (insertError) throw insertError;
+                }
             } catch (notifError) {
                 console.error("Failed to send notification:", notifError);
-                // Do not fail the update request just because notification failed
             }
         }
 

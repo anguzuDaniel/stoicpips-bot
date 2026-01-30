@@ -39,12 +39,13 @@ async function runMigration() {
         await client.connect();
         console.log("Connected to database.");
 
-        const migrationPath = path.join(__dirname, 'migrations', '011_create_announcements.sql');
+        // Restore original logic to run specific migration
+        const migrationPath = path.join(__dirname, 'migrations', '010_create_notifications.sql');
         const sql = fs.readFileSync(migrationPath, 'utf-8');
 
-        console.log("Executing SQL...");
+        console.log("Executing SQL from 010_create_notifications.sql...");
         await client.query(sql);
-        console.log("Migration executed successfully!");
+        console.log("Migration executed successfully! Table should now exist.");
 
     } catch (err: any) {
         console.error("Migration failed:", err.message);

@@ -26,6 +26,30 @@ export const createAnnouncement = async (req: AuthenticatedRequest, res: Respons
 
         if (error) throw error;
 
+        // Broadcast Notification to ALL Users
+        try {
+            const { data: users, error: userError } = await supabase
+                .from('profiles')
+                .select('id');
+
+            if (!userError && users) {
+                const notifications = users.map(user => ({
+                    user_id: user.id,
+                    type: type || 'info',
+                    title: `New Announcement: ${title}`,
+                    message: message.substring(0, 100) + (message.length > 100 ? '...' : ''), // Truncate for notification
+                    is_read: false
+                }));
+
+                await supabase.from('notifications').insert(notifications);
+            }
+        } catch (notifWarn) {
+            console.warn("Failed to broadcast announcement notification:", notifWarn);
+            // Don't fail the request, just log warning
+        }
+
+        if (error) throw error;
+
         res.status(201).json({ message: "Announcement created successfully", data: data[0] });
     } catch (error: any) {
         console.error("Error creating announcement:", error);

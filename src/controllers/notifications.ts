@@ -8,6 +8,7 @@ import { supabase } from '../config/supabase';
 export const getNotifications = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const userId = req.user.id;
+        console.log(`[DEBUG] Fetching notifications for user: ${userId}`);
 
         const { data, error } = await supabase
             .from('notifications')
@@ -17,6 +18,8 @@ export const getNotifications = async (req: AuthenticatedRequest, res: Response)
             .limit(50); // Fetch last 50
 
         if (error) throw error;
+
+        console.log(`[DEBUG] Found ${data ? data.length : 0} notifications for user ${userId}`);
 
         res.json({ notifications: data });
     } catch (error: any) {

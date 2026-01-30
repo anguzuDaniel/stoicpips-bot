@@ -13,8 +13,9 @@ router.post("/update-profile", authenticateToken, updateProfile);
 router.post("/report-bug", authenticateToken, reportBug);
 
 // Notifications
-router.get('/notifications', notificationController.getNotifications);
-router.patch('/notifications/:id/read', notificationController.markAsRead);
-router.patch('/notifications/read-all', notificationController.markAllAsRead);
+// Notifications
+router.get('/notifications', authenticateToken, notificationController.getNotifications);
+router.patch('/notifications/:id/read', authenticateToken, notificationController.markAsRead);
+router.patch('/notifications/read-all', authenticateToken, notificationController.markAllAsRead);
 
 export default router;
