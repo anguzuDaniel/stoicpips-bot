@@ -54,9 +54,12 @@ export default function LoginPage() {
                             alt="SyntoicAi Logo"
                             className="h-20 w-auto drop-shadow-2xl rounded-full"
                         />
-                        <h1 className="text-2xl font-black tracking-tighter text-foreground">SyntoicAi</h1>
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-2xl font-black tracking-tighter text-foreground">SyntoicAi</h1>
+                            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary uppercase tracking-wider border border-primary/20">Beta</span>
+                        </div>
                     </div>
-                    <h2 className="text-3xl font-bold tracking-tight">Welcome back</h2>
+                    <h2 className="text-3xl font-bold tracking-tight">Trade Emotionless</h2>
                     <p className="mt-2 text-sm text-muted-foreground">
                         Sign in to your account to continue trading
                     </p>
