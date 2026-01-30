@@ -151,11 +151,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             Log Out
           </button>
 
-          <div className="pt-2 text-center">
-            <span className="text-[10px] font-mono text-muted-foreground/40 hover:text-muted-foreground/60 transition-colors cursor-default">
-              v1.0.0-beta.1
-            </span>
-          </div>
+
         </div>
       </div>
 

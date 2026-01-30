@@ -7,11 +7,15 @@ export const getUserProfile = async (req: any, res: any) => {
   try {
     const userId = req.user.id;
 
+    console.log(`🔍 [getUserProfile] Fetching profile for user: ${userId}`);
+
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", userId)
       .single();
+
+    console.log(`🔍 [getUserProfile] Result:`, { data, error });
 
     if (error) {
       if (error.code === 'PGRST116') {

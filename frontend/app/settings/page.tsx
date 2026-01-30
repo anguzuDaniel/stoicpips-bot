@@ -343,8 +343,8 @@ export default function SettingsPage() {
 
                     {/* Deriv Configuration */}
                     <div className="rounded-xl border border-border bg-card p-6 space-y-6 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between border-b border-border pb-2">
-                            <div className="flex items-center gap-4">
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-border pb-4 md:pb-2 gap-4">
+                            <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto">
                                 <h2 className="text-lg font-semibold flex items-center gap-2">
                                     <span className="h-2 w-2 rounded-full bg-green-500" />
                                     Deriv Connection
@@ -353,15 +353,14 @@ export default function SettingsPage() {
                                     href="https://partners.deriv.com/rx?ca=1069524e30dbb2&utm_campaign=dynamicworks&utm_medium=affiliate&utm_source=CU32294"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-xs font-bold text-red-500 hover:text-red-600 flex items-center gap-1 bg-red-500/10 px-2.5 py-1 rounded-full border border-red-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                    className="text-xs font-bold text-red-500 hover:text-red-600 flex items-center gap-1 bg-red-500/10 px-2.5 py-1 rounded-full border border-red-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] w-full md:w-auto justify-center md:justify-start"
                                 >
                                     Don&apos;t have a Deriv account? (Mandatory)
                                     <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
                                 </a>
                             </div>
-                            <div className="px-3 py-1 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold uppercase">
-                                Mandatory Account Required
-                            </div>
+
+
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -449,6 +448,12 @@ export default function SettingsPage() {
                         </div>
                     </div>
                 </form>
+
+                <div className="pt-8 text-center pb-4">
+                    <span className="text-xs font-mono text-muted-foreground/40 select-all">
+                        App Version: v1.0.0-beta.1
+                    </span>
+                </div>
             </div>
         </DashboardLayout>
     );

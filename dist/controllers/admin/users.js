@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUserTier = exports.listUsers = void 0;
+exports.updateUserTier = exports.toggleUserStatus = exports.listUsers = void 0;
 const supabase_1 = require("../../config/supabase");
 const { logAdminAction } = require('../../utils/auditLog');
 const listUsers = async (req, res) => {
@@ -9,9 +9,11 @@ const listUsers = async (req, res) => {
         const offset = (page - 1) * limit;
         let query = supabase_1.supabase
             .from('profiles')
-            .select('id, email, subscription_tier, last_active, created_at, is_admin', { count: 'exact' })
+            .select('id, email, subscription_tier, last_active, created_at, is_admin, is_active', { count: 'exact' })
             .order('created_at', { ascending: false })
             .range(offset, offset + limit - 1);
+        // ... (rest of search logic)
+        // ... (inside toggleUserStatus)
         // Apply search filter if provided
         if (search) {
             query = query.ilike('email', `%${search}%`);
@@ -57,6 +59,43 @@ const listUsers = async (req, res) => {
 };
 exports.listUsers = listUsers;
 /**
+ * PATCH /api/v1/admin/users/:id/status
+ * Toggle user active status (Deactivate/Activate)
+ */
+const toggleUserStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { isActive } = req.body;
+        if (typeof isActive !== 'boolean') {
+            return res.status(400).json({ error: 'isActive must be a boolean' });
+        }
+        // Prevent deactivating own account
+        if (req.user.id === id) {
+            return res.status(400).json({ error: 'You cannot deactivate your own account' });
+        }
+        const { data, error } = await supabase_1.supabase
+            .from('profiles')
+            .update({ is_active: isActive })
+            .eq('id', id)
+            .select()
+            .single();
+        if (error) {
+            console.error('[ADMIN] Failed to update user status:', error);
+            return res.status(500).json({ error: 'Failed to update user status' });
+        }
+        await logAdminAction(req.user.id, 'TOGGLE_USER_STATUS', id, { new_status: isActive ? 'active' : 'inactive' });
+        res.json({
+            message: `User ${isActive ? 'activated' : 'deactivated'} successfully`,
+            user: data
+        });
+    }
+    catch (error) {
+        console.error('[ADMIN] Toggle status error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+exports.toggleUserStatus = toggleUserStatus;
+/**
  * PATCH /api/v1/admin/users/:id/tier
  * Update user subscription tier
  */
@@ -84,6 +123,19 @@ const updateUserTier = async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
         await logAdminAction(req.user.id, 'UPDATE_USER_TIER', id, { old_tier: data.subscription_tier, new_tier: tier });
+        // Send Notification to User
+        try {
+            await supabase_1.supabase.from('notifications').insert([{
+                    user_id: id,
+                    type: 'success',
+                    title: 'Account Upgraded',
+                    message: `Your account has been upgraded to ${tier.toUpperCase()}. Enjoy your new benefits!`,
+                    is_read: false
+                }]);
+        }
+        catch (notifWarn) {
+            console.warn("Failed to send upgrade notification:", notifWarn);
+        }
         res.json({
             message: 'User tier updated successfully',
             user: data

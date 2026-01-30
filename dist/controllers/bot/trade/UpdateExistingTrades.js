@@ -43,10 +43,21 @@ const updateExistingTrades = async (userId) => {
                         closed_at: new Date()
                     })
                         .eq('trade_id', trade.id);
-                    if (!error) {
-                        updatedTrades++;
-                        botState.analyticsCache = undefined;
-                        botState.lastSyncTime = 0;
+                    updatedTrades++;
+                    botState.totalProfit += profit;
+                    botState.analyticsCache = undefined;
+                    botState.lastSyncTime = 0;
+                    // Check Trading Cycle Targets (Stop Loss / Take Profit)
+                    const { stopLoss, takeProfit } = botState.config;
+                    if (takeProfit && botState.totalProfit >= takeProfit) {
+                        botState.isRunning = false;
+                        botLogger_1.BotLogger.log(userId, `🎯 Take Profit Triggered! Total Profit: $${botState.totalProfit.toFixed(2)}. Bot stopped.`, 'success');
+                        console.log(`🎯 [${userId}] Take Profit reached ($${botState.totalProfit}). Stopping bot.`);
+                    }
+                    else if (stopLoss && botState.totalProfit <= -stopLoss) {
+                        botState.isRunning = false;
+                        botLogger_1.BotLogger.log(userId, `🛑 Stop Loss Triggered! Total Loss: $${Math.abs(botState.totalProfit).toFixed(2)}. Bot stopped.`, 'error');
+                        console.log(`🛑 [${userId}] Stop Loss reached ($${botState.totalProfit}). Stopping bot.`);
                     }
                 }
             }

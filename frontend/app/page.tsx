@@ -159,6 +159,13 @@ export default function Dashboard() {
           title: "Trial Activated! 🚀",
           message: response.data.welcomeMessage
         });
+      } else {
+        setAlertState({
+          isOpen: true,
+          type: "success",
+          title: "Bot Started Successfully! 🚀",
+          message: "The AI engine is now active and scanning the market."
+        });
       }
 
       // Refresh status to get updated account info

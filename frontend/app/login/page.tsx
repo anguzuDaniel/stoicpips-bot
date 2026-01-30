@@ -55,21 +55,17 @@ export default function LoginPage() {
                         </div>
                     </div>
 
-                    <h2 className="text-[10px] font-black tracking-tight text-red-500 uppercase mb-2 flex items-center justify-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-                        Deriv Account Mandatory
-                    </h2>
-                    <p className="text-xs text-muted-foreground max-w-[280px] mx-auto mb-4">
-                        An active Deriv account is required to trade.{" "}
+                    <div className="flex justify-center mb-6">
                         <a
                             href="https://partners.deriv.com/rx?ca=1069524e30dbb2&utm_campaign=dynamicworks&utm_medium=affiliate&utm_source=CU32294"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-bold text-primary hover:underline"
+                            className="text-xs font-bold text-red-500 hover:text-red-600 flex items-center gap-1 bg-red-500/10 px-2.5 py-1 rounded-full border border-red-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                         >
-                            Create one here
+                            Don&apos;t have a Deriv account? (Mandatory)
+                            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
                         </a>
-                    </p>
+                    </div>
                 </div>
 
                 <div className="space-y-4">

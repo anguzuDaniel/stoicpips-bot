@@ -8,11 +8,13 @@ const supabase_1 = require("../../config/supabase");
 const getUserProfile = async (req, res) => {
     try {
         const userId = req.user.id;
+        console.log(`🔍 [getUserProfile] Fetching profile for user: ${userId}`);
         const { data, error } = await supabase_1.supabase
             .from("profiles")
             .select("*")
             .eq("id", userId)
             .single();
+        console.log(`🔍 [getUserProfile] Result:`, { data, error });
         if (error) {
             if (error.code === 'PGRST116') {
                 // No profile found, return null user so frontend can show empty form

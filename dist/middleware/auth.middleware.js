@@ -19,11 +19,11 @@ const authenticateToken = async (req, res, next) => {
         // Always fetch the latest profile from DB as the source of truth
         const { data: profile, error: profileError } = await supabase_1.supabase
             .from('profiles')
-            .select('subscription_tier, is_admin')
+            .select('subscription_tier, is_admin, is_active')
             .eq('id', user.id)
             .single();
-        if (profileError && profileError.code !== 'PGRST116') {
-            console.error(`❌ [${user.id}] Middleware Profile Fetch Error:`, profileError.message);
+        if (profile?.is_active === false) {
+            return res.status(403).json({ error: 'Your account has been deactivated. Please contact support.' });
         }
         req.user = {
             id: user.id,
@@ -31,7 +31,8 @@ const authenticateToken = async (req, res, next) => {
             isEmailVerified: !!user.email_confirmed_at,
             subscription_status: profile?.subscription_tier || 'free',
             subscription_tier: profile?.subscription_tier || 'free',
-            isAdmin: profile?.is_admin || false
+            isAdmin: profile?.is_admin || false,
+            isActive: profile?.is_active ?? true
         };
         next();
     }

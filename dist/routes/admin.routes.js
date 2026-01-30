@@ -39,6 +39,23 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const auth_middleware_1 = require("../middleware/auth.middleware");
 const router = express_1.default.Router();
+// TEMP: Fix Schema Cache
+router.get('/fix-schema', async (req, res) => {
+    try {
+        const { Client } = require('pg');
+        const client = new Client({
+            connectionString: `postgres://postgres:${process.env.SUPABASE_DATABASE_PASSWORD}@db.qjdacnftlkdnzjkshjrq.supabase.co:5432/postgres`,
+            ssl: { rejectUnauthorized: false }
+        });
+        await client.connect();
+        await client.query("NOTIFY pgrst, 'reload schema';");
+        await client.end();
+        res.json({ message: "Schema reload triggered successfully!" });
+    }
+    catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
 // Admin controllers
 const usersController = __importStar(require("../controllers/admin/users"));
 const infrastructureController = __importStar(require("../controllers/admin/infrastructure"));
@@ -51,6 +68,7 @@ router.use(auth_middleware_1.requireAdmin);
 // User Management
 router.get('/users', usersController.listUsers);
 router.patch('/users/:id/tier', usersController.updateUserTier);
+router.patch('/users/:id/status', usersController.toggleUserStatus);
 // Infrastructure Health
 router.get('/infrastructure/health', infrastructureController.getInfrastructureHealth);
 // Global Bot Control
@@ -59,7 +77,17 @@ router.post('/bot/resume', botControlController.resumeTrading);
 router.get('/bot/status', botControlController.getGlobalBotStatus);
 // Analytics
 router.get('/analytics/global', analyticsController.getGlobalAnalytics);
-// Announcements (Admin: Create, Auth: Get)
+// Bug Reports
+const bugReportsController = __importStar(require("../controllers/admin/bugReports"));
+router.get('/bug-reports', bugReportsController.getBugReports);
+router.patch('/bug-reports/:id/status', bugReportsController.updateBugReportStatus);
+// Feature Requests
+const featureRequestsController = __importStar(require("../controllers/admin/featureRequests"));
+router.get('/feature-requests', featureRequestsController.getFeatureRequests);
+router.patch('/feature-requests/:id/status', featureRequestsController.updateFeatureRequestStatus);
+// Announcements (Admin: Create, History, Delete | Auth: Get Active)
 router.post('/announcements', announcementsController.createAnnouncement);
-router.get('/announcements', announcementsController.getAnnouncements);
+router.get('/announcements', announcementsController.getAnnouncements); // Public/Users (Active Only)
+router.get('/announcements/all', announcementsController.getAllAnnouncements); // Admin (History)
+router.delete('/announcements/:id', announcementsController.deleteAnnouncement);
 exports.default = router;

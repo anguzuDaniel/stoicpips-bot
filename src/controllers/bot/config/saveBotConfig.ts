@@ -3,11 +3,43 @@ import { supabase } from '../../../config/supabase';
 export const saveBotConfig = async (req: any, res: any) => {
   try {
     const userId = req.user.id;
-    const config = req.body;
+    const {
+      symbols,
+      amountPerTrade,
+      timeframe,
+      candleCount,
+      cycleInterval,
+      contractPreference,
+      maxTradesPerCycle,
+      dailyTradeLimit,
+      derivApiToken,
+      derivRealToken,
+      derivDemoToken,
+      openaiApiKey,
+      aiProvider
+    } = req.body;
+
+    const dbConfig = {
+      user_id: userId,
+      symbols,
+      amount_per_trade: amountPerTrade,
+      timeframe,
+      candle_count: candleCount,
+      cycle_interval: cycleInterval,
+      contract_preference: contractPreference,
+      max_trades_per_cycle: maxTradesPerCycle,
+      daily_trade_limit: dailyTradeLimit,
+      deriv_api_token: derivApiToken,
+      deriv_real_token: derivRealToken,
+      deriv_demo_token: derivDemoToken,
+      openai_api_key: openaiApiKey,
+      ai_provider: aiProvider,
+      updated_at: new Date()
+    };
 
     const { data, error } = await supabase
       .from("bot_configs")
-      .upsert({ user_id: userId, ...config, updated_at: new Date() })
+      .upsert(dbConfig, { onConflict: 'user_id' })
       .select()
       .single();
 

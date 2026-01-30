@@ -31,6 +31,14 @@ const signupUser = async (req, res) => {
                 subscription_tier: 'free',
                 subscription_status: 'inactive'
             });
+            // Send Welcome Notification
+            await supabase_1.supabase.from('notifications').insert([{
+                    user_id: data.user.id,
+                    type: 'info',
+                    title: 'Welcome to Dunam Ai Beta! 🚀',
+                    message: 'Welcome to the beta version! We are constantly working on making the experience better. Please try it out and give us your feedback to help us improve.',
+                    is_read: false
+                }]);
         }
         res.status(201).json({ user: data.user });
     }

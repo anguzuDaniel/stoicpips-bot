@@ -40,7 +40,11 @@ export function ActivityLog() {
                         // Notify for relevant new items (reverse to show oldest first if multiple)
                         newItems.reverse().forEach(log => {
                             if (log.type === 'success') {
-                                addToast(`Trade Executed: ${log.message}`, 'success', 'New Trade');
+                                const title = log.message.includes('Take Profit') ? 'Target Reached 🎯' : 'New Trade';
+                                const message = log.message.startsWith('Trade Executed:') ? log.message :
+                                    log.message.includes('Take Profit') ? log.message :
+                                        `Trade Executed: ${log.message}`;
+                                addToast(message, 'success', title);
                             } else if (log.type === 'warning') {
                                 addToast(log.message, 'warning', 'Warning');
                             } else if (log.type === 'error') {
@@ -68,46 +72,44 @@ export function ActivityLog() {
     }, []);
 
     return (
-        <div className="rounded-xl border border-border bg-card h-full flex flex-col">
-            <div className="p-6 border-b border-border flex items-center justify-between">
-                <h3 className="font-bold flex items-center gap-2">
+        <div className="rounded-xl border border-border bg-card h-[500px] flex flex-col shadow-sm">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20 shrink-0">
+                <h3 className="font-bold flex items-center gap-2 text-sm">
                     <Activity className="h-4 w-4 text-primary" />
                     Live Activity
                 </h3>
-                <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
             </div>
 
-            <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
-                <div className="space-y-4">
+            <div className="flex-1 p-0 overflow-y-auto custom-scrollbar relative">
+                <div className="divide-y divide-border/50">
                     {logs.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-40 text-muted-foreground opacity-50">
+                        <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-muted-foreground opacity-50 p-6">
                             <Activity className="h-8 w-8 mb-2" />
-                            <p className="text-sm">Waiting for bot activity...</p>
+                            <p className="text-xs font-medium uppercase tracking-wider">Waiting for activity...</p>
                         </div>
                     ) : (
                         logs.map((log) => (
-                            <div key={log.id} className="flex gap-3 items-start text-sm">
-                                <span className="text-xs text-muted-foreground font-mono mt-0.5 whitespace-nowrap">
+                            <div key={log.id} className="flex gap-3 items-start p-3 hover:bg-muted/30 transition-colors text-sm group">
+                                <span className="text-[10px] text-muted-foreground font-mono mt-0.5 whitespace-nowrap opacity-70 group-hover:opacity-100 transition-opacity">
                                     {log.timestamp}
                                 </span>
-                                <div className="space-y-1">
-                                    <p className={`leading-none ${log.type === 'success' ? 'text-green-500' :
-                                        log.type === 'error' ? 'text-red-500' :
-                                            log.type === 'warning' ? 'text-yellow-500' :
-                                                'text-foreground'
+                                <div className="space-y-1 min-w-0 flex-1">
+                                    <p className={`leading-snug break-words ${log.type === 'success' ? 'text-green-500 dark:text-green-400 font-medium' :
+                                        log.type === 'error' ? 'text-red-500 dark:text-red-400 font-medium' :
+                                            log.type === 'warning' ? 'text-amber-500 font-medium' :
+                                                'text-foreground/90'
                                         }`}>
                                         {log.message}
                                     </p>
                                     {log.symbol && (
-                                        <span className="inline-flex items-center gap-1 rounded bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-secondary-foreground">
+                                        <span className="inline-flex items-center gap-1 rounded bg-secondary/50 border border-border px-1.5 py-0.5 text-[9px] font-bold uppercase text-muted-foreground tracking-wider">
                                             {log.symbol}
                                         </span>
                                     )}
                                 </div>
                             </div>
                         )))}
-
-                    {/* Waiting for next signal element removed */}
                 </div>
             </div>
         </div>
