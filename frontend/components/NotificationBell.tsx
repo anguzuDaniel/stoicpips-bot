@@ -1,50 +1,14 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { Bell, Info, CheckCircle, AlertTriangle, Zap, X } from "lucide-react";
-
-interface Notification {
-    id: string;
-    title: string;
-    description: string;
-    time: string;
-    type: "info" | "success" | "warning" | "alert";
-    read: boolean;
-}
-
-const MOCK_NOTIFICATIONS: Notification[] = [
-    {
-        id: "1",
-        title: "System Online",
-        description: "Dunam Probability Engine is now active and monitoring markets.",
-        time: "Just now",
-        type: "info",
-        read: false
-    },
-    {
-        id: "2",
-        title: "Profile Synchronized",
-        description: "Your Dunam Ai Profile has been successfully updated.",
-        time: "5m ago",
-        type: "success",
-        read: false
-    },
-    {
-        id: "3",
-        title: "New Feature Available",
-        description: "AI Scalping tier is currently in internal testing phase.",
-        time: "1h ago",
-        type: "alert",
-        read: true
-    }
-];
+import { useNotifications } from "@/context/NotificationContext";
 
 export function NotificationBell() {
     const [isOpen, setIsOpen] = useState(false);
-    const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+    const { notifications, unreadCount, markAllRead } = useNotifications();
     const dropdownRef = useRef<HTMLDivElement>(null);
-
-    const unreadCount = notifications.filter(n => !n.read).length;
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -55,10 +19,6 @@ export function NotificationBell() {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
-
-    const markAllRead = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    };
 
     const getIcon = (type: string) => {
         switch (type) {
@@ -131,9 +91,13 @@ export function NotificationBell() {
 
                     {/* Footer */}
                     <div className="p-3 border-t border-border bg-muted/20 text-center">
-                        <button className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors">
+                        <Link
+                            href="/notifications"
+                            onClick={() => setIsOpen(false)}
+                            className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors block w-full"
+                        >
                             View All History
-                        </button>
+                        </Link>
                     </div>
                 </div>
             )}
