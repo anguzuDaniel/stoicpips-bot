@@ -54,3 +54,43 @@ export const getAnnouncements = async (req: AuthenticatedRequest, res: Response)
         res.status(500).json({ error: "Failed to fetch announcements" });
     }
 };
+
+/**
+ * Fetches ALL announcements (Admin History)
+ */
+export const getAllAnnouncements = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const { data, error } = await supabase
+            .from('admin_announcements')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        res.json({ announcements: data });
+    } catch (error) {
+        console.error("Error fetching all announcements:", error);
+        res.status(500).json({ error: "Failed to fetch announcements" });
+    }
+};
+
+/**
+ * Delete an announcement
+ */
+export const deleteAnnouncement = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        const { error } = await supabase
+            .from('admin_announcements')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
+        res.json({ message: "Announcement deleted" });
+    } catch (error) {
+        console.error("Error deleting announcement:", error);
+        res.status(500).json({ error: "Failed to delete announcement" });
+    }
+};
