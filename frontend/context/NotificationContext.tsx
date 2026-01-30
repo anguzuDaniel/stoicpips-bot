@@ -127,13 +127,44 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         }
     }, [addNotification]);
 
+    // Fetch Admin Announcements
+    const pollAnnouncements = useCallback(async () => {
+        try {
+            const { data } = await botApi.getAnnouncements();
+            const announcements = data.announcements;
+            if (!announcements || !Array.isArray(announcements)) return;
+
+            const seenIds = JSON.parse(localStorage.getItem('dunam_seen_announcements') || '[]');
+            const newSeenIds = [...seenIds];
+
+            announcements.forEach(ann => {
+                if (!seenIds.includes(ann.id)) {
+                    addNotification({
+                        title: `OFFICIAL: ${ann.title}`,
+                        description: ann.message,
+                        time: "Just now",
+                        type: ann.type || "alert"
+                    });
+                    newSeenIds.push(ann.id);
+                }
+            });
+
+            if (newSeenIds.length > seenIds.length) {
+                localStorage.setItem('dunam_seen_announcements', JSON.stringify(newSeenIds));
+            }
+        } catch (e) {
+            // Silently fail
+        }
+    }, [addNotification]);
+
     useEffect(() => {
         const interval = setInterval(() => {
             pollLogs();
             pollStatus();
-        }, 5000); // Poll every 5 seconds for notifications
+            pollAnnouncements();
+        }, 5000);
         return () => clearInterval(interval);
-    }, [pollLogs, pollStatus]);
+    }, [pollLogs, pollStatus, pollAnnouncements]);
 
     const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     const clearAll = () => setNotifications([]);

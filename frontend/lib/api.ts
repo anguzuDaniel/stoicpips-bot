@@ -43,6 +43,7 @@ export const botApi = {
     resetBot: () => api.post("/bot/reset", {}),
     toggleAccount: (type: 'real' | 'demo') => api.post("/bot/toggle-account", { targetType: type }),
     initializePayment: (tier: 'pro' | 'elite') => api.post("/payments/initialize", { tier }),
+    getAnnouncements: () => api.get("/admin/announcements"),
 
     // User endpoints
     getProfile: () => api.get("/user/profile"),

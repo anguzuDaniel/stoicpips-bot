@@ -62,18 +62,13 @@ export default function SignupPage() {
             <div className="w-full max-w-md space-y-8 rounded-2xl border border-border bg-card p-8 shadow-lg">
                 <div className="text-center">
                     <div className="flex flex-col items-center justify-center mb-6 gap-3">
-                        <img
-                            src="/logo.png"
-                            alt="Dunam Logo"
-                            className="h-20 w-auto drop-shadow-2xl rounded-full"
-                        />
                         <div className="flex items-center gap-2">
-                            <h1 className="text-2xl font-black tracking-tighter text-foreground">Dunam Ai</h1>
+                            <h1 className="text-4xl font-black tracking-tighter text-foreground">Dunam Ai</h1>
                             <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary uppercase tracking-wider border border-primary/20">Beta</span>
                         </div>
                     </div>
-                    <h2 className="text-3xl font-bold tracking-tight">Zero Emotion. Total Execution.</h2>
-                    <p className="mt-2 text-sm text-muted-foreground">
+                    <h2 className="text-lg font-bold tracking-tight text-muted-foreground/80 uppercase mb-2">Zero Emotion. Total Execution.</h2>
+                    <p className="text-sm text-muted-foreground">
                         Start your automated trading journey today
                     </p>
                 </div>
