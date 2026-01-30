@@ -1,6 +1,8 @@
 # 🤖 Dunam Ai
 > *Zero Emotion. Total Execution. Automated Trading Bot for Synthetic Indices on Deriv.*
 
+[![Changelog](https://img.shields.io/badge/Changelog-v1.0.0--beta.1-blue)](CHANGELOG.md)
+
 ## 🎯 Overview
 
 Dunam Ai is a high-precision, emotionless algorithmic trading platform that executes automated trades on Deriv's financial markets using sophisticated market analysis and price action strategies.
