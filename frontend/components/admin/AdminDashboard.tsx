@@ -6,6 +6,7 @@ import { InfrastructureMonitor } from "@/components/admin/InfrastructureMonitor"
 import { BotAnalytics } from "@/components/admin/BotAnalytics";
 import { GlobalControls } from "@/components/admin/GlobalControls";
 import { BugReportViewer } from "@/components/admin/BugReportViewer";
+import { FeatureRequestViewer } from "@/components/admin/FeatureRequestViewer";
 import { AnnouncementsManager } from "@/components/admin/AnnouncementsManager";
 import { AnnouncementHistory } from "@/components/admin/AnnouncementHistory";
 import { LayoutDashboard, Users, Activity, Megaphone, Bug, Settings } from "lucide-react";
@@ -20,6 +21,7 @@ export function AdminDashboard() {
         { id: 'controls', label: 'Controls', icon: Settings },
         { id: 'communication', label: 'Communication', icon: Megaphone },
         { id: 'support', label: 'Support', icon: Bug },
+        { id: 'features', label: 'Features', icon: Lightbulb },
     ];
 
     const renderContent = () => {
@@ -51,6 +53,8 @@ export function AdminDashboard() {
                 );
             case 'support':
                 return <BugReportViewer />;
+            case 'features':
+                return <FeatureRequestViewer />;
             default:
                 return null;
         }

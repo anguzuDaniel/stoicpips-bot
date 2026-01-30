@@ -8,12 +8,16 @@ import {
     BookOpen,
     ChevronDown,
     ChevronUp,
-    ExternalLink
-} from "lucide-react";
+    ExternalLink,
+    Lightbulb,
+    Sparkles
+} from "lucide-react"; // Re-imported to fix HMR glitch
 import { useState } from "react";
+import { FeatureRequestModal } from "@/components/FeatureRequestModal";
 
 export default function HelpPage() {
     const [openFaq, setOpenFaq] = useState<number | null>(0);
+    const [isFeatureModalOpen, setIsFeatureModalOpen] = useState(false);
 
     const toggleFaq = (index: number) => {
         setOpenFaq(openFaq === index ? null : index);
@@ -53,7 +57,7 @@ export default function HelpPage() {
                 </div>
 
                 {/* Contact Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="rounded-xl border border-border bg-card p-6 flex flex-col items-center text-center space-y-4 hover:border-primary/50 transition-colors">
                         <div className="p-3 rounded-full bg-primary/10 text-primary">
                             <Mail className="h-6 w-6" />
@@ -92,7 +96,29 @@ export default function HelpPage() {
                             Read Guide <ExternalLink className="h-3 w-3" />
                         </a>
                     </div>
+
+                    <div
+                        onClick={() => setIsFeatureModalOpen(true)}
+                        className="rounded-xl border border-border bg-card p-6 flex flex-col items-center text-center space-y-4 hover:border-primary border-dashed cursor-pointer hover:bg-primary/5 transition-all group shadow-sm bg-primary/[0.02]"
+                    >
+                        <div className="p-3 rounded-full bg-primary/20 text-primary group-hover:scale-110 transition-transform">
+                            <Lightbulb className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <h3 className="font-semibold flex items-center gap-2">
+                                Feature Idea
+                                <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                            </h3>
+                            <p className="text-sm text-muted-foreground mt-1">Suggest a new tool or strategy</p>
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-widest text-primary">Submit Idea</span>
+                    </div>
                 </div>
+
+                <FeatureRequestModal
+                    isOpen={isFeatureModalOpen}
+                    onClose={() => setIsFeatureModalOpen(false)}
+                />
 
                 {/* FAQ Section */}
                 <div className="space-y-4">

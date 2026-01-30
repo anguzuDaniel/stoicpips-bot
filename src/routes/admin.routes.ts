@@ -55,6 +55,11 @@ import * as bugReportsController from '../controllers/admin/bugReports';
 router.get('/bug-reports', bugReportsController.getBugReports);
 router.patch('/bug-reports/:id/status', bugReportsController.updateBugReportStatus);
 
+// Feature Requests
+import * as featureRequestsController from '../controllers/admin/featureRequests';
+router.get('/feature-requests', featureRequestsController.getFeatureRequests);
+router.patch('/feature-requests/:id/status', featureRequestsController.updateFeatureRequestStatus);
+
 // Announcements (Admin: Create, History, Delete | Auth: Get Active)
 router.post('/announcements', announcementsController.createAnnouncement);
 router.get('/announcements', announcementsController.getAnnouncements); // Public/Users (Active Only)

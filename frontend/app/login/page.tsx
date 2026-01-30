@@ -54,9 +54,21 @@ export default function LoginPage() {
                             <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary uppercase tracking-wider border border-primary/20">Beta</span>
                         </div>
                     </div>
-                    <h2 className="text-lg font-bold tracking-tight text-muted-foreground/80 uppercase mb-2">Zero Emotion. Total Execution.</h2>
-                    <p className="text-sm text-muted-foreground">
-                        Sign in to your account to continue trading
+
+                    <h2 className="text-[10px] font-black tracking-tight text-red-500 uppercase mb-2 flex items-center justify-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+                        Deriv Account Mandatory
+                    </h2>
+                    <p className="text-xs text-muted-foreground max-w-[280px] mx-auto mb-4">
+                        An active Deriv account is required to trade.{" "}
+                        <a
+                            href="https://partners.deriv.com/rx?ca=1069524e30dbb2&utm_campaign=dynamicworks&utm_medium=affiliate&utm_source=CU32294"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-bold text-primary hover:underline"
+                        >
+                            Create one here
+                        </a>
                     </p>
                 </div>
 
@@ -79,7 +91,7 @@ export default function LoginPage() {
                                 fill="#FBBC05"
                             />
                             <path
-                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                                 fill="#EA4335"
                             />
                         </svg>
@@ -159,12 +171,14 @@ export default function LoginPage() {
                     </form>
                 </div>
 
-                <p className="text-center text-sm text-muted-foreground">
-                    Don&apos;t have an account?{" "}
-                    <Link href="/signup" className="font-semibold text-primary hover:underline">
-                        Sign up
-                    </Link>
-                </p>
+                <div className="flex flex-col gap-2">
+                    <p className="text-center text-sm text-muted-foreground">
+                        Don&apos;t have an account?{" "}
+                        <Link href="/signup" className="font-semibold text-primary hover:underline">
+                            Sign up
+                        </Link>
+                    </p>
+                </div>
             </div>
         </div>
     );

@@ -36,6 +36,7 @@ export const userApi = {
     updateProfile: (data: { fullName?: string, username?: string, tradingExperience?: string, bankName?: string, accountNumber?: string, accountName?: string }) => api.post("/user/update-profile", data),
     updateBankInfo: (data: any) => api.post("/user/update-bank-info", data),
     reportBug: (data: any) => api.post("/user/report-bug", data),
+    requestFeature: (data: any) => api.post("/user/request-feature", data),
     getNotifications: () => api.get("/user/notifications"),
     markNotificationRead: (id: string) => api.patch(`/user/notifications/${id}/read`),
     markAllNotificationsRead: () => api.patch("/user/notifications/read-all"),
@@ -83,4 +84,8 @@ export const adminApi = {
     // Bug Reports
     getBugReports: () => api.get("/admin/bug-reports"),
     updateBugReportStatus: (id: string, status: string) => api.patch(`/admin/bug-reports/${id}/status`, { status }),
+
+    // Feature Requests
+    getFeatureRequests: () => api.get("/admin/feature-requests"),
+    updateFeatureRequestStatus: (id: string, status: string) => api.patch(`/admin/feature-requests/${id}/status`, { status }),
 };

@@ -326,6 +326,31 @@ export default function Dashboard() {
             <NotificationBell />
           </div>
         </header>
+        {/* Deriv Account Notice Banner - Only show if tokens are not configured */}
+        {!status?.derivAccount && (
+          <div className="mb-6 p-4 rounded-xl bg-red-500/5 border border-red-500/20 flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                <AlertTriangle className="h-5 w-5 text-red-500" />
+              </div>
+              <div>
+                <h4 className="font-bold text-sm text-foreground flex items-center gap-2">
+                  Deriv Account Required
+                  <span className="px-1.5 py-0.5 rounded text-[9px] bg-red-500 text-white uppercase font-black">Mandatory</span>
+                </h4>
+                <p className="text-xs text-muted-foreground">You must have an active Deriv account to use Dunam Ai trading services. Don&apos;t have one yet?</p>
+              </div>
+            </div>
+            <a
+              href="https://partners.deriv.com/rx?ca=1069524e30dbb2&utm_campaign=dynamicworks&utm_medium=affiliate&utm_source=CU32294"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full md:w-auto px-6 py-2 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition-all shadow-sm shadow-red-500/20 hover:scale-[1.02] active:scale-[0.98] text-center"
+            >
+              Create Required Account
+            </a>
+          </div>
+        )}
 
         {/* Low Balance Warning */}
         {stats.accountType === 'real' && stats.balance <= 0 && (
@@ -564,7 +589,7 @@ export default function Dashboard() {
         title={confirmState.title}
         message={confirmState.message}
       />
-    </DashboardLayout>
+    </DashboardLayout >
   );
 }
 
