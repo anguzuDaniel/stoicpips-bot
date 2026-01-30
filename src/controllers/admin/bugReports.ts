@@ -7,9 +7,15 @@ import { supabase } from '../../config/supabase';
  */
 export const getBugReports = async (req: AuthenticatedRequest, res: Response) => {
     try {
+        // Removed .select('*, users(email, full_name)') because public.users table does not exist
+        // and we cannot easily join auth.users via public API without a view/wrapper.
+        // For now, we will just fetch the bug reports. 
+        // Ideally we would fetch user emails separately using the admin API if needed.
+        // Join with profiles failed due to missing FK.
+        // Reverting to simple fetch to fix 500 error.
         const { data, error } = await supabase
             .from('bug_reports')
-            .select('*, users(email, full_name)')
+            .select('*')
             .order('created_at', { ascending: false });
 
         if (error) throw error;
