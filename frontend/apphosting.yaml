@@ -4,7 +4,7 @@ runConfig:
   memoryMiB: 512
 env:
   - variable: NEXT_PUBLIC_API_URL
-    value: https://api.dunam.ai/api/v1
+    value: https://api.stoicpips.com/api/v1
   - variable: NEXT_PUBLIC_SUPABASE_URL
     value: https://qjdacnftlkdnzjkshjrq.supabase.co
   - variable: NEXT_PUBLIC_SUPABASE_ANON_KEY
