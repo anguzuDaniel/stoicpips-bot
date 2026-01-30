@@ -8,7 +8,7 @@ export const listUsers = async (req: any, res: any) => {
 
         let query = supabase
             .from('profiles')
-            .select('id, email, subscription_tier, last_active, created_at, is_admin', { count: 'exact' })
+            .select('id, email, subscription_tier, last_active, created_at, is_admin, is_active', { count: 'exact' })
             .order('created_at', { ascending: false })
             .range(offset, offset + limit - 1);
 
@@ -58,6 +58,48 @@ export const listUsers = async (req: any, res: any) => {
         });
     } catch (error) {
         console.error('[ADMIN] List users error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+/**
+ * PATCH /api/v1/admin/users/:id/status
+ * Toggle user active status (Deactivate/Activate)
+ */
+export const toggleUserStatus = async (req: any, res: any) => {
+    try {
+        const { id } = req.params;
+        const { isActive } = req.body;
+
+        if (typeof isActive !== 'boolean') {
+            return res.status(400).json({ error: 'isActive must be a boolean' });
+        }
+
+        // Prevent deactivating own account
+        if (req.user.id === id) {
+            return res.status(400).json({ error: 'You cannot deactivate your own account' });
+        }
+
+        const { data, error } = await supabase
+            .from('profiles')
+            .update({ is_active: isActive })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('[ADMIN] Failed to update user status:', error);
+            return res.status(500).json({ error: 'Failed to update user status' });
+        }
+
+        await logAdminAction(req.user.id, 'TOGGLE_USER_STATUS', id, { new_status: isActive ? 'active' : 'inactive' });
+
+        res.json({
+            message: `User ${isActive ? 'activated' : 'deactivated'} successfully`,
+            user: data
+        });
+    } catch (error) {
+        console.error('[ADMIN] Toggle status error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };

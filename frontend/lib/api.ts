@@ -65,6 +65,7 @@ export const adminApi = {
     // Users
     listUsers: () => api.get("/admin/users"),
     updateUserTier: (userId: string, tier: string) => api.patch(`/admin/users/${userId}/tier`, { tier }),
+    toggleUserStatus: (userId: string, isActive: boolean) => api.patch(`/admin/users/${userId}/status`, { isActive }),
 
     // Bot Control
     getGlobalBotStatus: () => api.get("/admin/bot/status"),

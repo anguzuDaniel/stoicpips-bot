@@ -37,6 +37,7 @@ router.use(requireAdmin);
 // User Management
 router.get('/users', usersController.listUsers);
 router.patch('/users/:id/tier', usersController.updateUserTier);
+router.patch('/users/:id/status', usersController.toggleUserStatus);
 
 // Infrastructure Health
 router.get('/infrastructure/health', infrastructureController.getInfrastructureHealth);
