@@ -103,4 +103,69 @@ export class TechnicalIndicators {
 
         return { upper, middle: sma, lower, bandwidth };
     }
+
+    /**
+     * Calculates ADX (Average Directional Index)
+     */
+    static adx(candles: { high: number, low: number, close: number }[], period: number = 14): number {
+        if (candles.length < period * 2) return 0; // Need history for smoothing
+
+        const trs: number[] = [];
+        const plusDMs: number[] = [];
+        const minusDMs: number[] = [];
+
+        // 1. Calculate TR, +DM, -DM
+        for (let i = 1; i < candles.length; i++) {
+            const h = candles[i].high;
+            const l = candles[i].low;
+            const ph = candles[i - 1].high;
+            const pl = candles[i - 1].low;
+            const pc = candles[i - 1].close;
+
+            const tr = Math.max(h - l, Math.abs(h - pc), Math.abs(l - pc));
+            trs.push(tr);
+
+            const upMove = h - ph;
+            const downMove = pl - l;
+
+            if (upMove > downMove && upMove > 0) {
+                plusDMs.push(upMove);
+            } else {
+                plusDMs.push(0);
+            }
+
+            if (downMove > upMove && downMove > 0) {
+                minusDMs.push(downMove);
+            } else {
+                minusDMs.push(0);
+            }
+        }
+
+        // 2. Smooth TR, +DM, -DM (Wilder's Smoothing)
+        // First value is simple sum
+        let smoothTR = trs.slice(0, period).reduce((a, b) => a + b, 0);
+        let smoothPlusDM = plusDMs.slice(0, period).reduce((a, b) => a + b, 0);
+        let smoothMinusDM = minusDMs.slice(0, period).reduce((a, b) => a + b, 0);
+
+        // Loop for the rest
+        const dxList: number[] = [];
+
+        for (let i = period; i < trs.length; i++) {
+            smoothTR = smoothTR - (smoothTR / period) + trs[i];
+            smoothPlusDM = smoothPlusDM - (smoothPlusDM / period) + plusDMs[i];
+            smoothMinusDM = smoothMinusDM - (smoothMinusDM / period) + minusDMs[i];
+
+            const plusDI = 100 * (smoothPlusDM / smoothTR);
+            const minusDI = 100 * (smoothMinusDM / smoothTR);
+
+            const dx = 100 * Math.abs((plusDI - minusDI) / (plusDI + minusDI));
+            dxList.push(dx);
+        }
+
+        // 3. ADX is SMA of DX
+        if (dxList.length < period) return dxList[dxList.length - 1]; // Fallback
+
+        const adx = dxList.slice(-period).reduce((a, b) => a + b, 0) / period;
+        return adx;
+    }
 }

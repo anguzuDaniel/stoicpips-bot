@@ -64,6 +64,8 @@ export default function Dashboard() {
     keepPreviousData: true
   });
 
+  const { data: profile } = useSWR('/user/profile', fetcher);
+
   // 2. Synchronize SWR data to state and localStorage
   useEffect(() => {
     if (analytics) {
@@ -153,12 +155,26 @@ export default function Dashboard() {
       setIsRunning(true);
 
       if (response.data?.welcomeMessage) {
-        setAlertState({
-          isOpen: true,
-          type: "success",
-          title: "Trial Activated! 🚀",
-          message: response.data.welcomeMessage
-        });
+        // Check if user has seen the trial start message before
+        const hasSeenTrial = localStorage.getItem("hasSeenTrialStart");
+
+        if (!hasSeenTrial) {
+          localStorage.setItem("hasSeenTrialStart", "true");
+          setAlertState({
+            isOpen: true,
+            type: "success",
+            title: "Trial Activated! 🚀",
+            message: response.data.welcomeMessage
+          });
+        } else {
+          // If seen before, just show standard connected message
+          setAlertState({
+            isOpen: true,
+            type: "success",
+            title: "Bot Started Successfully! 🚀",
+            message: "The AI engine is now active and scanning the market."
+          });
+        }
       } else {
         setAlertState({
           isOpen: true,
@@ -255,6 +271,16 @@ export default function Dashboard() {
           <div className="flex flex-col">
             <div className="flex items-center gap-3">
               <h1 className="text-2xl md:text-3xl font-black tracking-tight text-foreground uppercase">Dashboard</h1>
+              {/* Subscription Badge */}
+              {profile?.user ? (
+                (profile.user.subscription_tier === 'pro' || profile.user.subscription_tier === 'premium') ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] bg-yellow-500/20 text-yellow-500 border border-yellow-500/30 font-black uppercase tracking-widest shadow-[0_0_10px_rgba(234,179,8,0.2)]">PRO</span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] bg-secondary text-muted-foreground border border-border font-black uppercase tracking-widest">FREE</span>
+                )
+              ) : (
+                <div className="h-5 w-12 bg-secondary/30 rounded-full animate-pulse" />
+              )}
             </div>
           </div>
 

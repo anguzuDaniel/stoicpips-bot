@@ -41,7 +41,15 @@ class HybridScalpStrategy {
         const direction = this.getMarketDirection(ema20, ema50, rsi);
         if (direction === 'NEUTRAL')
             return null;
-        // 4. Detect Zones (Confluence)
+        // 4. Trend Strength Filter (ADX)
+        // Need OHLC for ADX
+        const ohlc = candles.map(c => ({ high: c.high, low: c.low, close: c.close }));
+        const adx = TechnicalIndicators_1.TechnicalIndicators.adx(ohlc, 14);
+        if (adx < 25) {
+            // console.log(`💤 [${symbol}] Weak Trend (ADX: ${adx.toFixed(2)}). Skipping.`);
+            return null;
+        }
+        // 5. Detect Zones (Confluence)
         const standardCandles = candles.map(c => ({
             open: c.open,
             high: c.high,
@@ -54,7 +62,7 @@ class HybridScalpStrategy {
         const zones = this.zoneDetector.detectZones(standardCandles);
         const freshZones = zones.filter(z => z.touched === 0);
         const activeZone = freshZones.find(z => currentPrice >= z.bottom && currentPrice <= z.top);
-        console.log(`🔎 [${symbol}] Dir: ${direction} | P: ${currentPrice} | EMA20: ${ema20.toFixed(2)} | RSI: ${rsi.toFixed(2)}`);
+        console.log(`🔎 [${symbol}] Dir: ${direction} | ADX: ${adx.toFixed(1)} | EMA20: ${ema20.toFixed(2)} | RSI: ${rsi.toFixed(2)}`);
         // 5. Entry Triggers
         // Trigger 1: Zone Touch (Classic)
         // Trigger 2: Pullback to EMA 20 (Trend Following) -> Price close to EMA20 (within 0.05%?)
