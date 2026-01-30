@@ -2,7 +2,7 @@ import axios, { AxiosResponse } from "axios";
 
 export const fetcher = (url: string) => api.get(url).then(res => res.data);
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
 
 export const api = axios.create({
     baseURL: API_URL,
@@ -29,6 +29,18 @@ api.interceptors.request.use(async (config) => {
     return config;
 });
 
+
+export const userApi = {
+    // User endpoints
+    getProfile: () => api.get("/user/profile"),
+    updateProfile: (data: { fullName?: string, username?: string, tradingExperience?: string, bankName?: string, accountNumber?: string, accountName?: string }) => api.post("/user/update-profile", data),
+    updateBankInfo: (data: any) => api.post("/user/update-bank-info", data),
+    reportBug: (data: any) => api.post("/user/report-bug", data),
+    getNotifications: () => api.get("/user/notifications"),
+    markNotificationRead: (id: string) => api.patch(`/user/notifications/${id}/read`),
+    markAllNotificationsRead: () => api.patch("/user/notifications/read-all"),
+};
+
 export const botApi = {
     getConfigs: () => api.get("/bot/config"),
     saveConfig: (data: any) => api.post("/bot/config", data),
@@ -44,12 +56,6 @@ export const botApi = {
     toggleAccount: (type: 'real' | 'demo') => api.post("/bot/toggle-account", { targetType: type }),
     initializePayment: (tier: 'pro' | 'elite') => api.post("/payments/initialize", { tier }),
     getAnnouncements: () => api.get("/admin/announcements"),
-
-    // User endpoints
-    getProfile: () => api.get("/user/profile"),
-    updateProfile: (data: { fullName?: string, username?: string, tradingExperience?: string, bankName?: string, accountNumber?: string, accountName?: string }) => api.post("/user/update-profile", data),
-    updateCardInfo: (data: { bankName: string; accountNumber: string; accountName: string }) => api.post("/user/update-bank-info", data),
-    reportBug: (data: { title: string; description: string; steps?: string; severity: string }) => api.post("/user/report-bug", data),
 };
 
 export const adminApi = {
@@ -59,6 +65,7 @@ export const adminApi = {
     // Users
     listUsers: () => api.get("/admin/users"),
     updateUserTier: (userId: string, tier: string) => api.patch(`/admin/users/${userId}/tier`, { tier }),
+    toggleUserStatus: (userId: string, isActive: boolean) => api.patch(`/admin/users/${userId}/status`, { isActive }),
 
     // Bot Control
     getGlobalBotStatus: () => api.get("/admin/bot/status"),
@@ -70,6 +77,8 @@ export const adminApi = {
 
     // Announcements
     createAnnouncement: (data: { title: string, message: string, type: string, expiresAt?: string }) => api.post("/admin/announcements", data),
+    getAnnouncementHistory: () => api.get("/admin/announcements/all"),
+    deleteAnnouncement: (id: string) => api.delete(`/admin/announcements/${id}`),
 
     // Bug Reports
     getBugReports: () => api.get("/admin/bug-reports"),

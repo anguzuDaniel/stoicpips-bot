@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { botApi } from "@/lib/api";
+import { botApi, userApi } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import { Loader2, Save, AlertCircle, User, CreditCard, ShieldCheck, Crown, ExternalLink, CheckCircle, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -37,7 +37,7 @@ export default function ProfilePage() {
             setUserAuth(user);
 
             // 2. Get Profile from DB
-            const response = await botApi.getProfile();
+            const response = await userApi.getProfile();
             if (response.data && response.data.user) {
                 const dbProfile = response.data.user;
                 setProfile(dbProfile);
@@ -65,7 +65,7 @@ export default function ProfilePage() {
         setSuccess(null);
 
         try {
-            await botApi.updateProfile({
+            await userApi.updateProfile({
                 fullName: profileData.fullName,
                 username: profileData.username,
                 tradingExperience: profileData.tradingExperience,
@@ -76,7 +76,7 @@ export default function ProfilePage() {
             setSuccess("Profile updated successfully!");
 
             // Re-fetch to update state
-            const response = await botApi.getProfile();
+            const response = await userApi.getProfile();
             if (response.data && response.data.user) setProfile(response.data.user);
 
             setTimeout(() => setSuccess(null), 3000);

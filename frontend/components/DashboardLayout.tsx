@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { Menu, Loader2, AlertTriangle, ExternalLink } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { botApi } from "@/lib/api";
+import { botApi, userApi } from "@/lib/api";
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -25,7 +25,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         // Skip check if already on profile page to avoid loops
         // But we still want to know if email is verified
         try {
-            const { data } = await botApi.getProfile();
+            const { data } = await userApi.getProfile();
             const profile = data.user;
 
             setIsEmailVerified(profile?.is_email_verified !== false);
@@ -68,7 +68,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     >
                         <Menu className="h-6 w-6" />
                     </button>
-                    <span className="ml-2 font-bold text-lg">Dunam Ai</span>
+                    <div className="ml-2 flex items-center gap-2">
+                        <span className="font-bold text-lg">Dunam Ai</span>
+                        <span className="text-[10px] bg-green-500/10 text-green-500 px-1.5 py-0.5 rounded border border-green-500/20 font-bold uppercase tracking-wider">Beta</span>
+                    </div>
                 </div>
 
                 <main className="flex-1 overflow-y-auto">

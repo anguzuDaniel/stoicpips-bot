@@ -1,14 +1,55 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { useNotifications } from "@/context/NotificationContext";
+// import { useNotifications } from "@/context/NotificationContext"; // Deprecated
+import { userApi } from "@/lib/api";
 import { Bell, Info, CheckCircle, AlertTriangle, Zap, Trash2, CheckCircle2 } from "lucide-react";
-import { format } from "date-fns";
-
+import { formatDistanceToNow } from "date-fns";
 export default function NotificationsPage() {
-    const { notifications, markAllRead, clearAll, toggleRead } = useNotifications();
+    const [notifications, setNotifications] = useState<any[]>([]);
     const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
+
+    // Fetch REAL notifications
+    const fetchNotifications = async () => {
+        try {
+            console.log("🔔 [Notifications Page] Fetching...");
+            const { data } = await userApi.getNotifications();
+            if (data.notifications) {
+                setNotifications(data.notifications.map((n: any) => ({
+                    id: n.id,
+                    title: n.title,
+                    description: n.message, // Map message to description
+                    time: formatDistanceToNow(new Date(n.created_at), { addSuffix: true }),
+                    read: n.is_read, // Map is_read to read
+                    type: n.type
+                })));
+            }
+        } catch (error) {
+            console.error("Failed to fetch notifications page:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchNotifications();
+        const interval = setInterval(fetchNotifications, 10000); // Poll every 10s
+        return () => clearInterval(interval);
+    }, []);
+
+    const markAllRead = async () => {
+        await userApi.markAllNotificationsRead();
+        fetchNotifications();
+    };
+
+    const toggleRead = async (id: string) => {
+        await userApi.markNotificationRead(id);
+        fetchNotifications();
+    };
+
+    const clearAll = () => {
+        // Not implemented in backend yet
+        console.log("Clear all not implemented");
+    };
 
     const filteredNotifications = notifications.filter(n => {
         if (filter === "unread") return !n.read;

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X, Send, AlertTriangle, Bug, Loader2 } from "lucide-react";
-import { botApi } from "@/lib/api";
+import { userApi } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
 
 interface BugReportModalProps {
@@ -27,7 +27,7 @@ export function BugReportModal({ isOpen, onClose }: BugReportModalProps) {
         setLoading(true);
 
         try {
-            await botApi.reportBug(formData);
+            await userApi.reportBug(formData);
             addToast("Bug reported successfully. Thank you for your feedback!", "success");
             onClose();
             setFormData({ title: "", description: "", steps: "", severity: "low" });

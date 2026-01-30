@@ -7,6 +7,7 @@ import { BotAnalytics } from "@/components/admin/BotAnalytics";
 import { GlobalControls } from "@/components/admin/GlobalControls";
 import { BugReportViewer } from "@/components/admin/BugReportViewer";
 import { AnnouncementsManager } from "@/components/admin/AnnouncementsManager";
+import { AnnouncementHistory } from "@/components/admin/AnnouncementHistory";
 import { LayoutDashboard, Users, Activity, Megaphone, Bug, Settings } from "lucide-react";
 import { clsx } from "clsx";
 
@@ -45,7 +46,7 @@ export function AdminDashboard() {
                 return (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <AnnouncementsManager />
-                        {/* Placeholder for future communication history */}
+                        <AnnouncementHistory />
                     </div>
                 );
             case 'support':
