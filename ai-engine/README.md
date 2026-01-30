@@ -1,4 +1,4 @@
-# StoicPips AI Engine
+# Dunam Ai Engine
 
 This is the Python microservice that powers the AI Scalping Module. It fetches real-time data and uses an XGBoost model to generate trading signals.
 

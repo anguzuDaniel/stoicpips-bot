@@ -1,9 +1,9 @@
-# 🤖 SyntoicAi Bot
-> *Automated Trading Bot for Synthetic Indices on Deriv.onal algorithmic trading system powered by advanced market analysis and Deriv API*
+# 🤖 Dunam Ai
+> *Zero Emotion. Total Execution. Automated Trading Bot for Synthetic Indices on Deriv.*
 
 ## 🎯 Overview
 
-SyntoicAi Bot is a full-featured algorithmic trading platform that executes automated trades on Deriv's financial markets using sophisticated supply-demand zone analysis and price action strategies.
+Dunam Ai is a high-precision, emotionless algorithmic trading platform that executes automated trades on Deriv's financial markets using sophisticated market analysis and price action strategies.
 
 ### 🚀 Live Features
 - **Real-time market analysis** across multiple symbols
@@ -109,8 +109,8 @@ SyntoicAi Bot is a full-featured algorithmic trading platform that executes auto
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/syntoicai-bot.git
-cd syntoicai-bot
+git clone https://github.com/yourusername/dunam-bot.git
+cd dunam-bot
 
 # Install dependencies
 npm install
@@ -151,7 +151,7 @@ REDIS_URL=redis://localhost:6379
 ## 🏗️ Project Structure
 
 ```
-syntoicai-bot/
+dunam-bot/
 ├── src/
 │   ├── frontend/                 # Next.js application
 │   │   ├── app/                  # App router pages
@@ -389,10 +389,10 @@ jobs:
 ## 📚 Documentation
 
 ### Additional Resources
-- [API Documentation](https://docs.syntoicai.com/api)
-- [Strategy Guide](https://docs.syntoicai.com/strategies)
-- [Deployment Guide](https://docs.syntoicai.com/deployment)
-- [Troubleshooting](https://docs.syntoicai.com/troubleshooting)
+- [API Documentation](https://docs.dunam.ai/api)
+- [Strategy Guide](https://docs.dunam.ai/api/strategies)
+- [Deployment Guide](https://docs.dunam.ai/api/deployment)
+- [Troubleshooting](https://docs.dunam.ai/api/troubleshooting)
 
 ### Contributing
 1. Fork the repository
@@ -413,16 +413,16 @@ jobs:
 - This bot does not provide financial advice
 - Always conduct your own due diligence
 
-The developers of SyntoicAi Bot are not responsible for any financial losses incurred through the use of this software.
+The developers of Dunam are not responsible for any financial losses incurred through the use of this software.
 
 ---
 
 ## 📞 Support
 
-- **Documentation**: [docs.syntoicai.com](https://docs.syntoicai.com)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/syntoicai-bot/issues)
-- **Discord**: [Join Community](https://discord.gg/syntoicai)
-- **Email**: support@syntoicai.com
+- **Documentation**: [docs.dunam.ai](https://docs.dunam.ai)
+- **Issues**: [GitHub Issues](https://github.com/yourusername/dunam-bot/issues)
+- **Discord**: [Join Community](https://discord.gg/dunam)
+- **Email**: support@dunam.ai
 
 ---
 
@@ -437,8 +437,8 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - [Deriv](https://deriv.com/) for their comprehensive trading API
 - [Supabase](https://supabase.com/) for amazing developer tools
 - [TradingView](https://www.tradingview.com/) for charting inspiration
-- All contributors and testers of the SyntoicAi Bot platform
+- All contributors and testers of the Dunam platform
 
 ---
 
-*Built with precision for disciplined traders. Stay stoic. 🏛️*
+*Built with precision for disciplined traders. Zero Emotion. Total Execution. 🏛️*

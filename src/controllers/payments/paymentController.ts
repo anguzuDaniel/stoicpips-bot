@@ -23,7 +23,7 @@ export const initializePayment = async (req: any, res: Response) => {
 
         const amount = PRICES[tier as keyof typeof PRICES];
         // Unique transaction ref
-        const tx_ref = `syntoic-${userId}-${Date.now()}`;
+        const tx_ref = `dunam-ai-${userId}-${Date.now()}`;
 
         // Plan IDs from .env or default (User should configure these in FLW dashboard)
         const PLAN_IDS = {
@@ -48,9 +48,9 @@ export const initializePayment = async (req: any, res: Response) => {
                 tier
             },
             customizations: {
-                title: `SyntoicAi ${tier.charAt(0).toUpperCase() + tier.slice(1)} Plan`,
+                title: `Dunam Ai ${tier.charAt(0).toUpperCase() + tier.slice(1)} Plan`,
                 description: `Upgrade to ${tier} tier`,
-                logo: "https://syntoic.com/logo.png"
+                logo: "https://api.dunam.ai/logo.png"
             }
         };
 

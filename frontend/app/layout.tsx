@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SyntoicAi Bot",
-  description: "Automated AI Trading Bot for Deriv",
+  title: "Dunam Ai | Zero Emotion. Total Execution.",
+  description: "Dunam Ai is an emotionless, high-precision trading bot for Synthetic Indices.",
 };
 
 export default function RootLayout({

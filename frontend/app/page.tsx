@@ -98,7 +98,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     // 1. Initial Load from Cache for Instant UI
-    const cachedStats = localStorage.getItem("syntoic_last_stats");
+    const cachedStats = localStorage.getItem("dunam_last_stats");
     if (cachedStats) {
       try {
         const parsed = JSON.parse(cachedStats);
@@ -119,10 +119,10 @@ export default function Dashboard() {
 
     if (stats.accountType) {
       // Save to general cache for initial load (current state)
-      localStorage.setItem("syntoic_last_stats", JSON.stringify(stats));
+      localStorage.setItem("dunam_last_stats", JSON.stringify(stats));
 
       // ALSO save to specific cache bucket
-      const bucketKey = `syntoic_cache_${stats.accountType}`;
+      const bucketKey = `dunam_cache_${stats.accountType}`;
       const cacheData = {
         balance: stats.balance,
         currency: stats.currency,
@@ -245,16 +245,10 @@ export default function Dashboard() {
       <div className="p-4 md:p-10 max-w-[1600px] mx-auto w-full">
         {/* Top Header */}
         <header className="flex items-center justify-between mb-8 gap-4">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-foreground">Dashboard</h1>
-            {status && (
-              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${status.subscriptionTier === 'elite' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
-                status.subscriptionTier === 'pro' ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20' :
-                  'bg-slate-500/10 text-slate-500 border-slate-500/20'
-                }`}>
-                {status.subscriptionTier === 'free' ? 'Free Tier' : (status.subscriptionTier || 'Free') + ' Tier'}
-              </span>
-            )}
+          <div className="flex flex-col">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl md:text-3xl font-black tracking-tight text-foreground uppercase">Dashboard</h1>
+            </div>
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
@@ -390,40 +384,77 @@ export default function Dashboard() {
           {/* Left Column (Chart & Signals) */}
           <div className="lg:col-span-2 space-y-6">
 
-            {/* Bot Configuration (Moved here) */}
-            <div className="rounded-xl border border-border bg-card p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-                <h3 className="font-bold flex items-center gap-2 shrink-0">
-                  <SettingsIcon className="h-4 w-4" /> Bot Configuration
-                </h3>
-                <div className="grid grid-cols-2 md:flex items-end gap-3 w-full sm:w-auto">
-                  <div className="col-span-2 md:col-auto flex items-end">
-                    <button
-                      onClick={async () => {
-                        if (confirm("Are you sure you want to reset all trade history and stats? This cannot be undone.")) {
-                          try {
-                            await botApi.resetBot();
-                            await fetchStats(); // Refresh stats immediately
-                            alert("Bot history reset successfully.");
-                          } catch (e) {
-                            console.error("Reset failed", e);
-                            alert("Failed to reset.");
-                          }
+            {/* Bot Configuration (Redesigned) */}
+            <div className="rounded-xl border border-secondary/30 bg-card/50 backdrop-blur-sm p-6 overflow-hidden relative">
+              {/* Subtle background glow */}
+              <div className="absolute -top-12 -right-12 h-32 w-32 bg-primary/5 blur-2xl rounded-full" />
+
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                <div className="flex flex-col gap-1">
+                  <h3 className="font-black text-sm uppercase tracking-widest flex items-center gap-2 text-foreground/80">
+                    <SettingsIcon className="h-4 w-4 text-primary" /> Bot Configuration
+                  </h3>
+                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Trading Risk Management</p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-end gap-3 w-full md:w-auto">
+                  <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
+                    {/* Stop Loss Input Group */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center gap-1.5 px-2">
+                        <div className="h-1 w-1 rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]" />
+                        <label className="text-[9px] font-black text-red-500/80 uppercase tracking-widest">Stop Loss ($)</label>
+                      </div>
+                      <div className="relative group">
+                        <input
+                          type="number"
+                          defaultValue={50}
+                          className="w-full sm:w-[120px] bg-secondary/20 border border-border/50 rounded-xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/30 transition-all hover:bg-secondary/30"
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-30 group-hover:opacity-60 transition-opacity">
+                          <AlertTriangle className="h-3 w-3 text-red-500" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Take Profit Input Group */}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center gap-1.5 px-2">
+                        <div className="h-1 w-1 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]" />
+                        <label className="text-[9px] font-black text-green-500/80 uppercase tracking-widest">Take Profit ($)</label>
+                      </div>
+                      <div className="relative group">
+                        <input
+                          type="number"
+                          defaultValue={100}
+                          className="w-full sm:w-[120px] bg-secondary/20 border border-border/50 rounded-xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500/30 transition-all hover:bg-secondary/30"
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-30 group-hover:opacity-60 transition-opacity">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Reset History Button */}
+                  <button
+                    onClick={async () => {
+                      if (confirm("Are you sure you want to reset all trade history and stats? This cannot be undone.")) {
+                        try {
+                          await botApi.resetBot();
+                          await fetchStats();
+                          alert("Bot history reset successfully.");
+                        } catch (e) {
+                          console.error("Reset failed", e);
+                          alert("Failed to reset.");
                         }
-                      }}
-                      className="w-full flex items-center justify-center gap-1 px-3 py-2 rounded-lg border border-border hover:bg-accent text-xs font-medium transition-colors h-9"
-                    >
-                      <RefreshCw className="h-3 w-3" /> Reset History
-                    </button>
-                  </div>
-                  <div className="flex-1 min-w-[100px]">
-                    <label className="text-[10px] text-red-500 font-bold uppercase block mb-1">Stop Loss ($)</label>
-                    <input type="number" defaultValue={50} className="w-full bg-input border border-border rounded-lg px-3 py-1.5 text-sm h-9" />
-                  </div>
-                  <div className="flex-1 min-w-[100px]">
-                    <label className="text-[10px] text-green-500 font-bold uppercase block mb-1">Take Profit ($)</label>
-                    <input type="number" defaultValue={100} className="w-full bg-input border border-border rounded-lg px-3 py-1.5 text-sm h-9" />
-                  </div>
+                      }
+                    }}
+                    className="h-[42px] px-5 flex items-center justify-center gap-2 rounded-xl bg-secondary/10 border border-border/40 hover:bg-secondary/20 hover:border-border transition-all text-[11px] font-black uppercase tracking-tighter w-full sm:w-auto"
+                  >
+                    <RefreshCw className="h-3 w-3 text-muted-foreground" />
+                    <span>Reset Trades</span>
+                  </button>
                 </div>
               </div>
             </div>

@@ -62,8 +62,8 @@ export default function HelpPage() {
                             <h3 className="font-semibold">Email Support</h3>
                             <p className="text-sm text-muted-foreground mt-1">Get detailed assistance via email</p>
                         </div>
-                        <a href="mailto:support@syntoicai.com" className="text-sm font-medium text-primary hover:underline">
-                            support@syntoicai.com
+                        <a href="mailto:support@dunam.ai" className="text-sm font-medium text-primary hover:underline">
+                            support@dunam.ai
                         </a>
                     </div>
 
@@ -129,7 +129,7 @@ export default function HelpPage() {
                     <p className="flex items-start gap-2">
                         <HelpCircle className="h-5 w-5 shrink-0" />
                         <span>
-                            <strong>Note:</strong> We are constantly updating SyntoicAi Bot. If you encounter a bug, please report it via email with a screenshot so we can fix it in the next update.
+                            <strong>Note:</strong> We are constantly updating Dunam Ai. If you encounter a bug, please report it via email with a screenshot so we can fix it in the next update.
                         </span>
                     </p>
                 </div>

@@ -32,6 +32,7 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
     req.user = {
       id: user.id,
       email: user.email,
+      isEmailVerified: !!user.email_confirmed_at,
       subscription_status: profile?.subscription_tier || 'free',
       subscription_tier: profile?.subscription_tier || 'free',
       isAdmin: profile?.is_admin || false

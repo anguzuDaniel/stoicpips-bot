@@ -6,7 +6,7 @@ test.describe('Bot Dashboard', () => {
         await page.goto('/login');
 
         // Perform login
-        await page.getByPlaceholder('name@example.com').fill('syntoicai@gmail.com');
+        await page.getByPlaceholder('name@example.com').fill('dunam@gmail.com');
         await page.getByPlaceholder('••••••••').fill('password123'); // Placeholder - adjust if needed
         await page.getByRole('button', { name: 'Sign In' }).click();
 

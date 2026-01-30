@@ -51,15 +51,15 @@ export default function LoginPage() {
                     <div className="flex flex-col items-center justify-center mb-6 gap-3">
                         <img
                             src="/logo.png"
-                            alt="SyntoicAi Logo"
+                            alt="Dunam Logo"
                             className="h-20 w-auto drop-shadow-2xl rounded-full"
                         />
                         <div className="flex items-center gap-2">
-                            <h1 className="text-2xl font-black tracking-tighter text-foreground">SyntoicAi</h1>
+                            <h1 className="text-2xl font-black tracking-tighter text-foreground">Dunam Ai</h1>
                             <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary uppercase tracking-wider border border-primary/20">Beta</span>
                         </div>
                     </div>
-                    <h2 className="text-3xl font-bold tracking-tight">Trade Emotionless</h2>
+                    <h2 className="text-3xl font-bold tracking-tight">Zero Emotion. Total Execution.</h2>
                     <p className="mt-2 text-sm text-muted-foreground">
                         Sign in to your account to continue trading
                     </p>

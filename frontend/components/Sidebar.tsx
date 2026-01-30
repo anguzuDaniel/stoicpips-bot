@@ -28,9 +28,28 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const router = useRouter();
 
   const handleLogout = async () => {
+    // 1. Sign out from Supabase
     await supabase.auth.signOut();
-    router.push("/login"); // Middleware might redirect anyway, but good to be explicit
-    // Force refresh to clear any cached state
+
+    // 2. Clear all local application cache
+    if (typeof window !== 'undefined') {
+      // Clear specific stats cache
+      localStorage.removeItem("dunam_last_stats");
+      localStorage.removeItem("dunam_cache_real");
+      localStorage.removeItem("dunam_cache_demo");
+      localStorage.removeItem("syntoic_last_stats");
+      localStorage.removeItem("token");
+
+      // Clear any other related keys
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('dunam') || key.startsWith('syntoic')) {
+          localStorage.removeItem(key);
+        }
+      });
+    }
+
+    // 3. Redirect and refresh
+    router.push("/login");
     router.refresh();
   };
 
@@ -52,12 +71,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div>
           <div className="flex items-center justify-between px-2 pb-8 pt-4">
             <div className="flex items-center gap-3">
-              <img
-                src="/logo.png"
-                alt="SyntoicAi Logo"
-                className="h-10 w-10 drop-shadow-md rounded-full"
-              />
-              <span className="text-xl font-bold tracking-tight">SyntoicAi Bot <span className="text-xs font-normal text-primary border border-primary/20 bg-primary/10 px-1 rounded">Beta</span></span>
+              <span className="text-xl font-bold tracking-tight">Dunam Ai <span className="text-xs font-normal text-primary border border-primary/20 bg-primary/10 px-1 rounded">Beta</span></span>
             </div>
             {/* Mobile Close Button */}
             <button onClick={onClose} className="md:hidden p-1 text-muted-foreground hover:text-foreground">

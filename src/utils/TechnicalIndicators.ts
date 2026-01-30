@@ -1,5 +1,5 @@
 /**
- * Technical Indicators for SyntoicAi
+ * Technical Indicators for Dunam Ai
  */
 
 export class TechnicalIndicators {

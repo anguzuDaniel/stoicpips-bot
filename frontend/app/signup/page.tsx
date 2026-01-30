@@ -64,15 +64,15 @@ export default function SignupPage() {
                     <div className="flex flex-col items-center justify-center mb-6 gap-3">
                         <img
                             src="/logo.png"
-                            alt="SyntoicAi Logo"
+                            alt="Dunam Logo"
                             className="h-20 w-auto drop-shadow-2xl rounded-full"
                         />
                         <div className="flex items-center gap-2">
-                            <h1 className="text-2xl font-black tracking-tighter text-foreground">SyntoicAi</h1>
+                            <h1 className="text-2xl font-black tracking-tighter text-foreground">Dunam Ai</h1>
                             <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary uppercase tracking-wider border border-primary/20">Beta</span>
                         </div>
                     </div>
-                    <h2 className="text-3xl font-bold tracking-tight">Trade Emotionless</h2>
+                    <h2 className="text-3xl font-bold tracking-tight">Zero Emotion. Total Execution.</h2>
                     <p className="mt-2 text-sm text-muted-foreground">
                         Start your automated trading journey today
                     </p>
@@ -116,25 +116,51 @@ export default function SignupPage() {
                     </div>
 
                     {successMessage ? (
-                        <div className="space-y-6 text-center py-4 animate-in fade-in zoom-in duration-300">
-                            <div className="flex justify-center">
-                                <Activity className="h-16 w-16 text-green-500" />
-                            </div>
-                            <div className="space-y-2">
-                                <h3 className="text-xl font-bold">Check your email</h3>
-                                <div className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
-                                    {successMessage}
+                        <div className="space-y-6 text-center py-6 animate-in fade-in zoom-in duration-500">
+                            <div className="relative mx-auto w-20 h-20">
+                                <div className="absolute inset-0 bg-green-500/20 rounded-full animate-ping" />
+                                <div className="relative flex items-center justify-center w-20 h-20 bg-green-500/10 rounded-full border-2 border-green-500/50">
+                                    <Mail className="h-10 w-10 text-green-500" />
                                 </div>
-                                <p className="text-xs text-muted-foreground">
-                                    Click the link in the email to verify your account and start trading.
+                            </div>
+
+                            <div className="space-y-2">
+                                <h3 className="text-2xl font-bold tracking-tight">Check Your Inbox</h3>
+                                <p className="text-sm text-muted-foreground">
+                                    We've sent a verification link to <span className="font-semibold text-foreground underline">{email}</span>.
                                 </p>
                             </div>
-                            <Link
-                                href="/login"
-                                className="inline-flex w-full items-center justify-center rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-                            >
-                                Proceed to Login
-                            </Link>
+
+                            <div className="bg-muted/50 rounded-xl p-4 text-left border border-border/50">
+                                <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                                    <Activity className="h-4 w-4 text-primary" />
+                                    Next Steps:
+                                </p>
+                                <ul className="text-xs text-muted-foreground space-y-2 list-disc pl-4">
+                                    <li>Open your email application</li>
+                                    <li>Look for an email from <span className="text-foreground">SyntoicAi</span></li>
+                                    <li>Click the <span className="text-foreground font-semibold italic">"Verify Email"</span> button to activate your account</li>
+                                </ul>
+                            </div>
+
+                            <div className="space-y-3 pt-2">
+                                <Link
+                                    href="/login"
+                                    className="inline-flex w-full items-center justify-center rounded-lg bg-primary px-4 py-2.5 font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98]"
+                                >
+                                    Go to Sign In
+                                </Link>
+
+                                <p className="text-xs text-muted-foreground">
+                                    Didn't receive the email? Check your spam folder or{" "}
+                                    <button
+                                        onClick={() => setSuccessMessage(null)}
+                                        className="text-primary font-semibold hover:underline"
+                                    >
+                                        try again
+                                    </button>
+                                </p>
+                            </div>
                         </div>
                     ) : (
                         <form onSubmit={handleEmailSignup} className="space-y-4">

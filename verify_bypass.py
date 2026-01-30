@@ -4,7 +4,7 @@ import sys
 import os
 
 # Add the ai-engine directory to the path so we can import modules
-sys.path.append(r"c:\Users\kenyi\OneDrive\Desktop\projects\stoic-sythentic-bot-main\stoic-sythentic-bot-main\ai-engine")
+sys.path.append(r"c:\Users\kenyi\OneDrive\Desktop\projects\dunam-bot\ai-engine")
 
 from model import TradePredictor
 

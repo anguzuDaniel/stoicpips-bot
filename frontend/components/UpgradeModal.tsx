@@ -31,7 +31,7 @@ export function UpgradeModal({ isOpen, onClose, message }: UpgradeModalProps) {
                             The Emperor Has Spoken
                         </h2>
                         <p className="text-muted-foreground">
-                            {message || "You have seen the power of SyntoicAi. Upgrade to Elite for full automation."}
+                            {message || "You have seen the power of Dunam Ai. Upgrade to Elite for full automation."}
                         </p>
                     </div>
 

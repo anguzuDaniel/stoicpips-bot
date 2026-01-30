@@ -22,7 +22,12 @@ export const getUserProfile = async (req: any, res: any) => {
       return res.status(400).json({ error: error.message });
     }
 
-    res.json({ user: data });
+    res.json({
+      user: {
+        ...data,
+        is_email_verified: req.user.isEmailVerified
+      }
+    });
   } catch (err) {
     console.error("getUserProfile error:", err);
     res.status(500).json({ error: "Server error" });

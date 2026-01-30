@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { botApi } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
-import { Loader2, Save, AlertCircle, User, CreditCard, ShieldCheck, Crown, ExternalLink } from "lucide-react";
+import { Loader2, Save, AlertCircle, User, CreditCard, ShieldCheck, Crown, ExternalLink, CheckCircle, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
@@ -129,7 +129,20 @@ export default function ProfilePage() {
                             <div className="space-y-5">
                                 <div className="p-5 rounded-2xl bg-secondary/10 border border-border/50">
                                     <label className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">Command Email</label>
-                                    <p className="text-sm font-bold truncate text-foreground">{userAuth?.email || 'N/A'}</p>
+                                    <div className="flex flex-col gap-2">
+                                        <p className="text-sm font-bold truncate text-foreground">{userAuth?.email || 'N/A'}</p>
+                                        <div className="flex">
+                                            {profile?.is_email_verified ? (
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/10 text-green-500 border border-green-500/20 text-[10px] font-bold uppercase tracking-wider">
+                                                    <CheckCircle className="h-3 w-3" /> Verified
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[10px] font-bold uppercase tracking-wider">
+                                                    <AlertTriangle className="h-3 w-3" /> Unverified
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className="p-5 rounded-2xl bg-secondary/10 border border-border/50">
                                     <label className="text-[11px] font-black text-muted-foreground uppercase tracking-widest mb-2 block">Authorization Level</label>

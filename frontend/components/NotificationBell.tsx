@@ -16,7 +16,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
     {
         id: "1",
         title: "System Online",
-        description: "SyntoicAI Probability Engine is now active and monitoring markets.",
+        description: "Dunam Probability Engine is now active and monitoring markets.",
         time: "Just now",
         type: "info",
         read: false
@@ -24,7 +24,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
     {
         id: "2",
         title: "Profile Synchronized",
-        description: "Your Empire Records have been successfully updated.",
+        description: "Your Dunam Ai Profile has been successfully updated.",
         time: "5m ago",
         type: "success",
         read: false

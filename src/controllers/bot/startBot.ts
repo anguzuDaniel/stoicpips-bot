@@ -106,7 +106,7 @@ export const startBot = async (req: AuthenticatedRequest, res: Response) => {
     if (tier === 'free') {
       if (isTrialExpired) {
         return res.status(403).json({
-          error: "Your 1-week free trial has expired. Upgrade to Pro or Elite to continue using SyntoicAi.",
+          error: "Your 1-week free trial has expired. Upgrade to Pro or Elite to continue using Dunam Ai.",
           code: "UPGRADE_REQUIRED"
         });
       }
@@ -267,7 +267,7 @@ export const startBot = async (req: AuthenticatedRequest, res: Response) => {
       startedAt: botState.startedAt,
       user: { id: userId, email: userEmail, subscription, subscriptionTier: tier },
       config,
-      welcomeMessage: (tier === 'free' && !hasTakenFirstTrade) ? "Welcome to your 1-week free trial! 🚀 Enjoy the full power of SyntoicAi. Consider upgrading to Elite if you love the experience!" : undefined
+      welcomeMessage: (tier === 'free' && !hasTakenFirstTrade) ? "Welcome to your 1-week free trial! 🚀 Enjoy the full power of Dunam Ai. Consider upgrading to Elite if you love the experience!" : undefined
     });
 
   } catch (error: any) {
