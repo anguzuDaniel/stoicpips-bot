@@ -9,7 +9,7 @@ import { BugReportViewer } from "@/components/admin/BugReportViewer";
 import { FeatureRequestViewer } from "@/components/admin/FeatureRequestViewer";
 import { AnnouncementsManager } from "@/components/admin/AnnouncementsManager";
 import { AnnouncementHistory } from "@/components/admin/AnnouncementHistory";
-import { LayoutDashboard, Users, Activity, Megaphone, Bug, Settings } from "lucide-react";
+import { LayoutDashboard, Users, Activity, Megaphone, Bug, Settings, Lightbulb } from "lucide-react";
 import { clsx } from "clsx";
 
 export function AdminDashboard() {
