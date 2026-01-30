@@ -5,14 +5,6 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { adminApi } from "@/lib/api";
 import { Loader2, Search, User, Shield, AlertTriangle, CheckCircle, XCircle, MoreVertical, Crown, Ban } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 export default function AdminUsersPage() {
     const [users, setUsers] = useState<any[]>([]);
@@ -186,8 +178,8 @@ export default function AdminUsersPage() {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${user.subscription_tier === 'elite' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
-                                                            user.subscription_tier === 'pro' ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' :
-                                                                'bg-secondary/50 text-muted-foreground border-border'
+                                                        user.subscription_tier === 'pro' ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' :
+                                                            'bg-secondary/50 text-muted-foreground border-border'
                                                         }`}>
                                                         {user.subscription_tier || 'Free'}
                                                     </span>
@@ -196,36 +188,24 @@ export default function AdminUsersPage() {
                                                     {formatDistanceToNow(new Date(user.created_at), { addSuffix: true })}
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger className="p-1 hover:bg-muted rounded-md transition-colors">
-                                                            <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                            <DropdownMenuItem onClick={() => handleToggleStatus(user.id, user.is_active ?? true)}>
-                                                                {user.is_active !== false ? (
-                                                                    <div className="flex items-center gap-2 text-red-500">
-                                                                        <Ban className="h-3 w-3" /> Deactivate User
-                                                                    </div>
-                                                                ) : (
-                                                                    <div className="flex items-center gap-2 text-green-500">
-                                                                        <CheckCircle className="h-3 w-3" /> Activate User
-                                                                    </div>
-                                                                )}
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuSeparator />
-                                                            <DropdownMenuLabel>Change Tier</DropdownMenuLabel>
-                                                            <DropdownMenuItem onClick={() => handleUpdateTier(user.id, 'free')}>
-                                                                Downgrade to Free
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => handleUpdateTier(user.id, 'pro')}>
-                                                                Upgrade to Pro
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => handleUpdateTier(user.id, 'elite')}>
-                                                                Upgrade to Elite
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <select
+                                                            value={user.subscription_tier}
+                                                            onChange={(e) => handleUpdateTier(user.id, e.target.value)}
+                                                            className="bg-transparent text-[10px] font-bold border border-border rounded px-1 py-0.5 focus:outline-none focus:border-primary"
+                                                        >
+                                                            <option value="free">Free</option>
+                                                            <option value="pro">Pro</option>
+                                                            <option value="elite">Elite</option>
+                                                        </select>
+                                                        <button
+                                                            onClick={() => handleToggleStatus(user.id, user.is_active ?? true)}
+                                                            className={`p-1 rounded hover:bg-muted transition-colors ${user.is_active !== false ? 'text-red-500' : 'text-green-500'}`}
+                                                            title={user.is_active !== false ? 'Deactivate' : 'Activate'}
+                                                        >
+                                                            {user.is_active !== false ? <Ban className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))

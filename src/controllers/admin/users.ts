@@ -12,6 +12,11 @@ export const listUsers = async (req: any, res: any) => {
             .order('created_at', { ascending: false })
             .range(offset, offset + limit - 1);
 
+        // ... (rest of search logic)
+
+        // ... (inside toggleUserStatus)
+
+
         // Apply search filter if provided
         if (search) {
             query = query.ilike('email', `%${search}%`);

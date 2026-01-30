@@ -29,6 +29,8 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
       return res.status(403).json({ error: 'Your account has been deactivated. Please contact support.' });
     }
 
+
+
     req.user = {
       id: user.id,
       email: user.email,

@@ -65,7 +65,7 @@ export default function ProfilePage() {
         setSuccess(null);
 
         try {
-            await botApi.updateProfile({
+            await userApi.updateProfile({
                 fullName: profileData.fullName,
                 username: profileData.username,
                 tradingExperience: profileData.tradingExperience,
@@ -76,7 +76,7 @@ export default function ProfilePage() {
             setSuccess("Profile updated successfully!");
 
             // Re-fetch to update state
-            const response = await botApi.getProfile();
+            const response = await userApi.getProfile();
             if (response.data && response.data.user) setProfile(response.data.user);
 
             setTimeout(() => setSuccess(null), 3000);

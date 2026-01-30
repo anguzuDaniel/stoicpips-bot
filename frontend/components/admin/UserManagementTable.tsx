@@ -4,6 +4,7 @@ import { useState } from "react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/api";
 import { Search, ChevronDown } from "lucide-react";
+import { clsx } from "clsx";
 import { Skeleton } from "../Skeleton";
 
 interface User {
@@ -13,6 +14,7 @@ interface User {
     last_active: string;
     total_trades: number;
     is_admin: boolean;
+    is_active: boolean;
 }
 
 export function UserManagementTable() {
@@ -51,6 +53,29 @@ export function UserManagementTable() {
         }
     };
 
+    const handleStatusToggle = async (userId: string, currentStatus: boolean) => {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/admin/users/${userId}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ isActive: !currentStatus })
+            });
+
+            if (response.ok) {
+                mutate(); // Refresh data
+            } else {
+                const errorData = await response.json();
+                alert(errorData.error || 'Failed to update status');
+            }
+        } catch (error) {
+            console.error('Status update error:', error);
+            alert('Failed to update status');
+        }
+    };
+
     return (
         <div className="border border-[#00F2FF]/30 rounded-lg bg-[#252525]/50 backdrop-blur">
             {/* Header */}
@@ -79,6 +104,7 @@ export function UserManagementTable() {
                             <th className="px-6 py-3 text-left font-medium">Subscription Tier</th>
                             <th className="px-6 py-3 text-left font-medium">Total Trades</th>
                             <th className="px-6 py-3 text-left font-medium">Last Active</th>
+                            <th className="px-6 py-3 text-left font-medium">Status</th>
                             <th className="px-6 py-3 text-left font-medium">Admin</th>
                         </tr>
                     </thead>
@@ -117,6 +143,26 @@ export function UserManagementTable() {
                                     <td className="px-6 py-4 text-gray-300">{user.total_trades}</td>
                                     <td className="px-6 py-4 text-gray-400 text-xs">
                                         {user.last_active ? new Date(user.last_active).toLocaleDateString() : 'Never'}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <button
+                                            onClick={() => handleStatusToggle(user.id, user.is_active ?? true)}
+                                            className={clsx(
+                                                "px-3 py-1 rounded text-xs font-bold transition-all border",
+                                                (user.is_active ?? true)
+                                                    ? "bg-green-500/10 text-green-500 border-green-500/30 hover:bg-red-500/20 hover:text-red-500 hover:border-red-500/30 group"
+                                                    : "bg-red-500/10 text-red-500 border-red-500/30 hover:bg-green-500/20 hover:text-green-500 hover:border-green-500/30"
+                                            )}
+                                        >
+                                            {(user.is_active ?? true) ? (
+                                                <span className="group-hover:hidden">ACTIVE</span>
+                                            ) : (
+                                                <span>BANNED</span>
+                                            )}
+                                            {(user.is_active ?? true) && (
+                                                <span className="hidden group-hover:inline">BAN</span>
+                                            )}
+                                        </button>
                                     </td>
                                     <td className="px-6 py-4">
                                         {user.is_admin && (
