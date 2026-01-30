@@ -2,8 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const user_controller_1 = require("../controllers/user/user.controller");
+const auth_middleware_1 = require("../middleware/auth.middleware");
 const router = (0, express_1.Router)();
-router.get("/profile", user_controller_1.getUserProfile);
-router.post("/update-plan", user_controller_1.updatePlan);
-router.post("/update-bank-info", user_controller_1.updateBankInfo);
+router.get("/profile", auth_middleware_1.authenticateToken, user_controller_1.getUserProfile);
+router.post("/update-plan", auth_middleware_1.authenticateToken, user_controller_1.updatePlan);
+router.post("/update-bank-info", auth_middleware_1.authenticateToken, user_controller_1.updateBankInfo);
+router.post("/update-profile", auth_middleware_1.authenticateToken, user_controller_1.updateProfile);
 exports.default = router;

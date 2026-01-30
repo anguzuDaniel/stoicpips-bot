@@ -44,6 +44,7 @@ const usersController = __importStar(require("../controllers/admin/users"));
 const infrastructureController = __importStar(require("../controllers/admin/infrastructure"));
 const botControlController = __importStar(require("../controllers/admin/botControl"));
 const analyticsController = __importStar(require("../controllers/admin/analytics"));
+const announcementsController = __importStar(require("../controllers/admin/announcements"));
 // All admin routes require authentication AND admin role
 router.use(auth_middleware_1.authenticateToken);
 router.use(auth_middleware_1.requireAdmin);
@@ -58,4 +59,7 @@ router.post('/bot/resume', botControlController.resumeTrading);
 router.get('/bot/status', botControlController.getGlobalBotStatus);
 // Analytics
 router.get('/analytics/global', analyticsController.getGlobalAnalytics);
+// Announcements (Admin: Create, Auth: Get)
+router.post('/announcements', announcementsController.createAnnouncement);
+router.get('/announcements', announcementsController.getAnnouncements);
 exports.default = router;

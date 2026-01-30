@@ -1,10 +1,12 @@
 "use client";
 
-import { LayoutDashboard, Activity, Settings, History, BarChart3, HelpCircle, LogOut, Cpu, CreditCard, User } from "lucide-react";
+import { useState } from "react";
+import { LayoutDashboard, Activity, Settings, History, BarChart3, HelpCircle, LogOut, Cpu, CreditCard, User, Bug } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { clsx } from "clsx";
+import { BugReportModal } from "./BugReportModal";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
@@ -20,12 +22,12 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [isBugModalOpen, setIsBugModalOpen] = useState(false);
 
   const handleLogout = async () => {
     // 1. Sign out from Supabase
@@ -122,6 +124,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         <div className="space-y-1 border-t border-border pt-4">
+          <button
+            onClick={() => setIsBugModalOpen(true)}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            <Bug className="h-5 w-5" />
+            Report a Bug
+          </button>
           <Link
             href="/help"
             onClick={() => onClose()}
@@ -139,6 +148,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </button>
         </div>
       </div>
+
+      <BugReportModal isOpen={isBugModalOpen} onClose={() => setIsBugModalOpen(false)} />
     </>
   );
 }

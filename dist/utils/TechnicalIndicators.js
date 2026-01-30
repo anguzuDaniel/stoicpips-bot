@@ -1,6 +1,6 @@
 "use strict";
 /**
- * Technical Indicators for SyntoicAi
+ * Technical Indicators for Dunam Ai
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TechnicalIndicators = void 0;

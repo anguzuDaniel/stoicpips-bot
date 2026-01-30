@@ -1,0 +1,65 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.updateProfile = void 0;
+const supabase_1 = require("../../config/supabase");
+/**
+ * Updates the user's profile information.
+ */
+const updateProfile = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) {
+            return res.status(401).json({ error: "Authentication required" });
+        }
+        const { fullName, username, tradingExperience, bankName, accountNumber, accountName } = req.body;
+        const email = req.user?.email;
+        const updateData = {
+            updated_at: new Date().toISOString(),
+            email: email, // Ensure email is present for upsert/creation
+            phone: "", // Default empty phone to satisfy not-null constraint
+            country_code: "US" // Default country code to satisfy not-null constraint
+        };
+        if (fullName !== undefined) {
+            updateData.full_name = fullName;
+            // Split full name into first and last name for legacy/schema compatibility
+            const names = fullName.trim().split(' ');
+            updateData.first_name = names[0];
+            updateData.last_name = names.length > 1 ? names.slice(1).join(' ') : '';
+        }
+        if (username !== undefined)
+            updateData.username = username;
+        if (tradingExperience !== undefined)
+            updateData.trading_experience = tradingExperience;
+        // Map card info to the database columns (bank_name, account_number, account_name)
+        if (bankName !== undefined)
+            updateData.bank_name = bankName;
+        if (accountNumber !== undefined)
+            updateData.account_number = accountNumber;
+        if (accountName !== undefined)
+            updateData.account_name = accountName;
+        const { data, error } = await supabase_1.supabase
+            .from("profiles")
+            .upsert({
+            ...updateData,
+            id: userId
+        })
+            .select()
+            .single();
+        if (error) {
+            console.error("Update profile DB error:", error.message);
+            return res.status(400).json({ error: `Failed to update profile: ${error.message}` });
+        }
+        res.json({
+            message: "Profile updated successfully.",
+            user: data
+        });
+    }
+    catch (err) {
+        console.error("updateProfile exception:", err);
+        res.status(500).json({
+            error: "Server error while updating profile information.",
+            details: err.message
+        });
+    }
+};
+exports.updateProfile = updateProfile;

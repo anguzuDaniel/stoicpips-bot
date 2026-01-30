@@ -49,4 +49,5 @@ export const botApi = {
     getProfile: () => api.get("/user/profile"),
     updateProfile: (data: { fullName?: string, username?: string, tradingExperience?: string, bankName?: string, accountNumber?: string, accountName?: string }) => api.post("/user/update-profile", data),
     updateCardInfo: (data: { bankName: string; accountNumber: string; accountName: string }) => api.post("/user/update-bank-info", data),
+    reportBug: (data: { title: string; description: string; steps?: string; severity: string }) => api.post("/user/report-bug", data),
 };

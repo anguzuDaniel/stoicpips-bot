@@ -13,11 +13,14 @@ const signupUser = async (req, res) => {
         const { data, error } = await supabase_1.supabase.auth.signUp({
             email,
             password,
-            options: { data: { first_name } }
+            options: {
+                data: { first_name },
+                emailRedirectTo: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/callback`
+            }
         });
         if (error) {
             console.error(`❌ Signup failure for ${email}:`, error.message);
-            return res.status(400).json({ error: error.message });
+            return res.status(error.status || 400).json({ error: error.message });
         }
         if (data.user) {
             // Initial profile creation is usually handled by Supabase triggers, 

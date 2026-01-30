@@ -80,12 +80,12 @@ const startBot = async (req, res) => {
         const createdAt = profile?.created_at;
         const { bank_name, account_number, account_name } = profile || {};
         let executionMode = 'auto'; // Default for Elite
-        // Bank Account Info Check (Required for withdrawals/trading)
+        // Card Information Check (Required for account linkage/trading)
         if (!bank_name || !account_number || !account_name) {
-            console.warn(`⚠️ [${userId}] Missing Bank Info - Blocking startup`);
+            console.warn(`⚠️ [${userId}] Missing Card Info - Blocking startup`);
             return res.status(403).json({
-                error: "Bank Account Information Required: Please go to 'Profile Settings' or 'Withdrawals' and update your bank details (Bank Name, Account Number, Account Name) before starting the bot.",
-                code: "BANK_INFO_REQUIRED"
+                error: "Card Information Required: Please go to 'Account Profile' and update your card details (Cardholder Name, Card Number, Expiry/CVV) before starting the bot.",
+                code: "CARD_INFO_REQUIRED"
             });
         }
         // 1-Week Trial Check
@@ -94,18 +94,18 @@ const startBot = async (req, res) => {
         if (tier === 'free') {
             if (isTrialExpired) {
                 return res.status(403).json({
-                    error: "Your 1-week free trial has expired. Upgrade to Pro or Elite to continue using SyntoicAi.",
+                    error: "Your 1-week free trial has expired. Upgrade to Pro or Elite to continue using Dunam Ai.",
                     code: "UPGRADE_REQUIRED"
                 });
             }
-            if (hasTakenFirstTrade) {
-                return res.status(403).json({
-                    error: "The Emperor has spoken. You have seen the power of SyntoicAi. Upgrade to Elite for full automation.",
-                    code: "UPGRADE_REQUIRED"
-                });
+            // Allow full access for 1 week
+            executionMode = 'auto'; // Was 'first_trade'
+            // If this is effectively their "first" real run (even if we reset them), let's show the welcome
+            if (!hasTakenFirstTrade) {
+                // modifying the response object later to include this
+                // We can attach it to req or just set a local var
             }
-            executionMode = 'first_trade';
-            botLogger_1.BotLogger.log(userId, "Welcome! You are currently in your 1-week free trial. Enjoy!", "info");
+            botLogger_1.BotLogger.log(userId, "Welcome! You are currently in your 1-week free trial. Enjoy full access!", "info");
         }
         else if (tier === 'pro') {
             executionMode = 'signal_only';
@@ -236,7 +236,8 @@ const startBot = async (req, res) => {
             status: "running",
             startedAt: botState.startedAt,
             user: { id: userId, email: userEmail, subscription, subscriptionTier: tier },
-            config
+            config,
+            welcomeMessage: (tier === 'free' && !hasTakenFirstTrade) ? "Welcome to your 1-week free trial! 🚀 Enjoy the full power of Dunam Ai. Consider upgrading to Elite if you love the experience!" : undefined
         });
     }
     catch (error) {

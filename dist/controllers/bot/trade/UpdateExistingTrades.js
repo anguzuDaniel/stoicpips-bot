@@ -36,6 +36,10 @@ const updateExistingTrades = async (userId) => {
                         status: status,
                         pnl: profit,
                         close_price: contract.exit_tick,
+                        exit_tick: contract.exit_tick,
+                        entry_tick: contract.entry_tick, // Ensure we have the precise entry tick
+                        tick_count: contract.tick_count,
+                        transaction_id: contract.transaction_ids?.sell || null, // Capture sell transaction ID
                         closed_at: new Date()
                     })
                         .eq('trade_id', trade.id);

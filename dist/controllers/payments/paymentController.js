@@ -23,7 +23,7 @@ const initializePayment = async (req, res) => {
         }
         const amount = PRICES[tier];
         // Unique transaction ref
-        const tx_ref = `syntoic-${userId}-${Date.now()}`;
+        const tx_ref = `dunam-ai-${userId}-${Date.now()}`;
         // Plan IDs from .env or default (User should configure these in FLW dashboard)
         const PLAN_IDS = {
             pro: process.env.FLW_PLAN_ID_PRO,
@@ -45,9 +45,9 @@ const initializePayment = async (req, res) => {
                 tier
             },
             customizations: {
-                title: `SyntoicAi ${tier.charAt(0).toUpperCase() + tier.slice(1)} Plan`,
+                title: `Dunam Ai ${tier.charAt(0).toUpperCase() + tier.slice(1)} Plan`,
                 description: `Upgrade to ${tier} tier`,
-                logo: "https://syntoic.com/logo.png"
+                logo: "https://api.dunam.ai/logo.png"
             }
         };
         // If a plan ID is provided, enable recurring billing

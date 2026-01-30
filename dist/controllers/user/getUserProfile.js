@@ -14,10 +14,19 @@ const getUserProfile = async (req, res) => {
             .eq("id", userId)
             .single();
         if (error) {
+            if (error.code === 'PGRST116') {
+                // No profile found, return null user so frontend can show empty form
+                return res.json({ user: null });
+            }
             console.error(`❌ [${userId}] Fetch profile error:`, error.message);
             return res.status(400).json({ error: error.message });
         }
-        res.json({ user: data });
+        res.json({
+            user: {
+                ...data,
+                is_email_verified: req.user.isEmailVerified
+            }
+        });
     }
     catch (err) {
         console.error("getUserProfile error:", err);

@@ -19,7 +19,7 @@ const authenticateToken = async (req, res, next) => {
         // Always fetch the latest profile from DB as the source of truth
         const { data: profile, error: profileError } = await supabase_1.supabase
             .from('profiles')
-            .select('subscription_status, subscription_tier, is_admin')
+            .select('subscription_tier, is_admin')
             .eq('id', user.id)
             .single();
         if (profileError && profileError.code !== 'PGRST116') {
@@ -28,7 +28,8 @@ const authenticateToken = async (req, res, next) => {
         req.user = {
             id: user.id,
             email: user.email,
-            subscription_status: profile?.subscription_status || 'free',
+            isEmailVerified: !!user.email_confirmed_at,
+            subscription_status: profile?.subscription_tier || 'free',
             subscription_tier: profile?.subscription_tier || 'free',
             isAdmin: profile?.is_admin || false
         };

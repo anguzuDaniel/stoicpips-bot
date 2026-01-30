@@ -374,29 +374,49 @@ class DerivWebSocket extends events_1.default {
             return;
         }
         // Use Multipliers for OCO-like TP/SL management by the exchange
-        const isMultiplier = signal.symbol.startsWith('R_') || signal.symbol.startsWith('10'); // Synthetic indices
+        // const isMultiplier = signal.symbol.startsWith('R_') || signal.symbol.startsWith('10'); // Synthetic indices
+        // FIXED: Don't assume everything is a Multiplier. Respect signal.contract_type.
+        const isMultiplier = signal.contract_type === 'MULTUP' || signal.contract_type === 'MULTDOWN';
         const contractParams = {
             proposal: 1,
             amount: signal.amount,
-            basis: isMultiplier ? 'stake' : 'stake',
-            contract_type: signal.contract_type === 'CALL' ? 'MULTUP' : 'MULTDOWN',
+            basis: 'stake',
+            contract_type: signal.contract_type, // Use what the strategy sent!
             currency: 'USD',
             symbol: signal.symbol,
-            limit_order: {}
         };
-        if (signal.takeProfit) {
-            contractParams.limit_order.take_profit = Math.abs(signal.takeProfit - (signal.zone?.bottom || signal.takeProfit)); // Simplified distance
+        if (isMultiplier) {
+            contractParams.limit_order = {};
+            if (signal.takeProfit)
+                contractParams.limit_order.take_profit = signal.takeProfit;
+            if (signal.stopLoss)
+                contractParams.limit_order.stop_loss = signal.stopLoss;
         }
-        if (signal.stopLoss) {
-            contractParams.limit_order.stop_loss = Math.abs(signal.stopLoss - (signal.zone?.top || signal.stopLoss)); // Simplified distance
-        }
-        // Fallback to standard CALL/PUT if not using multipliers or if preferred
-        if (!isMultiplier) {
-            contractParams.contract_type = signal.contract_type;
-            delete contractParams.limit_order;
+        else {
+            // Standard Options (Rise/Fall)
             contractParams.duration = signal.duration;
             contractParams.duration_unit = signal.duration_unit;
+            // TP/SL for options is usually managed by selling early, not limit_order param in proposal
+            // Deriv API does NOT support limit_order for vanilla options usually.
         }
+        /*
+        if (signal.takeProfit) {
+          contractParams.limit_order.take_profit = Math.abs(signal.takeProfit - (signal.zone?.bottom || signal.takeProfit)); // Simplified distance
+        }
+    
+        if (signal.stopLoss) {
+          contractParams.limit_order.stop_loss = Math.abs(signal.stopLoss - (signal.zone?.top || signal.stopLoss)); // Simplified distance
+        }
+        */
+        /*
+        // Fallback to standard CALL/PUT if not using multipliers or if preferred
+        if (!isMultiplier) {
+          contractParams.contract_type = signal.contract_type;
+          delete contractParams.limit_order;
+          contractParams.duration = signal.duration;
+          contractParams.duration_unit = signal.duration_unit;
+        }
+        */
         try {
             console.log(`📤 Requesting Proposal: ${contractParams.contract_type} on ${signal.symbol} | TP: ${signal.takeProfit} | SL: ${signal.stopLoss}`);
             const proposal = await this.request(contractParams);

@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
+const compression_1 = __importDefault(require("compression"));
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const bot_routes_1 = __importDefault(require("./routes/bot.routes"));
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
@@ -17,6 +18,7 @@ app.use((0, cors_1.default)({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
+app.use((0, compression_1.default)());
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
@@ -37,7 +39,9 @@ app.use((err, req, res, next) => {
         status: status
     });
 });
+const resurrectBots_1 = require("./utils/resurrectBots");
 const PORT = Number(process.env.PORT) || 3000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
+    (0, resurrectBots_1.resurrectBots)(); // Restore running bots
 });
