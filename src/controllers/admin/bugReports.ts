@@ -47,6 +47,20 @@ export const updateBugReportStatus = async (req: AuthenticatedRequest, res: Resp
 
         if (error) throw error;
 
+        // Send Notification if resolved/closed
+        if (status === 'resolved' || status === 'closed') {
+            const report = data[0];
+            const title = `Bug Report ${status === 'resolved' ? 'Resolved' : 'Closed'}`;
+            const message = `Your bug report "${report.title}" has been marked as ${status}. Thank you for your feedback!`;
+
+            await supabase.from('notifications').insert([{
+                user_id: report.user_id,
+                type: 'success',
+                title,
+                message
+            }]);
+        }
+
         res.json({ message: "Status updated", report: data[0] });
     } catch (error: any) {
         console.error("Error updating bug report:", error);

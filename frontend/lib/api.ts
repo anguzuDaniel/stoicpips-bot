@@ -48,8 +48,11 @@ export const botApi = {
     // User endpoints
     getProfile: () => api.get("/user/profile"),
     updateProfile: (data: { fullName?: string, username?: string, tradingExperience?: string, bankName?: string, accountNumber?: string, accountName?: string }) => api.post("/user/update-profile", data),
-    updateCardInfo: (data: { bankName: string; accountNumber: string; accountName: string }) => api.post("/user/update-bank-info", data),
-    reportBug: (data: { title: string; description: string; steps?: string; severity: string }) => api.post("/user/report-bug", data),
+    updateBankInfo: (data: any) => api.post("/user/update-bank-info", data),
+    reportBug: (data: any) => api.post("/user/report-bug", data),
+    getNotifications: () => api.get("/user/notifications"),
+    markNotificationRead: (id: string) => api.patch(`/user/notifications/${id}/read`),
+    markAllNotificationsRead: () => api.patch("/user/notifications/read-all"),
 };
 
 export const adminApi = {
@@ -70,6 +73,8 @@ export const adminApi = {
 
     // Announcements
     createAnnouncement: (data: { title: string, message: string, type: string, expiresAt?: string }) => api.post("/admin/announcements", data),
+    getAnnouncementHistory: () => api.get("/admin/announcements/all"),
+    deleteAnnouncement: (id: string) => api.delete(`/admin/announcements/${id}`),
 
     // Bug Reports
     getBugReports: () => api.get("/admin/bug-reports"),

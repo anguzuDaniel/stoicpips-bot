@@ -34,8 +34,10 @@ import * as bugReportsController from '../controllers/admin/bugReports';
 router.get('/bug-reports', bugReportsController.getBugReports);
 router.patch('/bug-reports/:id/status', bugReportsController.updateBugReportStatus);
 
-// Announcements (Admin: Create, Auth: Get)
+// Announcements (Admin: Create, History, Delete | Auth: Get Active)
 router.post('/announcements', announcementsController.createAnnouncement);
-router.get('/announcements', announcementsController.getAnnouncements);
+router.get('/announcements', announcementsController.getAnnouncements); // Public/Users (Active Only)
+router.get('/announcements/all', announcementsController.getAllAnnouncements); // Admin (History)
+router.delete('/announcements/:id', announcementsController.deleteAnnouncement);
 
 export default router;

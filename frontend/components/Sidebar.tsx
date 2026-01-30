@@ -7,6 +7,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { BugReportModal } from "./BugReportModal";
+import { NotificationsPopover } from "./NotificationsPopover";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
@@ -75,6 +76,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <div className="flex items-center gap-3">
               <span className="text-xl font-bold tracking-tight">Dunam Ai <span className="text-xs font-normal text-primary border border-primary/20 bg-primary/10 px-1 rounded">Beta</span></span>
             </div>
+
+            {/* Desktop Notification Bell (hidden on mobile) */}
+            <div className="hidden md:block">
+              <NotificationsPopover />
+            </div>
+
             {/* Mobile Close Button */}
             <button onClick={onClose} className="md:hidden p-1 text-muted-foreground hover:text-foreground">
               <LogOut className="h-5 w-5 rotate-180" />
