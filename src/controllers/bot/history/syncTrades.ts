@@ -98,7 +98,7 @@ export const syncTrades = async (userId: string) => {
                 pnl: parseFloat(t.sell_price) - parseFloat(t.buy_price),
                 status: (parseFloat(t.sell_price) - parseFloat(t.buy_price)) >= 0 ? 'won' : 'lost',
                 created_at: new Date(t.purchase_time * 1000).toISOString(),
-                closed_at: new Date(t.sell_time * 1000).toISOString()
+                // closed_at: new Date(t.sell_time * 1000).toISOString() // Commented out due to schema cache issue
             };
         });
 

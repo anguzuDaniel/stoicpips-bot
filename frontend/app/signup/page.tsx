@@ -61,12 +61,13 @@ export default function SignupPage() {
         <div className="flex min-h-screen items-center justify-center bg-background px-4">
             <div className="w-full max-w-md space-y-8 rounded-2xl border border-border bg-card p-8 shadow-lg">
                 <div className="text-center">
-                    <div className="flex justify-center mb-6">
+                    <div className="flex flex-col items-center justify-center mb-6 gap-3">
                         <img
                             src="/logo.png"
                             alt="SyntoicAi Logo"
                             className="h-20 w-auto drop-shadow-2xl rounded-full"
                         />
+                        <h1 className="text-2xl font-black tracking-tighter text-foreground">SyntoicAi</h1>
                     </div>
                     <h2 className="text-3xl font-bold tracking-tight">Create an account</h2>
                     <p className="mt-2 text-sm text-muted-foreground">
@@ -111,67 +112,84 @@ export default function SignupPage() {
                         </div>
                     </div>
 
-                    <form onSubmit={handleEmailSignup} className="space-y-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                Email
-                            </label>
-                            <div className="relative">
-                                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="name@example.com"
-                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pl-9 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                    required
-                                />
+                    {successMessage ? (
+                        <div className="space-y-6 text-center py-4 animate-in fade-in zoom-in duration-300">
+                            <div className="flex justify-center">
+                                <Activity className="h-16 w-16 text-green-500" />
                             </div>
+                            <div className="space-y-2">
+                                <h3 className="text-xl font-bold">Check your email</h3>
+                                <div className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
+                                    {successMessage}
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    Click the link in the email to verify your account and start trading.
+                                </p>
+                            </div>
+                            <Link
+                                href="/login"
+                                className="inline-flex w-full items-center justify-center rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                            >
+                                Proceed to Login
+                            </Link>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                Password
-                            </label>
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="••••••••"
-                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pl-9 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                    required
-                                    minLength={6}
-                                />
+                    ) : (
+                        <form onSubmit={handleEmailSignup} className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                    Email
+                                </label>
+                                <div className="relative">
+                                    <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        placeholder="name@example.com"
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pl-9 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                        required
+                                    />
+                                </div>
                             </div>
-                        </div>
-
-                        {error && (
-                            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                                {error}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                    Password
+                                </label>
+                                <div className="relative">
+                                    <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <input
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="••••••••"
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pl-9 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                        required
+                                        minLength={6}
+                                    />
+                                </div>
                             </div>
-                        )}
 
-                        {successMessage && (
-                            <div className="rounded-md bg-green-500/10 p-3 text-sm text-green-500">
-                                {successMessage}
-                            </div>
-                        )}
-
-                        <button
-                            type="submit"
-                            disabled={loading || !!successMessage}
-                            className="inline-flex w-full items-center justify-center rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-                        >
-                            {loading ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                                <>
-                                    <UserPlus className="mr-2 h-4 w-4" /> Create Account
-                                </>
+                            {error && (
+                                <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                                    {error}
+                                </div>
                             )}
-                        </button>
-                    </form>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="inline-flex w-full items-center justify-center rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                            >
+                                {loading ? (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                    <>
+                                        <UserPlus className="mr-2 h-4 w-4" /> Create Account
+                                    </>
+                                )}
+                            </button>
+                        </form>
+                    )}
                 </div>
 
                 <p className="text-center text-sm text-muted-foreground">

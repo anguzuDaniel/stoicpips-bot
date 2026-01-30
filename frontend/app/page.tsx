@@ -47,11 +47,14 @@ export default function Dashboard() {
     recentTrades: []
   });
 
+  // State to track if we have attempted to load from cache
+  const [isHydrated, setIsHydrated] = useState(false);
+
   // 1. Data Fetching with SWR (Optimized)
   const { data: analytics, mutate: refreshAnalytics } = useSWR('/bot/analytics', fetcher, {
     refreshInterval: 30000, // 30s
     dedupingInterval: 20000, // Don't re-fetch within 20s
-    revalidateOnFocus: false,
+    revalidateOnFocus: true, // Refresh on focus
     keepPreviousData: true // Keep showing old data while fetching
   });
 
@@ -99,12 +102,6 @@ export default function Dashboard() {
     if (cachedStats) {
       try {
         const parsed = JSON.parse(cachedStats);
-        // If it's the old format, just load it. If it's new, we need to decide which one to load.
-        // For simplicity, we just load whatever was last saved as "current".
-        // But for better UX, we see if we have `currentAccountType` saved.
-
-        // Actually, let's just support the simple object for now to avoid breaking existing cache,
-        // but we will SAVE in the new structure below.
         if (parsed.accountType) {
           setStats(parsed);
         }
@@ -112,10 +109,14 @@ export default function Dashboard() {
         console.error("Failed to parse cached stats", e);
       }
     }
+    setIsHydrated(true); // Mark as hydrated so we can start saving updates
   }, []);
 
   // 2. Consolidate Caching Logic (Dual Cache)
   useEffect(() => {
+    // Block saving if we haven't hydrated yet (prevents overwriting cache with default zeros)
+    if (!isHydrated) return;
+
     if (stats.accountType) {
       // Save to general cache for initial load (current state)
       localStorage.setItem("syntoic_last_stats", JSON.stringify(stats));
@@ -129,7 +130,7 @@ export default function Dashboard() {
       };
       localStorage.setItem(bucketKey, JSON.stringify(cacheData));
     }
-  }, [stats]);
+  }, [stats, isHydrated]);
 
   const fetchStats = async () => {
     await refreshAnalytics();
