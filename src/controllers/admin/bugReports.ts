@@ -47,18 +47,27 @@ export const updateBugReportStatus = async (req: AuthenticatedRequest, res: Resp
 
         if (error) throw error;
 
+        if (!data || data.length === 0) {
+            return res.status(404).json({ error: "Bug report not found" });
+        }
+
         // Send Notification if resolved/closed
         if (status === 'resolved' || status === 'closed') {
             const report = data[0];
             const title = `Bug Report ${status === 'resolved' ? 'Resolved' : 'Closed'}`;
             const message = `Your bug report "${report.title}" has been marked as ${status}. Thank you for your feedback!`;
 
-            await supabase.from('notifications').insert([{
-                user_id: report.user_id,
-                type: 'success',
-                title,
-                message
-            }]);
+            try {
+                await supabase.from('notifications').insert([{
+                    user_id: report.user_id,
+                    type: 'success',
+                    title,
+                    message
+                }]);
+            } catch (notifError) {
+                console.error("Failed to send notification:", notifError);
+                // Do not fail the update request just because notification failed
+            }
         }
 
         res.json({ message: "Status updated", report: data[0] });

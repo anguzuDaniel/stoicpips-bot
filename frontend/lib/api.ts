@@ -2,7 +2,7 @@ import axios, { AxiosResponse } from "axios";
 
 export const fetcher = (url: string) => api.get(url).then(res => res.data);
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
 
 export const api = axios.create({
     baseURL: API_URL,
