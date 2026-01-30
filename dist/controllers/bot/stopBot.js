@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.stopBot = void 0;
 const botStates_1 = require("../../types/botStates");
 const supabase_1 = require("../../config/supabase");
+const createNotification_1 = require("../../utils/createNotification");
 const stopBot = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -30,6 +31,8 @@ const stopBot = async (req, res) => {
         }
         console.log(`⏸️ Bot paused for user ${userId} (Connection kept alive)`);
         console.log(`📊 Final stats: ${botState.tradesExecuted} trades, P&L: $${botState.totalProfit.toFixed(2)}`);
+        // Send Notification
+        await (0, createNotification_1.createNotification)(userId, "Bot Stopped 🛑", `Trading session ended. Trades: ${botState.tradesExecuted}, P&L: $${botState.totalProfit.toFixed(2)}`, 'warning');
         res.json({
             message: "Trading bot stopped successfully",
             status: "stopped",

@@ -64,4 +64,43 @@ export class TechnicalIndicators {
 
         return totalVolume === 0 ? 0 : totalVP / totalVolume;
     }
+    /**
+     * Calculates EMA (Exponential Moving Average)
+     */
+    static ema(prices: number[], period: number): number[] {
+        if (prices.length === 0) return [];
+
+        const k = 2 / (period + 1);
+        const emaArray = [prices[0]];
+
+        for (let i = 1; i < prices.length; i++) {
+            const ema = prices[i] * k + emaArray[i - 1] * (1 - k);
+            emaArray.push(ema);
+        }
+
+        return emaArray;
+    }
+
+    /**
+     * Calculates Bollinger Bands
+     */
+    static bollingerBands(prices: number[], period: number = 20, stdDevMultiplier: number = 2) {
+        if (prices.length < period) return null;
+
+        // Simple Moving Average (Middle Band)
+        const sma = prices.slice(-period).reduce((a, b) => a + b, 0) / period;
+
+        // Standard Deviation
+        const squaredDiffs = prices.slice(-period).map(p => Math.pow(p - sma, 2));
+        const variance = squaredDiffs.reduce((a, b) => a + b, 0) / period;
+        const stdDev = Math.sqrt(variance);
+
+        const upper = sma + (stdDev * stdDevMultiplier);
+        const lower = sma - (stdDev * stdDevMultiplier);
+
+        // Bandwidth: (Upper - Lower) / Middle
+        const bandwidth = (upper - lower) / sma;
+
+        return { upper, middle: sma, lower, bandwidth };
+    }
 }

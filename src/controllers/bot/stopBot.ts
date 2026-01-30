@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthenticatedRequest } from '../../types/AuthenticatedRequest';
 import { botStates } from '../../types/botStates';
 import { supabase } from '../../config/supabase';
+import { createNotification } from '../../utils/createNotification';
 
 export const stopBot = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -37,6 +38,14 @@ export const stopBot = async (req: AuthenticatedRequest, res: Response) => {
 
     console.log(`⏸️ Bot paused for user ${userId} (Connection kept alive)`);
     console.log(`📊 Final stats: ${botState.tradesExecuted} trades, P&L: $${botState.totalProfit.toFixed(2)}`);
+
+    // Send Notification
+    await createNotification(
+      userId,
+      "Bot Stopped 🛑",
+      `Trading session ended. Trades: ${botState.tradesExecuted}, P&L: $${botState.totalProfit.toFixed(2)}`,
+      'warning'
+    );
 
     res.json({
       message: "Trading bot stopped successfully",

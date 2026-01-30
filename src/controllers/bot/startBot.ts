@@ -10,6 +10,7 @@ import { botStates } from '../../types/botStates';
 import { executeTradingCycle } from './trade/executeTradingCycle';
 import { supabase } from '../../config/supabase';
 import fetchLatestCandles from '../../strategies/fetchLatestCandles';
+import { createNotification } from '../../utils/createNotification';
 
 export const startBot = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -256,10 +257,18 @@ export const startBot = async (req: AuthenticatedRequest, res: Response) => {
       }
     };
 
-    const cycleIntervalMs = (config.cycleInterval || 30) * 1000;
+    const cycleIntervalMs = (config.cycleInterval || 1) * 1000;
 
     tradingCycle();
     botState.tradingInterval = setInterval(tradingCycle, cycleIntervalMs);
+
+    // Send Notification
+    await createNotification(
+      userId,
+      "Bot Started 🚀",
+      `The AI engine is active. Strategy: Directional-Aware (1s). Syms: ${config.symbols.length}`,
+      'success'
+    );
 
     res.json({
       message: "Trading bot started successfully",

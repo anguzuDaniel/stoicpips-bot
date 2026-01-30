@@ -9,98 +9,92 @@ class HybridScalpStrategy {
         this.minSignalGap = 60000; // 1 minute gap for scalping
         this.zoneDetector = new ZoneDetector_1.ZoneDetector();
     }
+    getMarketDirection(ema20, ema50, rsi) {
+        if (ema20 > ema50 && rsi > 50)
+            return 'BULLISH';
+        if (ema20 < ema50 && rsi < 50)
+            return 'BEARISH';
+        return 'NEUTRAL';
+    }
     analyze(candles, symbol, timeframe) {
         const now = Date.now();
         if (now - this.lastSignalTime < this.minSignalGap)
             return null;
-        // BYPASS MODE: Forced Entry (Moved to TOP)
-        console.log(`⚡ BYPASS MODE [${symbol}]: Force BUY Triggered`);
-        this.lastSignalTime = now;
-        /*
-        return {
-            action: 'BUY_CALL',
-            symbol,
-            contract_type: 'CALL',
-            amount: 0,
-            duration: 1,
-            duration_unit: 'm',
-            confidence: 1.0,
-            zone: { type: 'demand' } as any, // Mock zone
-            timestamp: now
-        };
-        */
-        // Let's actually return it enabled
-        return {
-            action: 'BUY_CALL',
-            symbol,
-            contract_type: 'CALL',
-            amount: 0,
-            duration: 1,
-            duration_unit: 'm',
-            confidence: 1.0,
-            zone: { type: 'demand' },
-            timestamp: now
-        };
-        // Convert DerivCandles to standard format for ZoneDetector
+        const prices = candles.map(c => c.close);
+        const currentPrice = prices[prices.length - 1];
+        // 1. Calculate Indicators
+        const ema20Array = TechnicalIndicators_1.TechnicalIndicators.ema(prices, 20);
+        const ema50Array = TechnicalIndicators_1.TechnicalIndicators.ema(prices, 50);
+        const rsi = TechnicalIndicators_1.TechnicalIndicators.rsi(prices, 14); // Using 14 as per standard RSI, user prompt said "RSI > 50" but usually implies RSI 14. 
+        // User prompt "RSI momentum" -> "RSI > 50"
+        const bb = TechnicalIndicators_1.TechnicalIndicators.bollingerBands(prices, 20, 2);
+        if (!bb || ema20Array.length === 0 || ema50Array.length === 0)
+            return null;
+        const ema20 = ema20Array[ema20Array.length - 1];
+        const ema50 = ema50Array[ema50Array.length - 1];
+        // 2. Volatility Filter (Sideways Squeeze)
+        if (bb.bandwidth < 0.0015) {
+            // console.log(`💤 [${symbol}] Squeeze Detected (BW: ${bb.bandwidth.toFixed(5)}). No Trade.`);
+            return null;
+        }
+        // 3. Determine Market Direction
+        const direction = this.getMarketDirection(ema20, ema50, rsi);
+        if (direction === 'NEUTRAL')
+            return null;
+        // 4. Detect Zones (Confluence)
         const standardCandles = candles.map(c => ({
             open: c.open,
             high: c.high,
             low: c.low,
             close: c.close,
-            volume: 0, // Deriv candles might not have volume, but ZoneDetector uses it
+            volume: 0,
             timestamp: new Date(c.epoch * 1000),
             timeframe: timeframe.toString()
         }));
         const zones = this.zoneDetector.detectZones(standardCandles);
         const freshZones = zones.filter(z => z.touched === 0);
-        if (freshZones.length === 0)
-            return null;
-        const currentPrice = candles[candles.length - 1].close;
         const activeZone = freshZones.find(z => currentPrice >= z.bottom && currentPrice <= z.top);
-        if (!activeZone)
-            return null;
-        // Indicators
-        const prices = candles.map(c => c.close);
-        const rsi = TechnicalIndicators_1.TechnicalIndicators.rsi(prices, 7);
-        const vwap = TechnicalIndicators_1.TechnicalIndicators.vwap(candles);
-        const atr = TechnicalIndicators_1.TechnicalIndicators.atr(candles, 14);
-        console.log(`🔎 Analysis [${symbol}]: Price=${currentPrice}, RSI=${rsi.toFixed(2)}, Zones=${freshZones.length}, ActiveZone=${activeZone ? activeZone.type : 'None'}`);
-        /* Old Bypass Location Removed */
-        /* Original Logic Disabled for Debugging
-        // Entry Rules:
-        // Buy: Price touches 'Fresh' Demand Zone AND RSI(7) < 30 (Relaxed from 25) AND Price > VWAP.
-        // Sell: Price touches 'Fresh' Supply Zone AND RSI(7) > 70 (Relaxed from 75) AND Price < VWAP.
-
-        if (activeZone?.type === 'demand' && rsi < 30 && currentPrice > vwap) {
-            console.log(`✅ BUY Signal Triggered for ${symbol}`);
-             this.lastSignalTime = now;
-            return {
-                action: 'BUY_CALL',
-                symbol,
-                contract_type: 'CALL',
-                amount: 0,
-                duration: 1,
-                duration_unit: 'm',
-                confidence: 0.8,
-                zone: activeZone as any,
-                timestamp: now
-            };
+        console.log(`🔎 [${symbol}] Dir: ${direction} | P: ${currentPrice} | EMA20: ${ema20.toFixed(2)} | RSI: ${rsi.toFixed(2)}`);
+        // 5. Entry Triggers
+        // Trigger 1: Zone Touch (Classic)
+        // Trigger 2: Pullback to EMA 20 (Trend Following) -> Price close to EMA20 (within 0.05%?)
+        const distToEma20 = Math.abs(currentPrice - ema20) / ema20;
+        const isNearEma20 = distToEma20 < 0.0005; // 0.05% tolerance
+        if (direction === 'BULLISH') {
+            // Long Entry: Zone Support OR Pullback to EMA20
+            if (activeZone?.type === 'demand' || (isNearEma20 && currentPrice > ema50)) {
+                console.log(`✅ [${symbol}] BULLISH Trigger!`);
+                this.lastSignalTime = now;
+                return {
+                    action: 'BUY_CALL',
+                    symbol,
+                    contract_type: 'CALL',
+                    amount: 0,
+                    duration: 1, // Scalp duration
+                    duration_unit: 'm',
+                    confidence: 0.85,
+                    zone: activeZone,
+                    timestamp: now
+                };
+            }
         }
-        */
-        if (activeZone?.type === 'supply' && rsi > 70 && currentPrice < vwap) {
-            console.log(`✅ SELL Signal Triggered for ${symbol}`);
-            this.lastSignalTime = now;
-            return {
-                action: 'BUY_PUT',
-                symbol,
-                contract_type: 'PUT',
-                amount: 0,
-                duration: 1,
-                duration_unit: 'm',
-                confidence: 0.8,
-                zone: activeZone,
-                timestamp: now
-            };
+        else if (direction === 'BEARISH') {
+            // Short Entry: Zone Resistance OR Pullback to EMA20
+            if (activeZone?.type === 'supply' || (isNearEma20 && currentPrice < ema50)) {
+                console.log(`✅ [${symbol}] BEARISH Trigger!`);
+                this.lastSignalTime = now;
+                return {
+                    action: 'BUY_PUT',
+                    symbol,
+                    contract_type: 'PUT',
+                    amount: 0,
+                    duration: 1, // Scalp duration
+                    duration_unit: 'm',
+                    confidence: 0.85,
+                    zone: activeZone,
+                    timestamp: now
+                };
+            }
         }
         return null;
     }

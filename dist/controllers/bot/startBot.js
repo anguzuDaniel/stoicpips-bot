@@ -14,6 +14,7 @@ const botStates_1 = require("../../types/botStates");
 const executeTradingCycle_1 = require("./trade/executeTradingCycle");
 const supabase_1 = require("../../config/supabase");
 const fetchLatestCandles_1 = __importDefault(require("../../strategies/fetchLatestCandles"));
+const createNotification_1 = require("../../utils/createNotification");
 const startBot = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -228,9 +229,11 @@ const startBot = async (req, res) => {
                 console.error(`❌ Error in trading cycle for user ${userId}:`, err);
             }
         };
-        const cycleIntervalMs = (config.cycleInterval || 30) * 1000;
+        const cycleIntervalMs = (config.cycleInterval || 1) * 1000;
         tradingCycle();
         botState.tradingInterval = setInterval(tradingCycle, cycleIntervalMs);
+        // Send Notification
+        await (0, createNotification_1.createNotification)(userId, "Bot Started 🚀", `The AI engine is active. Strategy: Directional-Aware (1s). Syms: ${config.symbols.length}`, 'success');
         res.json({
             message: "Trading bot started successfully",
             status: "running",
