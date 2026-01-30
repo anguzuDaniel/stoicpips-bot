@@ -29,6 +29,18 @@ api.interceptors.request.use(async (config) => {
     return config;
 });
 
+
+export const userApi = {
+    // User endpoints
+    getProfile: () => api.get("/user/profile"),
+    updateProfile: (data: { fullName?: string, username?: string, tradingExperience?: string, bankName?: string, accountNumber?: string, accountName?: string }) => api.post("/user/update-profile", data),
+    updateBankInfo: (data: any) => api.post("/user/update-bank-info", data),
+    reportBug: (data: any) => api.post("/user/report-bug", data),
+    getNotifications: () => api.get("/user/notifications"),
+    markNotificationRead: (id: string) => api.patch(`/user/notifications/${id}/read`),
+    markAllNotificationsRead: () => api.patch("/user/notifications/read-all"),
+};
+
 export const botApi = {
     getConfigs: () => api.get("/bot/config"),
     saveConfig: (data: any) => api.post("/bot/config", data),
@@ -44,15 +56,6 @@ export const botApi = {
     toggleAccount: (type: 'real' | 'demo') => api.post("/bot/toggle-account", { targetType: type }),
     initializePayment: (tier: 'pro' | 'elite') => api.post("/payments/initialize", { tier }),
     getAnnouncements: () => api.get("/admin/announcements"),
-
-    // User endpoints
-    getProfile: () => api.get("/user/profile"),
-    updateProfile: (data: { fullName?: string, username?: string, tradingExperience?: string, bankName?: string, accountNumber?: string, accountName?: string }) => api.post("/user/update-profile", data),
-    updateBankInfo: (data: any) => api.post("/user/update-bank-info", data),
-    reportBug: (data: any) => api.post("/user/report-bug", data),
-    getNotifications: () => api.get("/user/notifications"),
-    markNotificationRead: (id: string) => api.patch(`/user/notifications/${id}/read`),
-    markAllNotificationsRead: () => api.patch("/user/notifications/read-all"),
 };
 
 export const adminApi = {
