@@ -114,7 +114,10 @@ export default function Dashboard() {
             netProfit: parsed.netProfit ?? prev.netProfit ?? 0,
             winRate: parsed.winRate ?? prev.winRate ?? 0,
             streak: parsed.streak ?? prev.streak ?? 0,
-            totalTrades: parsed.totalTrades ?? prev.totalTrades ?? 0
+            totalTrades: parsed.totalTrades ?? prev.totalTrades ?? 0,
+            // FIX: Ensure arrays are arrays to prevent .map() crashes
+            profitHistory: Array.isArray(parsed.profitHistory) ? parsed.profitHistory : [],
+            recentTrades: Array.isArray(parsed.recentTrades) ? parsed.recentTrades : [],
           }));
         }
       } catch (e) {
@@ -564,7 +567,7 @@ export default function Dashboard() {
                 <h3 className="font-bold">Recent Activity</h3>
               </div>
 
-              {!stats.recentTrades || stats.recentTrades.length === 0 ? (
+              {!Array.isArray(stats.recentTrades) || stats.recentTrades.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-[200px] text-center text-muted-foreground">
                   <Activity className="h-8 w-8 mb-2 opacity-20" />
                   <p className="text-sm">No trades yet. Start trading to see your history.</p>
