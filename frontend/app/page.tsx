@@ -528,17 +528,32 @@ export default function Dashboard() {
 
                   {/* Reset History Button */}
                   <button
-                    onClick={async () => {
-                      if (confirm("Are you sure you want to reset all trade history and stats? This cannot be undone.")) {
-                        try {
-                          await botApi.resetBot();
-                          await fetchStats();
-                          alert("Bot history reset successfully.");
-                        } catch (e) {
-                          console.error("Reset failed", e);
-                          alert("Failed to reset.");
+                    onClick={() => {
+                      setConfirmState({
+                        isOpen: true,
+                        title: "Reset Trades?",
+                        message: "Are you sure you want to reset all trade history and stats? This cannot be undone.",
+                        onConfirm: async () => {
+                          try {
+                            await botApi.resetBot();
+                            await fetchStats();
+                            setAlertState({
+                              isOpen: true,
+                              type: "success",
+                              title: "Reset Complete",
+                              message: "Bot history reset successfully."
+                            });
+                          } catch (e) {
+                            console.error("Reset failed", e);
+                            setAlertState({
+                              isOpen: true,
+                              type: "error",
+                              title: "Reset Failed",
+                              message: "Failed to reset bot history."
+                            });
+                          }
                         }
-                      }
+                      });
                     }}
                     className="h-[42px] px-5 flex items-center justify-center gap-2 rounded-xl bg-secondary/10 border border-border/40 hover:bg-secondary/20 hover:border-border transition-all text-[11px] font-black uppercase tracking-tighter w-full sm:w-auto"
                   >

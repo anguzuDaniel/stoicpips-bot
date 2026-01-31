@@ -259,8 +259,19 @@ export const startBot = async (req: AuthenticatedRequest, res: Response) => {
 
     const cycleIntervalMs = (config.cycleInterval || 1) * 1000;
 
-    tradingCycle();
-    botState.tradingInterval = setInterval(tradingCycle, cycleIntervalMs);
+    // Non-overlapping loop
+    const runCycle = async () => {
+      if (!botState.isRunning) return;
+
+      await tradingCycle();
+
+      // Schedule next run ONLY after the previous one finishes
+      if (botState.isRunning) {
+        botState.tradingInterval = setTimeout(runCycle, cycleIntervalMs);
+      }
+    };
+
+    runCycle();
 
     // Send Notification
     await createNotification(

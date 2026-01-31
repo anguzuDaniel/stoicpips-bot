@@ -5,6 +5,8 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { botApi, userApi } from "@/lib/api";
 import { Loader2, Save, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { AlertModal } from "@/components/AlertModal";
+import { ConfirmModal } from "@/components/ConfirmModal";
 
 interface BotConfig {
     symbols: string[];
@@ -31,6 +33,9 @@ export default function SettingsPage() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+
+    const [alertState, setAlertState] = useState<{ isOpen: boolean, type: "error" | "success" | "info", title?: string, message: string }>({ isOpen: false, type: "error", message: "" });
+    const [confirmState, setConfirmState] = useState<{ isOpen: boolean, title?: string, message: string, onConfirm: () => void }>({ isOpen: false, message: "", onConfirm: () => { } });
 
     // Visibility toggles
     const [showDemoToken, setShowDemoToken] = useState(false);
@@ -124,8 +129,15 @@ export default function SettingsPage() {
     };
 
     const handleLogout = async () => {
-        const confirmed = window.confirm("Are you sure you want to log out?");
-        if (!confirmed) return;
+        setConfirmState({
+            isOpen: true,
+            title: "Log Out",
+            message: "Are you sure you want to log out of your Dunam account?",
+            onConfirm: performLogout
+        });
+    };
+
+    const performLogout = async () => {
 
         try {
             // 1. Sign out from Supabase
@@ -554,6 +566,22 @@ export default function SettingsPage() {
                     </span>
                 </div>
             </div>
-        </DashboardLayout>
+
+            <AlertModal
+                isOpen={alertState.isOpen}
+                onClose={() => setAlertState(prev => ({ ...prev, isOpen: false }))}
+                type={alertState.type}
+                title={alertState.title}
+                message={alertState.message}
+            />
+
+            <ConfirmModal
+                isOpen={confirmState.isOpen}
+                onClose={() => setConfirmState(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmState.onConfirm}
+                title={confirmState.title}
+                message={confirmState.message}
+            />
+        </DashboardLayout >
     );
 }

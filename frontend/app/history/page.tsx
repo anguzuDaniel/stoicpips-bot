@@ -46,10 +46,10 @@ export default function TradeHistory() {
     return (
         <DashboardLayout>
             <div className="p-4 md:p-10 max-w-[1600px] mx-auto w-full">
-                <header className="flex items-center justify-between mb-8">
+                <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                     <h1 className="text-2xl md:text-3xl font-black tracking-tight text-foreground">Trade History</h1>
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center bg-secondary/20 rounded-lg p-1 border border-border">
+                    <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3 w-full sm:w-auto">
+                        <div className="flex items-center bg-secondary/20 rounded-xl p-1 border border-border flex-1 sm:flex-none">
                             {(["all", "won", "lost"] as const).map((f) => (
                                 <button
                                     key={f}
@@ -57,7 +57,7 @@ export default function TradeHistory() {
                                         setStatusFilter(f);
                                         setCurrentPage(1);
                                     }}
-                                    className={`px-4 py-1 text-xs font-medium rounded-md transition-all capitalize ${statusFilter === f
+                                    className={`flex-1 sm:px-4 py-2 sm:py-1 text-xs font-bold uppercase tracking-wider rounded-lg transition-all capitalize ${statusFilter === f
                                         ? "bg-primary text-primary-foreground shadow-sm"
                                         : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                                         }`}
@@ -69,10 +69,10 @@ export default function TradeHistory() {
                         <button
                             onClick={handleRefresh}
                             disabled={refreshing}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card border border-border hover:bg-accent transition-colors disabled:opacity-50"
+                            className="h-10 sm:h-auto flex items-center justify-center gap-2 px-6 py-2 rounded-xl bg-card border border-border hover:bg-accent transition-all disabled:opacity-50 text-xs font-bold uppercase tracking-wider shadow-sm active:scale-95"
                         >
                             <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-                            Refresh
+                            <span>Refresh</span>
                         </button>
                     </div>
                 </header>
@@ -138,25 +138,25 @@ export default function TradeHistory() {
                             </table>
 
                             {/* Pagination Controls */}
-                            <div className="flex items-center justify-between px-6 py-4 bg-muted/30 border-t border-border">
-                                <span className="text-xs text-muted-foreground font-medium">
-                                    Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} of {totalCount} trades
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-muted/30 border-t border-border">
+                                <span className="text-[10px] sm:text-xs text-muted-foreground font-medium text-center sm:text-left">
+                                    Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} of {totalCount} records
                                 </span>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
                                     <button
                                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                         disabled={currentPage === 1 || loading}
-                                        className="px-3 py-1.5 text-xs font-bold rounded-lg border border-border hover:bg-accent disabled:opacity-50 transition-colors"
+                                        className="flex-1 sm:flex-none px-4 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-border hover:bg-accent disabled:opacity-50 transition-all active:scale-95"
                                     >
-                                        Previous
+                                        Prev
                                     </button>
-                                    <span className="text-xs font-bold px-3">
-                                        Page {currentPage} of {totalPages}
+                                    <span className="text-[10px] font-bold px-3 min-w-[80px] text-center">
+                                        Page {currentPage} / {totalPages}
                                     </span>
                                     <button
                                         onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                         disabled={currentPage === totalPages || loading}
-                                        className="px-3 py-1.5 text-xs font-bold rounded-lg border border-border hover:bg-accent disabled:opacity-50 transition-colors"
+                                        className="flex-1 sm:flex-none px-4 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-border hover:bg-accent disabled:opacity-50 transition-all active:scale-95"
                                     >
                                         Next
                                     </button>

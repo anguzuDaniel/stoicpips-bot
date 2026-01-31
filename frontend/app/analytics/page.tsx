@@ -5,6 +5,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatsCard } from "@/components/StatsCard";
 import { botApi } from "@/lib/api";
 import { Loader2, TrendingUp, TrendingDown, Target, Zap } from "lucide-react";
+import { PerformanceAnalytics } from "@/components/PerformanceAnalytics";
 import dynamic from "next/dynamic";
 
 const GrowthChart = dynamic(() => import("@/components/GrowthChart").then(mod => mod.GrowthChart), {
@@ -100,6 +101,9 @@ export default function AnalyticsPage() {
                         <h3 className="text-3xl font-bold text-red-500">-${Math.abs(data?.largestLoss || 0).toFixed(2)}</h3>
                     </div>
                 </div>
+
+                {/* Pair Efficiency Analytics */}
+                <PerformanceAnalytics />
             </div>
         </DashboardLayout>
     );

@@ -6,6 +6,7 @@ import { fetcher } from "@/lib/api";
 import { Search, ChevronDown } from "lucide-react";
 import { clsx } from "clsx";
 import { Skeleton } from "../Skeleton";
+import { AlertModal } from "../AlertModal";
 
 interface User {
     id: string;
@@ -20,6 +21,7 @@ interface User {
 export function UserManagementTable() {
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
+    const [alertState, setAlertState] = useState<{ isOpen: boolean, type: "error" | "success" | "info", title?: string, message: string }>({ isOpen: false, type: "error", message: "" });
     const limit = 50;
 
     const { data, mutate, isValidating } = useSWR(
@@ -45,11 +47,11 @@ export function UserManagementTable() {
             if (response.ok) {
                 mutate(); // Refresh data
             } else {
-                alert('Failed to update tier');
+                setAlertState({ isOpen: true, type: "error", title: "Error", message: "Failed to update tier" });
             }
         } catch (error) {
             console.error('Tier update error:', error);
-            alert('Failed to update tier');
+            setAlertState({ isOpen: true, type: "error", title: "Error", message: "Failed to update tier" });
         }
     };
 
@@ -68,11 +70,11 @@ export function UserManagementTable() {
                 mutate(); // Refresh data
             } else {
                 const errorData = await response.json();
-                alert(errorData.error || 'Failed to update status');
+                setAlertState({ isOpen: true, type: "error", title: "Update Failed", message: errorData.error || 'Failed to update status' });
             }
         } catch (error) {
             console.error('Status update error:', error);
-            alert('Failed to update status');
+            setAlertState({ isOpen: true, type: "error", title: "Error", message: 'Failed to update status' });
         }
     };
 
@@ -203,6 +205,14 @@ export function UserManagementTable() {
                     </button>
                 </div>
             </div>
+
+            <AlertModal
+                isOpen={alertState.isOpen}
+                onClose={() => setAlertState(prev => ({ ...prev, isOpen: false }))}
+                type={alertState.type}
+                title={alertState.title}
+                message={alertState.message}
+            />
         </div>
     );
 }

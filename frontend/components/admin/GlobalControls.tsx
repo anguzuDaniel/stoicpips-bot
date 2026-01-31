@@ -4,11 +4,14 @@ import { useState } from "react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/api";
 import { Power, Play, AlertTriangle } from "lucide-react";
+import { AlertModal } from "../AlertModal";
+import { ConfirmModal } from "../ConfirmModal";
 
 export function GlobalControls() {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [pauseReason, setPauseReason] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [alertState, setAlertState] = useState<{ isOpen: boolean, type: "error" | "success" | "info", title?: string, message: string }>({ isOpen: false, type: "error", message: "" });
 
     const { data: botStatus, mutate } = useSWR(
         '/admin/bot/status',
@@ -20,7 +23,7 @@ export function GlobalControls() {
 
     const handleGreatPause = async () => {
         if (!pauseReason.trim()) {
-            alert('Please provide a reason for the pause');
+            setAlertState({ isOpen: true, type: "warning", title: "Reason Required", message: "Please provide a reason for the pause" });
             return;
         }
 
@@ -40,11 +43,11 @@ export function GlobalControls() {
                 setShowConfirmModal(false);
                 setPauseReason("");
             } else {
-                alert('Failed to trigger Great Pause');
+                setAlertState({ isOpen: true, type: "error", title: "Error", message: 'Failed to trigger Great Pause' });
             }
         } catch (error) {
             console.error('Great Pause error:', error);
-            alert('Failed to trigger Great Pause');
+            setAlertState({ isOpen: true, type: "error", title: "Error", message: 'Failed to trigger Great Pause' });
         } finally {
             setIsSubmitting(false);
         }
@@ -64,11 +67,11 @@ export function GlobalControls() {
             if (response.ok) {
                 mutate();
             } else {
-                alert('Failed to resume trading');
+                setAlertState({ isOpen: true, type: "error", title: "Error", message: 'Failed to resume trading' });
             }
         } catch (error) {
             console.error('Resume error:', error);
-            alert('Failed to resume trading');
+            setAlertState({ isOpen: true, type: "error", title: "Error", message: 'Failed to resume trading' });
         } finally {
             setIsSubmitting(false);
         }
@@ -173,6 +176,14 @@ export function GlobalControls() {
                     </div>
                 </div>
             )}
+
+            <AlertModal
+                isOpen={alertState.isOpen}
+                onClose={() => setAlertState(prev => ({ ...prev, isOpen: false }))}
+                type={alertState.type}
+                title={alertState.title}
+                message={alertState.message}
+            />
         </>
     );
 }

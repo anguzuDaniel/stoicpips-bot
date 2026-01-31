@@ -326,7 +326,7 @@ class DerivWebSocket extends events_1.default {
             };
             console.log(`📈 BUY_CALL Signal: ${symbol} at ${currentPrice} (RSI: ${rsi})`);
             this.emit('trading_signal', signal);
-            this.executeTrade(signal);
+            // this.executeTrade(signal); // Controller handles execution now
         }
         else if (zone.type === 'supply' && (rsi > 65 || !rsi)) {
             confidence += 0.3;
@@ -344,7 +344,7 @@ class DerivWebSocket extends events_1.default {
             };
             console.log(`📉 BUY_PUT Signal: ${symbol} at ${currentPrice} (RSI: ${rsi})`);
             this.emit('trading_signal', signal);
-            this.executeTrade(signal);
+            // this.executeTrade(signal); // Controller handles execution now
         }
     }
     calculateRSI(symbol) {
