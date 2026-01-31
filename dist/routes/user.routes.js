@@ -46,6 +46,7 @@ router.post("/update-bank-info", auth_middleware_1.authenticateToken, user_contr
 router.post("/update-profile", auth_middleware_1.authenticateToken, user_controller_1.updateProfile);
 router.post("/report-bug", auth_middleware_1.authenticateToken, bugReport_1.reportBug);
 router.post("/request-feature", auth_middleware_1.authenticateToken, featureRequest_1.requestFeature);
+router.post("/trial/start", auth_middleware_1.authenticateToken, user_controller_1.startTrial);
 // Notifications
 // Notifications
 router.get('/notifications', auth_middleware_1.authenticateToken, notificationController.getNotifications);

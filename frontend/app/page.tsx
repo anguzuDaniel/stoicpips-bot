@@ -4,6 +4,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { StatsCard } from "@/components/StatsCard";
 import { ConfidenceGauge } from "@/components/ConfidenceGauge";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { StartTrialModal } from "@/components/StartTrialModal";
 import { AlertModal } from "@/components/AlertModal";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import dynamic from "next/dynamic";
@@ -28,6 +29,7 @@ export default function Dashboard() {
   const [isConnected, setIsConnected] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showTrialModal, setShowTrialModal] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
 
   const [alertState, setAlertState] = useState<{ isOpen: boolean, type: "error" | "success" | "info", title?: string, message: string }>({ isOpen: false, type: "error", message: "" });
@@ -64,7 +66,7 @@ export default function Dashboard() {
     keepPreviousData: true
   });
 
-  const { data: profile } = useSWR('/user/profile', fetcher);
+  const { data: profile, mutate: refreshProfile } = useSWR('/user/profile', fetcher);
 
   // 2. Synchronize SWR data to state and localStorage
   useEffect(() => {
@@ -159,12 +161,18 @@ export default function Dashboard() {
 
   // useSWR refresh provides the polling now
 
-  const handleConnect = async () => {
+  const handleConnect = async (overrideUser?: any) => {
+    // 1. Check for Free Trial onboarding
+    const currentUser = overrideUser || profile?.user;
+
+    if (currentUser && !currentUser.has_started_trial && !currentUser.is_subscribed && currentUser.subscription_status !== 'active') {
+      setShowTrialModal(true);
+      return;
+    }
+
     setConnecting(true);
     try {
-      // Regardless of isConnected (which might just mean idle balance connection),
-      // we want to ensure the bot is actually STARTED if the user clicks this.
-      console.log("🚀 Attempting to start the bot...");
+      console.log(`🚀 [${currentUser?.id}] Attempting to start the bot...`);
       const response = await botApi.startBot();
       setIsConnected(true);
       setIsRunning(true);
@@ -652,6 +660,16 @@ export default function Dashboard() {
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
         message={upgradeMessage}
+      />
+
+      <StartTrialModal
+        isOpen={showTrialModal}
+        onClose={() => setShowTrialModal(false)}
+        onStart={(updatedProfile) => {
+          refreshProfile({ user: updatedProfile }, false);
+          // NEW: Pass the updated profile directly to handleConnect to skip the check
+          handleConnect(updatedProfile);
+        }}
       />
 
       <AlertModal

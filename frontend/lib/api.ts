@@ -40,6 +40,7 @@ export const userApi = {
     getNotifications: () => api.get("/user/notifications"),
     markNotificationRead: (id: string) => api.patch(`/user/notifications/${id}/read`),
     markAllNotificationsRead: () => api.patch("/user/notifications/read-all"),
+    startTrial: () => api.post("/user/trial/start"),
 };
 
 export const botApi = {

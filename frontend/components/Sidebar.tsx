@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { LayoutDashboard, Activity, Settings, History, BarChart3, HelpCircle, LogOut, Cpu, CreditCard, User, Bug } from "lucide-react";
+import { LayoutDashboard, Activity, Settings, History, BarChart3, HelpCircle, LogOut, Cpu, CreditCard, User, Bug, Zap } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { BugReportModal } from "./BugReportModal";
 import { NotificationsPopover } from "./NotificationsPopover";
+import useSWR from "swr";
+import { fetcher } from "@/lib/api";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
@@ -29,6 +31,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isBugModalOpen, setIsBugModalOpen] = useState(false);
+
+  const { data: profile } = useSWR('/user/profile', fetcher);
+  const user = profile?.user;
 
   const handleLogout = async () => {
     // 1. Sign out from Supabase
@@ -103,7 +108,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </nav>
         </div>
 
-        <div className="px-3 py-2 mt-auto mb-2">
+        <div className="px-3 py-2 mt-auto">
           <div className="rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 p-3">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-indigo-500 flex items-center gap-1.5">
