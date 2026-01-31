@@ -10,7 +10,7 @@ Welcome to Stoicpips. This guide will help you navigate the platform and get you
 ## 1. Getting Started
 
 ### Account Registration
-- Navigate to [stoicpips.com/signup](https://stoicpips.com/signup).
+- Navigate to [dunam.stoicpips.com/signup](https://dunam.stoicpips.com/signup).
 - Enter your email and create a secure password.
 - Verify your email address to activate your account.
 
@@ -55,4 +55,4 @@ The **Dashboard** provides real-time monitoring:
 - **Pro Tier**: Unlimited stake sizes, advanced strategy access, and priority signal generation.
 
 ## Need Help?
-If you encounter any issues, please visit our [Discord Community](https://discord.gg/stoicpips) or contact support at support@stoicpips.com.
+If you encounter any issues, please visit our [Discord Community](https://discord.gg/stoicpips) or contact support at support@dunam.stoicpips.com.
