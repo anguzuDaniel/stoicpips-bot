@@ -62,28 +62,38 @@ export const initializePayment = async (req: any, res: Response) => {
             console.warn(`⚠️ No Flutterwave Plan ID found for ${tier}. Falling back to one-time payment.`);
         }
 
+        if (!FLW_SECRET_KEY) {
+            console.error("❌ FLW_SECRET_KEY is missing in env variables!");
+            return res.status(500).json({ error: "Server Configuration Error: Missing Payment Keys" });
+        }
+
+        console.log(`🚀 Initializing Payment for ${req.user.email} (Tier: ${tier})`);
+        console.log(`Payload preview:`, { ...payload, payment_options: 'REDACTED' });
+
         const response = await axios.post('https://api.flutterwave.com/v3/payments', payload, {
             headers: { Authorization: `Bearer ${FLW_SECRET_KEY}` }
         });
 
+        console.log("✅ Flutterwave Response Status:", response.data.status);
+
         if (response.data.status === 'success') {
             return res.json({ link: response.data.data.link });
         } else {
-            return res.status(400).json({ error: "Failed to create payment link." });
+            console.error("❌ Flutterwave Failed:", response.data);
+            return res.status(400).json({ error: "Failed to create payment link.", details: response.data.message });
         }
 
     } catch (error: any) {
         const errorData = error.response?.data;
-        console.error("❌ Payment Init Error:", errorData || error.message);
+        console.error("❌ Payment Init Exception:", error.message);
 
-        // Log more specifics to help debug
         if (errorData) {
-            console.error("Flutterwave Error Message:", errorData.message);
+            console.error("Flutterwave API Error Data:", JSON.stringify(errorData, null, 2));
         }
 
         return res.status(500).json({
-            error: "Payment Initialization Failed",
-            details: errorData?.message || error.message
+            error: errorData?.message || "Payment Initialization Failed",
+            details: errorData || error.message
         });
     }
 };

@@ -1,12 +1,16 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { Check, Loader2, CreditCard, Smartphone, Shield, Zap, BarChart3, Globe, Clock, Target, Cpu, Crown } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { botApi } from "@/lib/api";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/context/ToastContext";
 
 // Tier Data
 const TIERS = [
     {
+        id: "pro", // Added ID for API
         title: "Pro",
         price: "10",
         description: "Perfect for beginners and manual traders.",
@@ -23,9 +27,11 @@ const TIERS = [
             border: "border-blue-500/20",
             lightBg: "bg-blue-500/10",
             glow: "shadow-blue-500/20"
-        }
+        },
+        disabled: true // Temporarily disabled
     },
     {
+        id: "elite", // Added ID for API
         title: "AI Automated",
         price: "30",
         description: "Designed for intermediate traders wanting automation.",
@@ -44,9 +50,11 @@ const TIERS = [
             border: "border-emerald-500/20",
             lightBg: "bg-emerald-500/10",
             glow: "shadow-emerald-500/20"
-        }
+        },
+        disabled: true // Temporarily disabled
     },
     {
+        id: "enterprise", // Added ID
         title: "AI Scalping",
         price: "100",
         description: "For professional traders and serious investors.",
@@ -65,12 +73,13 @@ const TIERS = [
             border: "border-purple-500/20",
             lightBg: "bg-purple-500/10",
             glow: "shadow-purple-500/20"
-        }
+        },
+        disabled: true // Keep disabled for now
     }
 ];
 
 // Helper Component for Tier Card
-const PricingTierCard = ({ title, price, description, features, popular, badge, theme }: any) => (
+const PricingTierCard = ({ id, title, price, description, features, popular, badge, theme, disabled, onUpgrade, loading }: any) => (
     <div className={`relative flex flex-col p-8 rounded-3xl border transition-all duration-500 overflow-hidden group hover:-translate-y-2 ${popular
         ? `border-${theme.main.split('-')[1]}-500/50 bg-gradient-to-b from-${theme.main.split('-')[1]}-500/10 to-transparent shadow-[0_0_50px_rgba(0,0,0,0.5)]`
         : `border-border bg-card/40 hover:border-${theme.main.split('-')[1]}-500/30 hover:shadow-lg`
@@ -79,11 +88,13 @@ const PricingTierCard = ({ title, price, description, features, popular, badge, 
         <div className={`absolute top-0 right-0 w-32 h-32 ${theme.bg} blur-[80px] opacity-20 group-hover:opacity-40 transition-opacity pointer-events-none`} />
 
         {/* Coming Soon Overlay/Badge */}
-        <div className="absolute top-4 right-4 z-20">
-            <span className={`px-3 py-1 rounded-full ${theme.lightBg} border ${theme.border} text-[10px] font-black uppercase tracking-widest ${theme.main} animate-pulse`}>
-                Coming Soon
-            </span>
-        </div>
+        {disabled && (
+            <div className="absolute top-4 right-4 z-20">
+                <span className={`px-3 py-1 rounded-full ${theme.lightBg} border ${theme.border} text-[10px] font-black uppercase tracking-widest ${theme.main} animate-pulse`}>
+                    Coming Soon
+                </span>
+            </div>
+        )}
 
         {popular && (
             <div className={`absolute -left-12 top-6 -rotate-45 ${theme.bg} px-12 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-lg`}>
@@ -113,13 +124,16 @@ const PricingTierCard = ({ title, price, description, features, popular, badge, 
         </ul>
 
         <button
-            disabled
-            className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl ${popular
-                ? `${theme.bg} text-white ${theme.glow} cursor-not-allowed opacity-50`
-                : 'bg-secondary text-foreground shadow-black/5 cursor-not-allowed opacity-50 group-hover:bg-secondary/80'
+            onClick={() => onUpgrade(id)}
+            disabled={disabled || loading}
+            className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl ${disabled
+                ? 'bg-secondary text-foreground shadow-black/5 cursor-not-allowed opacity-50'
+                : popular
+                    ? `${theme.bg} text-white ${theme.glow} hover:brightness-110 hover:scale-[1.02] active:scale-[0.98]`
+                    : `bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20`
                 }`}
         >
-            Waitlist Only
+            {loading ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : (disabled ? "Waitlist Only" : "Upgrade Now")}
         </button>
     </div>
 );
@@ -136,6 +150,39 @@ const BenefitItem = ({ icon: Icon, title, description, color }: any) => (
 );
 
 function PricingContent() {
+    const router = useRouter();
+    const { addToast } = useToast();
+    const [loadingTier, setLoadingTier] = useState<string | null>(null);
+
+    const handleUpgrade = async (tierId: string) => {
+        if (tierId === 'enterprise') return; // Skip disabled
+
+        setLoadingTier(tierId);
+        try {
+            // Map our UI IDs to backend expected values
+            const backendTier = tierId === 'prime' ? 'elite' : tierId; // Just ensuring mapping if needed, but current IDs match 'pro' and 'elite' decently. 
+            // Wait, TIERS above has 'pro' and 'elite' (labeled AI Automated). 
+            // Backend in paymentController expects 'pro' or 'elite'.
+            // Let's make sure TIERS above matches exactly.
+
+            const res = await botApi.initializePayment(tierId as 'pro' | 'elite');
+
+            if (res.data && res.data.link) {
+                addToast("Redirecting to secure payment...", "success", "Processing");
+                window.location.href = res.data.link;
+            } else {
+                throw new Error("No payment link returned");
+            }
+        } catch (error: any) {
+            console.error("Upgrade failed:", error);
+            const errorMessage = error.response?.data?.error || "Failed to initialize payment";
+            const errorDetails = error.response?.data?.details ? ` (${JSON.stringify(error.response.data.details).slice(0, 50)}...)` : "";
+            addToast(`${errorMessage}${errorDetails}`, "error", "Payment Error");
+        } finally {
+            setLoadingTier(null);
+        }
+    };
+
     return (
         <div className="flex-1 p-4 md:p-10 flex flex-col items-center">
             <div className="max-w-[1600px] w-full space-y-20 mt-8">
@@ -157,7 +204,12 @@ function PricingContent() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
                     <div className="absolute inset-0 bg-primary/5 blur-[120px] rounded-full -z-10 opacity-30 pointer-events-none" />
                     {TIERS.map((tier, idx) => (
-                        <PricingTierCard key={idx} {...tier} />
+                        <PricingTierCard
+                            key={idx}
+                            {...tier}
+                            onUpgrade={handleUpgrade}
+                            loading={loadingTier === tier.id}
+                        />
                     ))}
                 </div>
 

@@ -23,6 +23,36 @@ const saveBotConfig = async (req, res) => {
             ai_provider: aiProvider,
             updated_at: new Date()
         };
+        // --- Enforce Subscription Limits ---
+        const { data: profile } = await supabase_1.supabase
+            .from('profiles')
+            .select('subscription_tier')
+            .eq('id', userId)
+            .single();
+        const tier = profile?.subscription_tier; // 'pro' | 'elite' | null/free
+        // Limit Definitions
+        let maxDailyTradesLimit = 5;
+        let maxSymbolsLimit = 5;
+        if (tier === 'elite') {
+            maxDailyTradesLimit = 10000; // Unlimited effectively
+            maxSymbolsLimit = 100; // Unlimited effectively
+        }
+        else if (tier === 'pro') {
+            maxDailyTradesLimit = 20;
+            maxSymbolsLimit = 10;
+        }
+        // Validate Daily Trades
+        if (dailyTradeLimit > maxDailyTradesLimit) {
+            return res.status(403).json({
+                error: `Plan Limit Exceeded: Your ${tier || 'Free'} plan allows max ${maxDailyTradesLimit} daily trades. Please upgrade.`
+            });
+        }
+        // Validate Symbols Count
+        if (symbols && symbols.length > maxSymbolsLimit) {
+            return res.status(403).json({
+                error: `Plan Limit Exceeded: Your ${tier || 'Free'} plan allows max ${maxSymbolsLimit} active symbols. Please upgrade.`
+            });
+        }
         const { data, error } = await supabase_1.supabase
             .from("bot_configs")
             .upsert(dbConfig, { onConflict: 'user_id' })

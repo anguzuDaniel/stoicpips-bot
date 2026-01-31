@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SentinelExecutionLayer = void 0;
 const axios_1 = __importDefault(require("axios"));
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8005';
 class SentinelExecutionLayer {
     /**
      * Wrapper function to execute scalp with AI filter or fallback

@@ -105,10 +105,22 @@ export default function Dashboard() {
       try {
         const parsed = JSON.parse(cachedStats);
         if (parsed.accountType) {
-          setStats(parsed);
+          // FIX: Safely merge cache with default state to prevent missing keys (like balance) causing crashes
+          setStats(prev => ({
+            ...prev,
+            ...parsed,
+            // Ensure critical fields are never undefined even if cache is bad
+            balance: parsed.balance ?? prev.balance ?? 0,
+            netProfit: parsed.netProfit ?? prev.netProfit ?? 0,
+            winRate: parsed.winRate ?? prev.winRate ?? 0,
+            streak: parsed.streak ?? prev.streak ?? 0,
+            totalTrades: parsed.totalTrades ?? prev.totalTrades ?? 0
+          }));
         }
       } catch (e) {
         console.error("Failed to parse cached stats", e);
+        // If cache is corrupt, clear it
+        localStorage.removeItem("dunam_last_stats");
       }
     }
     setIsHydrated(true); // Mark as hydrated so we can start saving updates
@@ -424,7 +436,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <StatsCard
             label={`${stats.accountType === 'real' ? 'Live' : 'Demo'} Balance`}
-            value={`${stats.currency} ${stats.balance.toLocaleString()}`}
+            value={`${stats.currency} ${(stats.balance ?? 0).toLocaleString()}`}
             icon={Wallet}
             isLoading={!status && stats.balance === 0}
             theme="indigo"
