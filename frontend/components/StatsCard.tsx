@@ -1,5 +1,6 @@
 import { LucideIcon } from "lucide-react";
 import { clsx } from "clsx";
+import { Skeleton } from "@/components/Skeleton";
 
 interface StatsCardProps {
     label: string;
