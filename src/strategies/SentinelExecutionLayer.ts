@@ -2,7 +2,7 @@ import axios from 'axios';
 import { TradingSignal, DerivCandle } from '../deriv/types';
 import { BotLogger } from '../utils/botLogger';
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8005';
 
 export class SentinelExecutionLayer {
     /**

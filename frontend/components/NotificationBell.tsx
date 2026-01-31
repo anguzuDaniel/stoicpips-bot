@@ -72,7 +72,7 @@ export function NotificationBell() {
             >
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background border-none shadow-[0_0_8px_rgba(var(--primary-rgb),0.5)]" />
+                    <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-background shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse" />
                 )}
             </button>
 

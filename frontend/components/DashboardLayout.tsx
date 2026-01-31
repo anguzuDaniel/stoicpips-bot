@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Sidebar } from "./Sidebar";
-import { Menu, Loader2, AlertTriangle, ExternalLink } from "lucide-react";
+import { BottomNav } from "./BottomNav";
+import { NotificationBell } from "@/components/NotificationBell";
+import { Loader2, AlertTriangle, ExternalLink } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { botApi, userApi } from "@/lib/api";
 
@@ -61,20 +63,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
 
             <div className="flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out w-full">
-                <div className="md:hidden flex items-center p-4 border-b border-border bg-card sticky top-0 z-30">
-                    <button
-                        onClick={() => setSidebarOpen(true)}
-                        className="p-2 -ml-2 rounded-lg hover:bg-accent text-muted-foreground"
-                    >
-                        <Menu className="h-6 w-6" />
-                    </button>
-                    <div className="ml-2 flex items-center gap-2">
-                        <span className="font-bold text-lg">Dunam Ai</span>
-                        <span className="text-[10px] bg-green-500/10 text-green-500 px-1.5 py-0.5 rounded border border-green-500/20 font-bold uppercase tracking-wider">Beta</span>
+                {/* Content Wrapper - Add bottom padding for mobile nav */}
+                <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
+                    {/* Mobile Header (Simple) */}
+                    <div className="md:hidden flex items-center justify-between p-4 border-b border-border bg-card/50 backdrop-blur-md sticky top-0 z-30">
+                        <div className="flex items-center gap-2">
+                            {/* Logo removed since we just want title? Or keep logo. Existing code has just text span 'Dunam Ai' in the view I saw earlier? 
+                               Actually line 70 in view_file was just text. 
+                               Let's keep the existing structure but add the bell at the end. 
+                            */}
+                            <span className="font-bold text-lg tracking-tight">Dunam Ai</span>
+                            <span className="text-[10px] bg-green-500/10 text-green-500 px-1.5 py-0.5 rounded border border-green-500/20 font-bold uppercase tracking-wider">Beta</span>
+                        </div>
+                        <NotificationBell />
                     </div>
-                </div>
-
-                <main className="flex-1 overflow-y-auto">
                     {!isEmailVerified && (
                         <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2.5 flex items-center justify-between animate-in fade-in slide-in-from-top duration-500">
                             <div className="flex items-center gap-3">
@@ -97,6 +99,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     )}
                     {children}
                 </main>
+                <BottomNav />
             </div>
         </div>
     );

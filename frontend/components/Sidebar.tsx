@@ -67,8 +67,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       )}
 
       {/* Sidebar */}
+
       <div className={clsx(
-        "fixed inset-y-0 left-0 z-50 flex h-screen w-64 flex-col justify-between border-r border-border bg-card p-4 transition-transform duration-300 md:sticky md:top-0 md:translate-x-0",
+        "hidden md:flex fixed inset-y-0 left-0 z-50 h-screen w-64 flex-col justify-between border-r border-border bg-card p-4 transition-transform duration-300 md:sticky md:top-0 md:translate-x-0",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { botApi } from "@/lib/api";
+import { botApi, userApi } from "@/lib/api";
 import { Loader2, Save, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -21,6 +21,9 @@ interface BotConfig {
     openaiApiKey?: string;
     aiProvider?: 'local' | 'openai';
 }
+
+import { supabase } from "@/lib/supabase";
+import { LogOut, CreditCard } from "lucide-react";
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -46,6 +49,15 @@ export default function SettingsPage() {
     });
 
     const [symbolsString, setSymbolsString] = useState("R_100");
+    const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
+
+    // Limits
+    const getLimits = () => {
+        if (subscriptionTier === 'elite') return { maxTrades: 10000, maxSymbols: 100, label: 'Elite' };
+        if (subscriptionTier === 'pro') return { maxTrades: 20, maxSymbols: 10, label: 'Pro' };
+        return { maxTrades: 5, maxSymbols: 5, label: 'Free' };
+    };
+    const limits = getLimits();
 
     useEffect(() => {
         fetchConfig();
@@ -53,8 +65,13 @@ export default function SettingsPage() {
 
     const fetchConfig = async () => {
         try {
-            const response = await botApi.getConfigs();
-            const fetchedConfig = response.data;
+            const [botRes, userRes] = await Promise.all([
+                botApi.getConfigs(),
+                userApi.getProfile()
+            ]);
+
+            const fetchedConfig = botRes.data;
+            setSubscriptionTier(userRes.data.user?.subscription_tier || null);
 
             if (fetchedConfig && Object.keys(fetchedConfig).length > 0) {
                 setConfig({
@@ -103,6 +120,36 @@ export default function SettingsPage() {
             setError(err.response?.data?.error || "Failed to save configuration");
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleLogout = async () => {
+        const confirmed = window.confirm("Are you sure you want to log out?");
+        if (!confirmed) return;
+
+        try {
+            // 1. Sign out from Supabase
+            await supabase.auth.signOut();
+
+            // 2. Clear all local application cache
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem("dunam_last_stats");
+                localStorage.removeItem("dunam_cache_real");
+                localStorage.removeItem("dunam_cache_demo");
+                localStorage.removeItem("syntoic_last_stats");
+                localStorage.removeItem("token");
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('dunam') || key.startsWith('syntoic')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+            }
+
+            // 3. Redirect
+            router.push("/login");
+            router.refresh();
+        } catch (e) {
+            console.error("Logout failed:", e);
         }
     };
 
@@ -170,15 +217,20 @@ export default function SettingsPage() {
 
                             <div className="space-y-6">
                                 <div className="space-y-3">
-                                    <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Active Symbols</label>
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Active Symbols</label>
+                                        <span className="text-xs text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded">
+                                            {config.symbols.length} / {limits.maxSymbols === 100 ? '∞' : limits.maxSymbols}
+                                        </span>
+                                    </div>
                                     <div className="flex flex-wrap gap-2 p-3 bg-secondary/10 rounded-xl min-h-[50px] border border-border/50">
                                         {config.symbols.map((symbol) => (
-                                            <span key={symbol} className="inline-flex items-center gap-1 bg-primary/10 text-primary border border-primary/20 px-3 py-1.5 rounded-lg text-xs font-bold uppercase">
+                                            <span key={symbol} className="inline-flex items-center gap-1.5 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-3 py-1.5 rounded-lg text-xs font-bold uppercase shadow-[0_0_10px_rgba(99,102,241,0.1)] hover:bg-indigo-500/20 transition-all">
                                                 {AVAILABLE_SYMBOLS.find(s => s.value === symbol)?.label || symbol}
                                                 <button
                                                     type="button"
                                                     onClick={() => removeSymbol(symbol)}
-                                                    className="hover:bg-primary/20 rounded-full p-1 ml-1 transition-colors"
+                                                    className="hover:bg-indigo-500/20 hover:text-indigo-300 rounded-full p-0.5 ml-1 transition-colors"
                                                 >
                                                     <AlertCircle className="h-3.5 w-3.5 rotate-45" />
                                                 </button>
@@ -197,8 +249,12 @@ export default function SettingsPage() {
                                         >
                                             <option value="" disabled>+ Add a symbol...</option>
                                             {AVAILABLE_SYMBOLS.map((s) => (
-                                                <option key={s.value} value={s.value} disabled={config.symbols.includes(s.value)}>
-                                                    {s.label} ({s.value})
+                                                <option
+                                                    key={s.value}
+                                                    value={s.value}
+                                                    disabled={config.symbols.includes(s.value) || (config.symbols.length >= limits.maxSymbols)}
+                                                >
+                                                    {s.label} ({s.value}) {config.symbols.length >= limits.maxSymbols && !config.symbols.includes(s.value) ? "(Limit Reached)" : ""}
                                                 </option>
                                             ))}
                                         </select>
@@ -264,9 +320,21 @@ export default function SettingsPage() {
                                         <input
                                             type="number"
                                             value={config.dailyTradeLimit}
-                                            onChange={(e) => setConfig({ ...config, dailyTradeLimit: Number(e.target.value) })}
+                                            max={limits.maxTrades}
+                                            onChange={(e) => {
+                                                const val = Number(e.target.value);
+                                                if (val <= limits.maxTrades) {
+                                                    setConfig({ ...config, dailyTradeLimit: val });
+                                                }
+                                            }}
                                             className="w-full bg-input border border-border rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all"
                                         />
+                                        <p className="text-[10px] text-muted-foreground mt-1 text-right">
+                                            Plan Limit: {limits.maxTrades === 10000 ? 'Unlimited' : limits.maxTrades}
+                                            {subscriptionTier !== 'elite' && (
+                                                <a href="/pricing" className="text-primary hover:underline ml-1">Upgrade</a>
+                                            )}
+                                        </p>
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-muted-foreground">Max Trades / Cycle</label>
@@ -448,6 +516,37 @@ export default function SettingsPage() {
                         </div>
                     </div>
                 </form>
+
+                <div className="md:hidden mt-8 space-y-4 pt-8 border-t border-border">
+                    <h2 className="text-lg font-bold text-foreground mb-4">Account Actions</h2>
+
+                    <button
+                        onClick={() => router.push('/pricing')}
+                        className="w-full flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 text-indigo-400 font-bold uppercase tracking-wider"
+                    >
+                        <span className="flex items-center gap-3">
+                            <CreditCard className="h-5 w-5" />
+                            Upgrade Plan
+                        </span>
+                        <span className="text-xs bg-indigo-500/20 px-2 py-1 rounded">PRO</span>
+                    </button>
+
+                    <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 p-4 rounded-xl bg-destructive/5 border border-destructive/20 text-destructive font-bold uppercase tracking-wider hover:bg-destructive/10 transition-colors"
+                    >
+                        <LogOut className="h-5 w-5" />
+                        Log Out
+                    </button>
+
+                    <div className="text-center pt-4">
+                        {subscriptionTier && (
+                            <p className="text-xs text-muted-foreground">
+                                Current Plan: <span className="font-bold uppercase text-foreground">{subscriptionTier}</span>
+                            </p>
+                        )}
+                    </div>
+                </div>
 
                 <div className="pt-8 text-center pb-4">
                     <span className="text-xs font-mono text-muted-foreground/40 select-all">

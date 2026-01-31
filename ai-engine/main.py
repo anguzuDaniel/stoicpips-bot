@@ -55,5 +55,7 @@ async def predict_signal(request: SignalRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8080))
+    # Use AI_SERVICE_PORT if defined, otherwise default to 8005. 
+    # Do NOT use generic 'PORT' to avoid conflict with backend .env
+    port = int(os.getenv("AI_SERVICE_PORT", 8005)) 
     uvicorn.run(app, host="0.0.0.0", port=port)

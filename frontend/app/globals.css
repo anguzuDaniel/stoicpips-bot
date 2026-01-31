@@ -1,26 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09090b;
+  --background: #000000; /* True Black for depth */
   --foreground: #fafafa;
-  --card: #18181b;
+  --card: #09090b; /* Zinc 950 */
   --card-foreground: #fafafa;
   --popover: #09090b;
   --popover-foreground: #fafafa;
-  --primary: #22c55e;
-  --primary-foreground: #09090b;
-  --secondary: #27272a;
-  --secondary-foreground: #fafafa;
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
-  --accent: #27272a;
+  --primary: #ffffff; /* White for Stoic minimalism/contrast */
+  --primary-foreground: #000000;
+  --secondary: #18181b; /* Zinc 900 */
+  --secondary-foreground: #a1a1aa;
+  --muted: #18181b;
+  --muted-foreground: #71717a; /* Zinc 500 */
+  --accent: #27272a; /* Zinc 800 */
   --accent-foreground: #fafafa;
-  --destructive: #ef4444;
+  --destructive: #ef4444; /* Red 500 */
   --destructive-foreground: #fafafa;
+  --success: #10b981; /* Emerald 500 */
+  --success-foreground: #ffffff;
   --border: #27272a;
   --input: #27272a;
-  --ring: #22c55e;
-  --radius: 0.5rem;
+  --ring: #ffffff;
+  --radius: 0.75rem; /* Slightly more rounded */
 }
 
 @theme inline {

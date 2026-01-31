@@ -16,7 +16,14 @@ const TIERS = [
             "Entry/exit recommendations",
             "Basic support"
         ],
-        badge: "Essential"
+        badge: "Essential",
+        theme: {
+            main: "text-blue-500",
+            bg: "bg-blue-500",
+            border: "border-blue-500/20",
+            lightBg: "bg-blue-500/10",
+            glow: "shadow-blue-500/20"
+        }
     },
     {
         title: "AI Automated",
@@ -30,7 +37,14 @@ const TIERS = [
             "Priority support"
         ],
         popular: true,
-        badge: "Most Popular"
+        badge: "Most Popular",
+        theme: {
+            main: "text-emerald-500",
+            bg: "bg-emerald-500",
+            border: "border-emerald-500/20",
+            lightBg: "bg-emerald-500/10",
+            glow: "shadow-emerald-500/20"
+        }
     },
     {
         title: "AI Scalping",
@@ -44,31 +58,41 @@ const TIERS = [
             "24/7 monitoring",
             "Dedicated support"
         ],
-        badge: "Enterprise"
+        badge: "Enterprise",
+        theme: {
+            main: "text-purple-500",
+            bg: "bg-purple-500",
+            border: "border-purple-500/20",
+            lightBg: "bg-purple-500/10",
+            glow: "shadow-purple-500/20"
+        }
     }
 ];
 
 // Helper Component for Tier Card
-const PricingTierCard = ({ title, price, description, features, popular, badge }: any) => (
-    <div className={`relative flex flex-col p-8 rounded-3xl border transition-all duration-500 overflow-hidden group ${popular
-        ? 'border-primary/50 bg-gradient-to-b from-primary/10 to-transparent shadow-[0_0_50px_rgba(var(--primary-rgb),0.1)]'
-        : 'border-border bg-card/40 hover:border-primary/30'
+const PricingTierCard = ({ title, price, description, features, popular, badge, theme }: any) => (
+    <div className={`relative flex flex-col p-8 rounded-3xl border transition-all duration-500 overflow-hidden group hover:-translate-y-2 ${popular
+        ? `border-${theme.main.split('-')[1]}-500/50 bg-gradient-to-b from-${theme.main.split('-')[1]}-500/10 to-transparent shadow-[0_0_50px_rgba(0,0,0,0.5)]`
+        : `border-border bg-card/40 hover:border-${theme.main.split('-')[1]}-500/30 hover:shadow-lg`
         }`}>
+        {/* Glow Effect */}
+        <div className={`absolute top-0 right-0 w-32 h-32 ${theme.bg} blur-[80px] opacity-20 group-hover:opacity-40 transition-opacity pointer-events-none`} />
+
         {/* Coming Soon Overlay/Badge */}
         <div className="absolute top-4 right-4 z-20">
-            <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-black uppercase tracking-widest text-primary animate-pulse">
+            <span className={`px-3 py-1 rounded-full ${theme.lightBg} border ${theme.border} text-[10px] font-black uppercase tracking-widest ${theme.main} animate-pulse`}>
                 Coming Soon
             </span>
         </div>
 
         {popular && (
-            <div className="absolute -left-12 top-6 -rotate-45 bg-primary px-12 py-1 text-[10px] font-black uppercase tracking-widest text-primary-foreground shadow-lg">
+            <div className={`absolute -left-12 top-6 -rotate-45 ${theme.bg} px-12 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-lg`}>
                 Popular
             </div>
         )}
 
         <div className="mb-8 relative z-10">
-            <h3 className="text-2xl font-black tracking-tight mb-2 group-hover:text-primary transition-colors">{title}</h3>
+            <h3 className={`text-2xl font-black tracking-tight mb-2 group-hover:${theme.main} transition-colors`}>{title}</h3>
             <p className="text-xs text-muted-foreground font-medium leading-relaxed">{description}</p>
         </div>
 
@@ -80,7 +104,7 @@ const PricingTierCard = ({ title, price, description, features, popular, badge }
         <ul className="space-y-4 mb-10 flex-1 relative z-10">
             {features.map((feature: string, i: number) => (
                 <li key={i} className="flex items-start gap-3 group/item">
-                    <div className={`mt-1 p-0.5 rounded-full ${popular ? 'bg-primary/20 text-primary' : 'bg-secondary text-muted-foreground'}`}>
+                    <div className={`mt-1 p-0.5 rounded-full ${theme.lightBg} ${theme.main}`}>
                         <Check className="h-3 w-3" />
                     </div>
                     <span className="text-sm font-medium text-foreground/90 group-hover/item:text-foreground transition-colors">{feature}</span>
@@ -91,8 +115,8 @@ const PricingTierCard = ({ title, price, description, features, popular, badge }
         <button
             disabled
             className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl ${popular
-                ? 'bg-primary text-primary-foreground shadow-primary/20 cursor-not-allowed opacity-50'
-                : 'bg-secondary text-foreground shadow-black/5 cursor-not-allowed opacity-50'
+                ? `${theme.bg} text-white ${theme.glow} cursor-not-allowed opacity-50`
+                : 'bg-secondary text-foreground shadow-black/5 cursor-not-allowed opacity-50 group-hover:bg-secondary/80'
                 }`}
         >
             Waitlist Only
@@ -101,9 +125,9 @@ const PricingTierCard = ({ title, price, description, features, popular, badge }
 );
 
 // Platform Benefit Component
-const BenefitItem = ({ icon: Icon, title, description }: any) => (
-    <div className="flex flex-col items-center text-center p-6 rounded-3xl bg-card/30 border border-border/50 hover:border-primary/20 transition-all duration-300">
-        <div className="p-4 rounded-2xl bg-primary/10 text-primary mb-5 shadow-inner">
+const BenefitItem = ({ icon: Icon, title, description, color }: any) => (
+    <div className="flex flex-col items-center text-center p-6 rounded-3xl bg-card/30 border border-border/50 hover:border-secondary transition-all duration-300 group">
+        <div className={`p-4 rounded-2xl ${color} mb-5 shadow-inner transition-transform group-hover:scale-110`}>
             <Icon className="h-6 w-6" />
         </div>
         <h4 className="text-sm font-bold uppercase tracking-wider mb-2">{title}</h4>
@@ -148,31 +172,37 @@ function PricingContent() {
                             icon={Cpu}
                             title="AI Signal Generation"
                             description="Real-time analysis using custom LLM models optimized for synthetic markets."
+                            color="bg-indigo-500/10 text-indigo-500"
                         />
                         <BenefitItem
                             icon={Zap}
                             title="Automated Execution"
                             description="Lightning-fast order placement directly on the Deriv platform with zero latency."
+                            color="bg-amber-500/10 text-amber-500"
                         />
                         <BenefitItem
                             icon={Shield}
                             title="Risk Management"
                             description="Advanced stop-loss, take-profit, and volatility protection at every layer."
+                            color="bg-red-500/10 text-red-500"
                         />
                         <BenefitItem
                             icon={Globe}
                             title="Multi-Exchange"
                             description="Deep integration across synthetic indices to maximize your trading opportunities."
+                            color="bg-cyan-500/10 text-cyan-500"
                         />
                         <BenefitItem
                             icon={BarChart3}
                             title="Performance Analytics"
                             description="Granular tracking of win rates, PnL, and AI confidence scores in real-time."
+                            color="bg-emerald-500/10 text-emerald-500"
                         />
                         <BenefitItem
                             icon={Clock}
                             title="24/7 Monitoring"
                             description="Always-on infrastructure that never sleeps, ensuring you never miss a trade."
+                            color="bg-purple-500/10 text-purple-500"
                         />
                     </div>
                 </div>

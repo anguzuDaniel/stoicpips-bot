@@ -267,10 +267,16 @@ export default function Dashboard() {
     <DashboardLayout>
       <div className="p-4 md:p-10 max-w-[1600px] mx-auto w-full">
         {/* Top Header */}
-        <header className="flex items-center justify-between mb-8 gap-4">
-          <div className="flex flex-col">
+        {/* Top Header - Responsive Refactor */}
+        <header className="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 gap-4">
+          <div className="flex flex-row md:flex-col justify-between items-center md:items-start gap-1 w-full md:w-auto">
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight text-foreground uppercase">Dashboard</h1>
+              {/* Hide "DASHBOARD" on mobile to save space, redundant with BottomNav */}
+              <h1 className="hidden md:block text-2xl md:text-3xl font-black tracking-tight text-foreground uppercase">Dashboard</h1>
+
+              {/* Show simple welcome/status on mobile? Or just the controls. keeping it clean. */}
+              <h1 className="md:hidden text-lg font-black tracking-tight text-foreground uppercase">Trading Desk</h1>
+
               {/* Subscription Badge */}
               {profile?.user ? (
                 (profile.user.subscription_tier === 'pro' || profile.user.subscription_tier === 'premium') ? (
@@ -282,17 +288,22 @@ export default function Dashboard() {
                 <div className="h-5 w-12 bg-secondary/30 rounded-full animate-pulse" />
               )}
             </div>
+
+
           </div>
 
-          <div className="flex items-center gap-2 md:gap-4">
-            {/* Account Toggle - Fixed event propagation */}
-            <div className={`flex items-center bg-secondary/20 rounded-lg p-1 border border-border ${isSwitching ? 'opacity-50 pointer-events-none cursor-wait' : ''}`}>
+
+
+          {/* Controls - Full width on mobile */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 w-full md:w-auto">
+            {/* Account Toggle - Mobile: Full Width Segmented Control */}
+            <div className={`grid grid-cols-2 sm:flex sm:items-center bg-secondary/20 rounded-xl p-1 border border-border ${isSwitching ? 'opacity-50 pointer-events-none cursor-wait' : ''}`}>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleAccountSwitch('real');
                 }}
-                className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md transition-all ${stats.accountType === 'real'
+                className={`flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${stats.accountType === 'real'
                   ? 'bg-green-500 text-white shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
                   }`}
@@ -304,7 +315,7 @@ export default function Dashboard() {
                   e.stopPropagation();
                   handleAccountSwitch('demo');
                 }}
-                className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md transition-all ${stats.accountType === 'demo'
+                className={`flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${stats.accountType === 'demo'
                   ? 'bg-indigo-500 text-white shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
                   }`}
@@ -313,20 +324,17 @@ export default function Dashboard() {
               </button>
             </div>
 
+            {/* Start/Stop Button - Mobile: Large Touch Target (Min 44px) */}
             <button
               onClick={async () => {
                 if (loading) return;
-                setLoading(true); // Re-using loading state for button spinner
+                setLoading(true);
                 try {
                   if (isConnected && isRunning) {
-                    // Stop Bot
                     await botApi.stopBot();
                     setIsRunning(false);
-                    // setIsConnected(false); // Optional: Do we want to disconnect or just stop? Usually stop = running=false
                   } else {
-                    // Connect & Start (Handled by handleConnect)
                     await handleConnect();
-                    // handleConnect already sets isConnected and isRunning
                   }
                 } catch (e) {
                   console.error(e);
@@ -335,84 +343,91 @@ export default function Dashboard() {
                 }
               }}
               disabled={loading}
-              className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium transition-colors text-sm ${isRunning
-                ? 'bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20'
+              className={`h-11 md:h-10 flex items-center justify-center gap-2 px-6 rounded-xl font-bold uppercase tracking-wide transition-all text-sm shadow-lg hover:translate-y-[-1px] active:translate-y-[1px] w-full sm:w-auto ${isRunning
+                ? 'bg-destructive text-white shadow-destructive/20 hover:bg-destructive/90'
                 : isConnected
                   ? stats.accountType === 'real'
-                    ? 'bg-yellow-500/10 text-yellow-500 border-2 border-yellow-500/50 hover:bg-yellow-500/20'
-                    : 'bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500/20'
-                  : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                    ? 'bg-yellow-500 text-black shadow-yellow-500/20 hover:bg-yellow-400' // Real ready
+                    : 'bg-green-500 text-white shadow-green-500/20 hover:bg-green-600'   // Demo ready
+                  : 'bg-primary text-primary-foreground hover:bg-white/90' // Connect
                 }`}
             >
               {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin" />
               ) : isRunning ? (
-                <Power className="h-4 w-4" />
+                <Power className="h-5 w-5" />
               ) : isConnected ? (
-                <Play className="h-4 w-4" />
+                <Play className="h-5 w-5 fill-current" />
               ) : (
-                <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
+                <div className="h-2 w-2 rounded-full bg-current animate-pulse" />
               )}
 
-              {!isConnected ? "Connect & Start" : isRunning ? "Stop Bot" : "Start Bot"}
+              {!isConnected ? "Connect System" : isRunning ? "Stop Engine" : "Start Engine"}
             </button>
-            <NotificationBell />
+
+            <div className="hidden md:block">
+              <NotificationBell />
+            </div>
           </div>
         </header>
         {/* Deriv Account Notice Banner - Only show if tokens are not configured */}
-        {!status?.derivAccount && (
-          <div className="mb-6 p-4 rounded-xl bg-red-500/5 border border-red-500/20 flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
-            <div className="flex items-center gap-3">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
-                <AlertTriangle className="h-5 w-5 text-red-500" />
+        {
+          !status?.derivAccount && (
+            <div className="mb-6 p-4 rounded-xl bg-red-500/5 border border-red-500/20 flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                  <AlertTriangle className="h-5 w-5 text-red-500" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-foreground flex items-center gap-2">
+                    Deriv Account Required
+                    <span className="px-1.5 py-0.5 rounded text-[9px] bg-red-500 text-white uppercase font-black">Mandatory</span>
+                  </h4>
+                  <p className="text-xs text-muted-foreground">You must have an active Deriv account to use Dunam Ai trading services. Don&apos;t have one yet?</p>
+                </div>
               </div>
-              <div>
-                <h4 className="font-bold text-sm text-foreground flex items-center gap-2">
-                  Deriv Account Required
-                  <span className="px-1.5 py-0.5 rounded text-[9px] bg-red-500 text-white uppercase font-black">Mandatory</span>
-                </h4>
-                <p className="text-xs text-muted-foreground">You must have an active Deriv account to use Dunam Ai trading services. Don&apos;t have one yet?</p>
-              </div>
+              <a
+                href="https://partners.deriv.com/rx?ca=1069524e30dbb2&utm_campaign=dynamicworks&utm_medium=affiliate&utm_source=CU32294"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full md:w-auto px-6 py-2 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition-all shadow-sm shadow-red-500/20 hover:scale-[1.02] active:scale-[0.98] text-center"
+              >
+                Create Required Account
+              </a>
             </div>
-            <a
-              href="https://partners.deriv.com/rx?ca=1069524e30dbb2&utm_campaign=dynamicworks&utm_medium=affiliate&utm_source=CU32294"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full md:w-auto px-6 py-2 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition-all shadow-sm shadow-red-500/20 hover:scale-[1.02] active:scale-[0.98] text-center"
-            >
-              Create Required Account
-            </a>
-          </div>
-        )}
+          )
+        }
 
         {/* Low Balance Warning */}
-        {stats.accountType === 'real' && stats.balance <= 0 && (
-          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="h-5 w-5" />
-              <div>
-                <h4 className="font-bold text-sm">Insufficient Funds</h4>
-                <p className="text-xs opacity-90">Your Real Account balance is {stats.currency} 0.00. Please deposit funds on Deriv to start trading.</p>
+        {
+          stats.accountType === 'real' && stats.balance <= 0 && (
+            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="h-5 w-5" />
+                <div>
+                  <h4 className="font-bold text-sm">Insufficient Funds</h4>
+                  <p className="text-xs opacity-90">Your Real Account balance is {stats.currency} 0.00. Please deposit funds on Deriv to start trading.</p>
+                </div>
               </div>
+              <a
+                href="https://app.deriv.com/cashier/deposit"
+                target="_blank"
+                rel="noreferrer"
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition-colors shadow-sm"
+              >
+                Deposit Now
+              </a>
             </div>
-            <a
-              href="https://app.deriv.com/cashier/deposit"
-              target="_blank"
-              rel="noreferrer"
-              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition-colors shadow-sm"
-            >
-              Deposit Now
-            </a>
-          </div>
-        )}
+          )
+        }
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <StatsCard
-            label={`${stats.accountType === 'real' ? 'Live' : 'Demo'} Account Balance`}
+            label={`${stats.accountType === 'real' ? 'Live' : 'Demo'} Balance`}
             value={`${stats.currency} ${stats.balance.toLocaleString()}`}
             icon={Wallet}
             isLoading={!status && stats.balance === 0}
-            color={stats.accountType === 'real' ? 'default' : 'default'}
+            theme="indigo"
           />
           <StatsCard
             label="Net Profit"
@@ -420,19 +435,21 @@ export default function Dashboard() {
             color={stats.netProfit >= 0 ? "green" : "red"}
             icon={Activity}
             isLoading={!analytics && stats.netProfit === 0}
+            theme={stats.netProfit >= 0 ? "emerald" : "rose"}
           />
           <StatsCard
             label="Win Rate"
             value={`${stats.winRate}%`}
             icon={RefreshCw}
             isLoading={!analytics && stats.winRate === 0}
+            theme="cyan"
           />
           <StatsCard
-            label="Current Streak"
+            label="Streak"
             value={stats.streak.toString()}
             icon={stats.streak >= 0 ? CheckCircle : AlertTriangle}
-            color={stats.streak > 0 ? "green" : stats.streak < 0 ? "red" : "default"}
             isLoading={!analytics && stats.streak === 0}
+            theme={stats.streak > 0 ? "amber" : stats.streak < 0 ? "rose" : "default"}
           />
         </div>
 
@@ -600,7 +617,7 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-      </div>
+      </div >
       <UpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
