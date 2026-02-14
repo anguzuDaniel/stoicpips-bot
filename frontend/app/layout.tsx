@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   title: "Dunam Ai | Zero Emotion. Total Execution.",
   description: "Dunam Ai is an emotionless, high-precision trading bot for Synthetic Indices.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icon.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
