@@ -1,11 +1,2 @@
 name = "stoicpips-bot"
 pages_build_output_dir = ".vercel/output/static"
-
-[build]
-command = "npm run build && npx @cloudflare/next-on-pages@1"
-
-[build.environment]
-NEXT_PUBLIC_SUPABASE_URL = "https://qjdacnftlkdnzjkshjrq.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqZGFjbmZ0bGtkbnpqa3NoanJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxNTgzODAsImV4cCI6MjA3OTczNDM4MH0._kV1X37Ln8DJf8RgRt8JDTHz5bsXR0DeZcuQ3bmARhM"
-NEXT_PUBLIC_API_URL = "https://dunam-api.stoicpips.com/api/v1/"
-NEXT_PUBLIC_SITE_URL = "https://dunam.stoicpips.com"
